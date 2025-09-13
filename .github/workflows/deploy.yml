@@ -1,0 +1,25 @@
+
+
+name: Deploy to Render
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Render
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: srv-d31uif6mcj7s7393mecg
+          api-key: ${{ secrets.RENDER_API_TOKEN }}
+
+      - name: Deploy Frontend to Render
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: srv-d31um2adbo4c739vn17g
+          api-key: ${{ secrets.RENDER_API_TOKEN }}
