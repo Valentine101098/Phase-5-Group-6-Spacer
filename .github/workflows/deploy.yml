@@ -15,11 +15,11 @@ jobs:
       - name: Deploy to Render
         uses: johnbeynon/render-deploy-action@v0.0.8
         with:
-          service-id: srv-d31uif6mcj7s7393mecg
+          service-id: srv-d32qqkidbo4c73amkccg
           api-key: ${{ secrets.RENDER_API_TOKEN }}
 
       - name: Deploy Frontend to Render
         uses: johnbeynon/render-deploy-action@v0.0.8
         with:
-          service-id: srv-d31um2adbo4c739vn17g
+          service-id: srv-d32qtbbuibrs73a3tap0
           api-key: ${{ secrets.RENDER_API_TOKEN }}
