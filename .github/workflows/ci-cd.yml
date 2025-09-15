@@ -17,20 +17,28 @@ jobs:
         working-directory: client
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: client/node_modules
+          key: frontend-${{ hashFiles('client/package-lock.json') }}
+          restore-keys: |
+            frontend-
+
       - name: Install dependencies
         run: npm install
 
-      - name: Run frontend tests
+      - name: Run frontend tests (Vitest)
         run: npm run test -- --run
 
-      - name: Build project
+      - name: Build frontend
         run: npm run build
 
   backend:
@@ -40,63 +48,54 @@ jobs:
         working-directory: server
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.8
         uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version: 3.8
 
-      - name: Install dependencies
-        run: |
-          pip install pipenv
-          pipenv install --dev --deploy --ignore-pipfile
+      - name: Cache Pipenv packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.local/share/virtualenvs
+          key: backend-${{ hashFiles('server/Pipfile.lock') }}
+          restore-keys: |
+            backend-
+
+      - name: Install Pipenv
+        run: pip install pipenv
+
+      - name: Install backend dependencies
+        run: pipenv install --dev --deploy --ignore-pipfile
 
       - name: Run backend tests
         run: pipenv run pytest
 
   deploy-frontend:
-    needs: [frontend, backend] 
+    needs: [frontend, backend]  # Only runs if both tests pass
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Trigger Render Frontend Deploy
-        run: |
-          set -e
-          echo "Deploying Frontend to Render..."
-          response=$(curl -s -o response.json -w "%{http_code}" -X POST \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d '{"serviceId": "${{ secrets.RENDER_FRONTEND_SERVICE_ID }}"}' \
-            https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_SERVICE_ID }}/deploys)
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-          if [ "$response" -ne 201 ]; then
-            echo "Frontend deployment failed! Response code: $response"
-            cat response.json
-            exit 1
-          fi
-          echo "Frontend deployment triggered successfully!"
+      - name: Deploy Frontend to Render
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_FRONTEND_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_TOKEN }}
 
   deploy-backend:
-    needs: [frontend, backend]
+    needs: [frontend, backend]  # Only runs if both tests pass
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Trigger Render Backend Deploy
-        run: |
-          set -e
-          echo "Deploying Backend to Render..."
-          echo "Service ID: ${{ secrets.RENDER_BACKEND_SERVICE_ID }}"
-          response=$(curl -s -o response.json -w "%{http_code}" -X POST \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"serviceId\": \"${{ secrets.RENDER_BACKEND_SERVICE_ID }}\"}" \
-            https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys)
-          echo "HTTP status code: $response"
-          cat response.json
-          if [ "$response" -ne 201 ]; then
-            echo "Backend deployment failed! Response code: $response"
-            exit 1
-          fi
-          echo "Backend deployment triggered successfully!"
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Deploy Backend to Render
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_BACKEND_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_TOKEN }}
