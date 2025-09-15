@@ -1,0 +1,100 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches:
+      - development
+      - main
+  push:
+    branches:
+      - main   # Only deploy on main pushes
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test -- --watchAll=false
+
+      - name: Build project
+        run: npm run build
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv install --dev --deploy --ignore-pipfile
+
+      - name: Run backend tests
+        run: pipenv run pytest
+
+  deploy-frontend:
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Render Frontend Deploy
+        run: |
+          set -e
+          echo "Deploying Frontend to Render..."
+          response=$(curl -s -o response.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"serviceId": "${{ secrets.RENDER_FRONTEND_SERVICE_ID }}"}' \
+            https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_SERVICE_ID }}/deploys)
+
+          if [ "$response" -ne 201 ]; then
+            echo "Frontend deployment failed! Response code: $response"
+            cat response.json
+            exit 1
+          fi
+          echo "Frontend deployment triggered successfully!"
+
+  deploy-backend:
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Render Backend Deploy
+        run: |
+          set -e
+          echo "Deploying Backend to Render..."
+          response=$(curl -s -o response.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"serviceId": "${{ secrets.RENDER_BACKEND_SERVICE_ID }}"}' \
+            https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys)
+
+          if [ "$response" -ne 201 ]; then
+            echo "Backend deployment failed! Response code: $response"
+            cat response.json
+            exit 1
+          fi
+          echo "Backend deployment triggered successfully!"
