@@ -22,6 +22,7 @@ psycopg2-binary = "*"
 honcho = "*"
 
 [dev-packages]
+pytest = "*"
 
 [requires]
 python_version = "3.8"
