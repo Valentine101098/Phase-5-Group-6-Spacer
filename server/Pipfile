@@ -4,9 +4,22 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-flask = "*"
+shell = "*"
+ipdb = "0.13.9"
+Werkzeug = "2.2.2"
+sqlalchemy-serializer = "*"
+flask-restful = "*"
 flask-cors = "*"
+faker = "*"
+flask-sqlalchemy = "*"
+flask-migrate = "*"
+flask-bcrypt = "*"
+flask-jwt-extended = "*"
+python-dotenv = "*"
+flask = "*"
 gunicorn = "*"
+psycopg2-binary = "*"
+honcho = "*"
 
 [dev-packages]
 
