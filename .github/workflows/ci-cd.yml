@@ -53,10 +53,10 @@ jobs:
           pipenv install --dev --deploy --ignore-pipfile
 
       - name: Run backend tests
-        run: pipenv run pytest server/tests
+        run: pipenv run pytest
 
   deploy-frontend:
-    needs: [frontend, backend]
+    needs: [frontend, backend] 
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
