@@ -86,15 +86,17 @@ jobs:
         run: |
           set -e
           echo "Deploying Backend to Render..."
+          echo "Service ID: ${{ secrets.RENDER_BACKEND_SERVICE_ID }}"
           response=$(curl -s -o response.json -w "%{http_code}" -X POST \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"serviceId": "${{ secrets.RENDER_BACKEND_SERVICE_ID }}"}' \
+            -d "{\"serviceId\": \"${{ secrets.RENDER_BACKEND_SERVICE_ID }}\"}" \
             https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys)
-
+          echo "HTTP status code: $response"
+          cat response.json
           if [ "$response" -ne 201 ]; then
             echo "Backend deployment failed! Response code: $response"
-            cat response.json
             exit 1
           fi
           echo "Backend deployment triggered successfully!"
+
