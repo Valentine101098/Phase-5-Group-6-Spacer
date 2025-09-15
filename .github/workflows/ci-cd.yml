@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
-        run: npm test -- --watchAll=false
+      - name: Run frontend tests
+        run: npm run test -- --run
 
       - name: Build project
         run: npm run build
@@ -53,7 +53,7 @@ jobs:
           pipenv install --dev --deploy --ignore-pipfile
 
       - name: Run backend tests
-        run: pipenv run pytest
+        run: pipenv run pytest server/tests
 
   deploy-frontend:
     needs: [frontend, backend]
