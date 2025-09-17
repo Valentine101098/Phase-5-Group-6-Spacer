@@ -236,20 +236,23 @@ class Booking(db.Model, SerializerMixin):
         "Review", back_populates="booking", uselist=False, cascade="all, delete-orphan"
     )
 
-    @validates('start_time', 'end_time')
-    def validate_booking_times(self, key, value):
-        if key == 'start_time' and value < datetime.now(timezone.utc).replace(second=0, microsecond=0):
+    @validates('start_time')
+    def validate_start_time(self, key, value):
+        if value < datetime.now(timezone.utc).replace(second=0, microsecond=0):
             raise ValueError("Booking start time cannot be in the past")
-        
-        if hasattr(self, 'start_time') and hasattr(self, 'end_time') and self.start_time and self.end_time:
-            if self.end_time <= self.start_time:
-                raise ValueError("End time must be after start time")
-            
-            duration = self.end_time - self.start_time
-            if duration.total_seconds() < 3600: 
-                raise ValueError("Booking duration must be at least 1 hour")
-
         return value
+
+    @validates('end_time')
+    def validate_end_time(self, key, value):
+        if self.start_time and value:
+            if value <= self.start_time:
+                raise ValueError("End time must be after start time")
+
+            duration = value - self.start_time
+            if duration.total_seconds() < 3600:
+                raise ValueError("Booking duration must be at least 1 hour")
+        return value
+
 
     @validates('total_amount')
     def validate_total_amount(self, key, amount):
