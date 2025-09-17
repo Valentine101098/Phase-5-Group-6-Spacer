@@ -5,6 +5,7 @@ from sqlalchemy import Enum
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
 import re
+import secrets  # for secure token generation
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -21,7 +22,7 @@ class User(db.Model, SerializerMixin):
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
     email = db.Column(db.String(40), nullable=False, unique=True, index=True)
-    phone_number = db.Column(db.String(16), nullable=False)
+    phone_number = db.Column(db.String(16), nullable=False, index=True)
     password_hash = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
@@ -44,11 +45,13 @@ class User(db.Model, SerializerMixin):
     def get_roles(self):#Get list of user's role names
         return [ur.role.role for ur in self.user_roles]
 
-    def add_role(self, role_name):#Add a role to the user
+    def add_role(self, role_name, commit=False):#Add a role to the user
         role = Role.query.filter_by(role=role_name).first()
         if role and not self.has_role(role_name):
             user_role = User_Roles(user_id=self.id, role_id=role.id)
             db.session.add(user_role)
+            if commit:
+                db.session.commit()
 
     @validates('email')
     def validate_email(self, key, email):
@@ -62,7 +65,7 @@ class User(db.Model, SerializerMixin):
         cleaned_phone = ''.join(filter(str.isdigit, phone))
         if len(cleaned_phone) < 10:
             raise ValueError("Phone number must be at least 10 digits")
-        return phone
+        return cleaned_phone
 
 class Role(db.Model, SerializerMixin):
     __tablename__ = 'roles'
@@ -77,13 +80,11 @@ class Role(db.Model, SerializerMixin):
     def __repr__(self):
         return f"<Role {self.role}>"
 
-
     @validates('role')
     def validate_role(self, key, value):
         if value not in VALID_ROLES:
             raise ValueError(f"Invalid role: {value}. Must be one of {VALID_ROLES}")
         return value
-
 
 class User_Roles(db.Model,SerializerMixin):
     __tablename__ = "user_roles"
@@ -98,7 +99,6 @@ class User_Roles(db.Model,SerializerMixin):
     role = db.relationship("Role", back_populates="user_roles")
 
     serialize_rules = ('-user.user_roles', '-role.user_roles')
-
 
 class Password_reset_token(db.Model, SerializerMixin):
     __tablename__ = "reset_tokens"
@@ -119,6 +119,8 @@ class Password_reset_token(db.Model, SerializerMixin):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        if not self.token:
+            self.token = secrets.token_urlsafe(32) # generate a secure random token if not provided
         if not self.expires_at:
             self.expires_at = self.created_at + timedelta(hours=1) #expire 1 hour after creation
 
@@ -133,6 +135,12 @@ class Password_reset_token(db.Model, SerializerMixin):
 
     def is_valid(self):
         return not self.is_used and not self.is_expired()
+    
+    def mark_used(self, commit=False): # Mark token as used
+        self.is_used = True
+        if commit:
+            db.session.commit()
+
     
 class Space(db.Model, SerializerMixin):
     __tablename__ = "spaces"
