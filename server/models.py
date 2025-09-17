@@ -133,3 +133,67 @@ class Password_reset_token(db.Model, SerializerMixin):
 
     def is_valid(self):
         return not self.is_used and not self.is_expired()
+    
+class Space(db.Model, SerializerMixin):
+    __tablename__ = "spaces"
+
+    id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String, nullable=False)
+    description = db.Column(db.String, nullable=True)
+    price_per_hour = db.Column(db.Numeric, nullable=False)
+    status = db.Column(db.String, nullable=False, default='available')
+    images = db.Column(db.ARRAY(db.Text), default=[], nullable=True)
+    space_type = db.Column(db.String, nullable=False)
+    max_guests = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
+    owner = db.relationship("User", backref="spaces")
+
+    serialize_rules = ('-owner.spaces',)
+
+    def __repr__(self):
+        return f"<Space {self.title} owned by User {self.owner_id}>"
+
+    @validates('max_guests')
+    def validate_capacity(self, key, capacity):
+        if capacity < 1:
+            raise ValueError("Capacity must be at least 1")
+        return capacity
+    
+    @validates('price_per_hour')
+    def validate_price(self, key, price):
+        if price < 0:
+            raise ValueError("Price per hour must be non-negative")
+        return price
+    
+    @validates('status')
+    def validate_status(self, key, status):
+        valid_statuses = {'available', 'booked'}
+        if status not in valid_statuses:
+            raise ValueError(f"Invalid status: {status}. Must be one of {valid_statuses}")
+        return status
+    
+class Review(db.Model, SerializerMixin):
+    __tablename__ = "reviews"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.String(250), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
+    user = db.relationship("User", backref="reviews")
+    booking = db.relationship("Booking", backref="review")
+
+    serialize_rules = ('-user.user_roles', '-booking.review')
+
+    def __repr__(self):
+        return f"<Review {self.id} by User {self.user_id}>"
+
+    @validates('rating')
+    def validate_rating(self, key, rating):
+        if not (1 <= rating <= 5):
+            raise ValueError("Rating must be between 1 and 5")
+        return rating
