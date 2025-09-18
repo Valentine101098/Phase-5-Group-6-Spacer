@@ -27,7 +27,7 @@ class User(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     user_roles = db.relationship("User_Roles", back_populates= "user", cascade="all, delete-orphan")
-    reset_tokens = db.relationship("Password_reset_token", back_populates="user")
+    reset_tokens = db.relationship("PasswordResetToken", back_populates="user")
     bookings = db.relationship("Booking", back_populates="user")
     agreement_templates = db.relationship("AgreementTemplate", back_populates="owner")
     agreements_issued = db.relationship("AgreementInstance", foreign_keys="AgreementInstance.owner_id", back_populates="owner")
@@ -104,7 +104,7 @@ class User_Roles(db.Model,SerializerMixin):
 
     serialize_rules = ('-user.user_roles', '-role.user_roles')
 
-class Password_reset_token(db.Model, SerializerMixin):
+class PasswordResetToken(db.Model, SerializerMixin):
     __tablename__ = "reset_tokens"
 
     id = db.Column(db.Integer,primary_key=True)
@@ -119,7 +119,7 @@ class Password_reset_token(db.Model, SerializerMixin):
     serialize_rules = ('-user.reset_tokens')
 
     def __repr__(self):
-        return f"<Password_reset_token {self.token}>"
+        return f"<PasswordResetToken {self.token}>"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -139,13 +139,13 @@ class Password_reset_token(db.Model, SerializerMixin):
 
     def is_valid(self):
         return not self.is_used and not self.is_expired()
-    
+
     def mark_used(self, commit=False): # Mark token as used
         self.is_used = True
         if commit:
             db.session.commit()
 
-    
+
 class Space(db.Model, SerializerMixin):
     __tablename__ = "spaces"
 
@@ -175,20 +175,20 @@ class Space(db.Model, SerializerMixin):
         if capacity < 1:
             raise ValueError("Capacity must be at least 1")
         return capacity
-    
+
     @validates('price_per_hour')
     def validate_price(self, key, price):
         if price < 0:
             raise ValueError("Price per hour must be non-negative")
         return price
-    
+
     @validates('status')
     def validate_status(self, key, status):
         valid_statuses = {'available', 'booked'}
         if status not in valid_statuses:
             raise ValueError(f"Invalid status: {status}. Must be one of {valid_statuses}")
         return status
-    
+
 class Review(db.Model, SerializerMixin):
     __tablename__ = "reviews"
 
@@ -316,7 +316,7 @@ class AgreementInstance(db.Model, SerializerMixin):
     client_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     space_id = db.Column(db.Integer, db.ForeignKey("spaces.id"), nullable=False)
     booking_id = db.Column(db.Integer, db.ForeignKey("bookings.id"), unique=True, nullable=False)
-    terms = db.Column(db.Text, nullable=False) 
+    terms = db.Column(db.Text, nullable=False)
     status = db.Column(
         Enum("draft", "accepted", "declined", name="agreement_instance_status"),
         nullable=False,
@@ -362,7 +362,7 @@ class Invoice(db.Model, SerializerMixin):
     __table_args__ = (
         CheckConstraint("amount >= 0", name="ck_invoice_non_negative_amount"),
         CheckConstraint(
-            "(status != 'paid') OR (paid_at IS NOT NULL)", 
+            "(status != 'paid') OR (paid_at IS NOT NULL)",
             name="ck_invoice_paid_requires_paid_at"
         ),
     )
@@ -382,10 +382,10 @@ class Invoice(db.Model, SerializerMixin):
         valid_statuses = ["unpaid", "paid", "failed"]
         if status not in valid_statuses:
             raise ValueError(f"Invalid invoice status. Must be one of: {', '.join(valid_statuses)}")
-        
+
         if status == "paid" and not self.paid_at:
             raise ValueError("Invoice cannot be marked as paid without a payment date")
-        
+
         return status
 
     @validates('paid_at')
