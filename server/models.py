@@ -104,7 +104,7 @@ class User_Roles(db.Model,SerializerMixin):
 
     serialize_rules = ('-user.user_roles', '-role.user_roles')
 
-class Password_reset_token(db.Model, SerializerMixin):
+class PasswordResetToken(db.Model, SerializerMixin):
     __tablename__ = "reset_tokens"
 
     id = db.Column(db.Integer,primary_key=True)
@@ -139,13 +139,13 @@ class Password_reset_token(db.Model, SerializerMixin):
 
     def is_valid(self):
         return not self.is_used and not self.is_expired()
-    
+
     def mark_used(self, commit=False): # Mark token as used
         self.is_used = True
         if commit:
             db.session.commit()
 
-    
+
 class Space(db.Model, SerializerMixin):
     __tablename__ = "spaces"
 
@@ -175,20 +175,20 @@ class Space(db.Model, SerializerMixin):
         if capacity < 1:
             raise ValueError("Capacity must be at least 1")
         return capacity
-    
+
     @validates('price_per_hour')
     def validate_price(self, key, price):
         if price < 0:
             raise ValueError("Price per hour must be non-negative")
         return price
-    
+
     @validates('status')
     def validate_status(self, key, status):
         valid_statuses = {'available', 'booked'}
         if status not in valid_statuses:
             raise ValueError(f"Invalid status: {status}. Must be one of {valid_statuses}")
         return status
-    
+
 class Review(db.Model, SerializerMixin):
     __tablename__ = "reviews"
 
