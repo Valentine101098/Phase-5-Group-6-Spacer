@@ -50,7 +50,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      SQLALCHEMY_DATABASE_URI: postgresql://postgres:postgres@localhost:5432/test_db
       FLASK_ENV: testing
     steps:
       - name: Checkout code
