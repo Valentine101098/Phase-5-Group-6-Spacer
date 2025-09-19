@@ -24,11 +24,13 @@ def test_assign_client_role(session):
     session.add_all([user, role])
     session.commit()
 
-    user.add_role(role)
+    # Pass role name string instead of object
+    user.add_role("client")
     session.commit()
 
-    assert role in user.roles
+    assert any(r.role == "client" for r in user.roles)
     assert user.roles[0].role == "client"  
+
 
 # Ensure admin role cannot be combined with client/owner
 def test_admin_cannot_have_other_roles(session):
@@ -43,13 +45,14 @@ def test_admin_cannot_have_other_roles(session):
     session.commit()
 
     # Add admin first
-    user.add_role(admin_role)
+    user.add_role("admin")
     session.commit()
-    assert admin_role in user.roles
+    assert any(r.role == "admin" for r in user.roles)
 
     # Adding client should fail
     with pytest.raises(ValueError):
-        user.add_role(client_role)
+        user.add_role("client")
+
 
 # Ensure a user cannot have both client and owner roles
 def test_client_and_owner_conflict(session):
@@ -63,10 +66,11 @@ def test_client_and_owner_conflict(session):
     session.add_all([user, client_role, owner_role])
     session.commit()
 
-    user.add_role(client_role)
+    # Assign client role
+    user.add_role("client")
     session.commit()
-    assert client_role in user.roles
+    assert any(r.role == "client" for r in user.roles)
 
     # Adding owner should fail
     with pytest.raises(ValueError):
-        user.add_role(owner_role)
+        user.add_role("owner")
