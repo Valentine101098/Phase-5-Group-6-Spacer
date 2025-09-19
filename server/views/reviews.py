@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from ..models import Review, User, Booking, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-reviews_bp = Blueprint('reviews', __name__, url_prefix='/reviews')  
+reviews_bp = Blueprint('reviews', __name__)  
 
 # Create a new review
 @reviews_bp.route('/', methods=['POST'])
