@@ -5,7 +5,7 @@ from models import User, PasswordResetToken
 class TestPasswordResetToken:
     
     @pytest.fixture
-    def test_user(self, session)
+    def test_user(self, session):
         user = User(
             first_name="Group",
             last_name="Six",
