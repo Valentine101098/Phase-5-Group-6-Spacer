@@ -1,135 +1,124 @@
 import pytest
-from models import User, db
 import re
+from models import User, db, bcrypt
 
-class TestUserValidations:
-    
-    def test_user_email_validation_valid(self, session):
+def test_table_creation(app):
    
-        valid_emails = [
-            "test@example.com",
-            "test.user@example.co.uk",
-            "test_user+tag@example.org",
-            "test123@sub.domain.com"
-        ]
-        
-        for i, email in enumerate(valid_emails):
-            user = User(
-                first_name=f"Test{i}",
-                last_name="User",
-                email=email,
-                phone_number=f"123456789{i}",
-                password_hash=f"hash{i}"
-            )
-            session.add(user)
-        
+    with app.app_context():
+        assert db.engine.has_table('users') is True
+        print("✓ Users table created successfully")
+
+def test_user_email_validation():
+
+    user = User()
+    
+    # Test valid emails
+    valid_emails = [
+        "test@example.com",
+        "test.user@example.co.uk", 
+        "test_user+tag@example.org",
+        "test123@sub.domain.com"
+    ]
+    
+    for email in valid_emails:
+        result = user.validate_email('email', email)
+        assert result == email.lower()
+    
+    # Test invalid emails
+    invalid_emails = [
+        "invalid",
+        "invalid@",
+        "invalid@domain",
+        "@domain.com",
+        "invalid@.com"
+    ]
+    
+    for email in invalid_emails:
+        with pytest.raises(ValueError, match="Invalid email format"):
+            user.validate_email('email', email)
+
+def test_user_phone_validation():
+
+    user = User()
+    
+    # Test valid phone numbers
+    test_cases = [
+        ("1234567890", "1234567890"),
+        ("(123) 456-7890", "1234567890"),
+        ("+1 123-456-7890", "11234567890"),
+        ("123.456.7890", "1234567890")
+    ]
+    
+    for input_phone, expected in test_cases:
+        result = user.validate_phone('phone_number', input_phone)
+        assert result == expected
+    
+    # Test invalid phone numbers
+    invalid_phones = ["123", "abc1234567", "123456", ""]
+    
+    for phone in invalid_phones:
+        with pytest.raises(ValueError, match="Phone number must be at least 10 digits"):
+            user.validate_phone('phone_number', phone)
+
+def test_user_password_hashing():
+ 
+    user = User()
+    
+    # Test password hashing
+    password = "securepassword123"
+    user.set_password(password)
+    
+    assert user.password_hash is not None
+    assert user.password_hash != password
+    assert user.check_password(password) is True
+    assert user.check_password("wrongpassword") is False
+
+def test_user_repr():
+   
+    user = User(first_name="John", last_name="Doe")
+    assert repr(user) == "<User John Doe>"
+
+def test_user_creation_and_save(session):
+  
+    user = User(
+        first_name="Test",
+        last_name="User",
+        email="test@example.com",
+        phone_number="1234567890"
+    )
+    user.set_password("password123")
+    
+    session.add(user)
+    session.commit()
+    
+    # Verify user was saved
+    saved_user = User.query.filter_by(email="test@example.com").first()
+    assert saved_user is not None
+    assert saved_user.first_name == "Test"
+    assert saved_user.last_name == "User"
+    assert saved_user.check_password("password123") is True
+
+def test_user_unique_email_constraint(session):
+    user1 = User(
+        first_name="User1",
+        last_name="Test",
+        email="duplicate@example.com",
+        phone_number="1111111111"
+    )
+    user1.set_password("password1")
+    
+    user2 = User(
+        first_name="User2",
+        last_name="Test",
+        email="duplicate@example.com",  # Same email
+        phone_number="2222222222"
+    )
+    user2.set_password("password2")
+    
+    session.add(user1)
+    session.commit()
+    
+    session.add(user2)
+    with pytest.raises(Exception):  # Should raise integrity error
         session.commit()
-        assert User.query.count() == len(valid_emails)
-        session.rollback()
-    
-    def test_user_email_validation_invalid(self):
-       
-        invalid_emails = [
-            "invalid",
-            "invalid@",
-            "invalid@domain",
-            "@domain.com",
-            "invalid@.com"
-        ]
-        
-        for email in invalid_emails:
-            user = User(
-                first_name="Test",
-                last_name="User",
-                email=email,
-                phone_number="1234567890",
-                password_hash="test_hash"
-            )
-            
-            with pytest.raises(ValueError, match="Invalid email format"):
-                user.validate_email('email', email)
-    
-    def test_user_email_normalization(self, session):
-      
-        user = User(
-            first_name="Test",
-            last_name="User",
-            email="Test.User@Example.COM",
-            phone_number="1234567890",
-            password_hash="test_hash"
-        )
-        session.add(user)
-        session.commit()
-        
-        assert user.email == "test.user@example.com"
-        session.rollback()
-    
-    def test_user_phone_validation_valid(self, session):
-        
-        test_cases = [
-            ("1234567890", "1234567890"),
-            ("(123) 456-7890", "1234567890"),
-            ("+1 123-456-7890", "11234567890"),
-            ("123.456.7890", "1234567890")
-        ]
-        
-        for i, (input_phone, expected) in enumerate(test_cases):
-            user = User(
-                first_name=f"Test{i}",
-                last_name="User",
-                email=f"test{i}@example.com",
-                phone_number=input_phone,
-                password_hash=f"hash{i}"
-            )
-            session.add(user)
-            session.commit()
-            
-            user_from_db = User.query.filter_by(email=f"test{i}@example.com").first()
-            assert user_from_db.phone_number == expected
-            session.rollback()
-    
-    def test_user_phone_validation_invalid(self):
-      
-        invalid_phones = [
-            "123",
-            "abc1234567",
-            "123456",  # too short
-            ""  # empty
-        ]
-        
-        for phone in invalid_phones:
-            user = User(
-                first_name="Test",
-                last_name="User",
-                email=f"test{phone}@example.com",
-                phone_number=phone,
-                password_hash="test_hash"
-            )
-            
-            with pytest.raises(ValueError, match="Phone number must be at least 10 digits"):
-                user.validate_phone('phone_number', phone)
-    
-    def test_user_unique_email_constraint(self, session):
-       
-        user1 = User(
-            first_name="User1",
-            last_name="Test",
-            email="duplicate@example.com",
-            phone_number="1111111111",
-            password_hash="hash1"
-        )
-        user2 = User(
-            first_name="User2",
-            last_name="Test",
-            email="duplicate@example.com",  # Same email
-            phone_number="2222222222",
-            password_hash="hash2"
-        )
-        
-        session.add(user1)
-        session.commit()
-        
-        session.add(user2)
-        with pytest.raises(Exception):  # Should raise integrity error
-            session.commit()
-        session.rollback()
+    session.rollback()
