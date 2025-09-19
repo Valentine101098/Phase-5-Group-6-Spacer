@@ -19,8 +19,9 @@ flask-bcrypt = "*"
 flask-sqlalchemy = "*"
 sqlalchemy-serializer = "*"
 flask = "*"
-pytest = "*"
 python-dotenv = "*"
+pytest = "*"
+pytest-flask = "*"
 
 [dev-packages]
 pytest = "*"
