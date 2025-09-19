@@ -7,7 +7,7 @@ from flask_jwt_extended import (
 from functools import wraps
 from datetime import timedelta, datetime, timezone
 import secrets
-from ..models import db, User, Role, User_Roles, PasswordResetToken, VALID_ROLES
+from models import db, User, Role, User_Roles, PasswordResetToken, VALID_ROLES
 import re
 
 # Create Blueprint
