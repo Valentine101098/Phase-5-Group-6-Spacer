@@ -1,5 +1,6 @@
 import pytest
 from flask import Flask
+from sqlalchemy.orm import sessionmaker, scoped_session
 from models import db
 import os
 from dotenv import load_dotenv
@@ -10,12 +11,9 @@ load_dotenv()
 @pytest.fixture(scope="session")
 def app():
     app = Flask(__name__)
-
-    # Use the Postgres DB URI from .env (must point to a TEST database, not dev/prod!)
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["TESTING"] = True
-
     db.init_app(app)
 
     with app.app_context():
@@ -23,22 +21,20 @@ def app():
         yield app
         db.drop_all()
 
-# Provide a fresh database session for each test
+# Creates a clean database session for each test
 @pytest.fixture(scope="function")
 def session(app):
-    connection = db.engine.connect()
-    transaction = connection.begin()
+    with app.app_context():
+        connection = db.engine.connect()
+        transaction = connection.begin()
 
-    # Bind a new scoped session to this connection
-    options = dict(bind=connection, binds={})
-    sess = db.create_scoped_session(options=options)
+        # Create a new session bound to this connection
+        Session = scoped_session(sessionmaker(bind=connection))
+        sess = Session()
 
-    # Swap out the global session for this test
-    db.session = sess
+        yield sess
 
-    yield sess
-
-    # Cleanup — rollback everything after the test
-    transaction.rollback()
-    connection.close()
-    sess.remove()
+        # Rollback everything after each test
+        sess.close()
+        transaction.rollback()
+        connection.close()
