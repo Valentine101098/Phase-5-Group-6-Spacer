@@ -5,7 +5,7 @@ import os
 
 load_dotenv()
 
-# Import your models and db instance
+# Import your actual models and db instance
 from models import db, bcrypt, User, Role, User_Roles, PasswordResetToken, VALID_ROLES
 
 def create_app():
@@ -17,6 +17,7 @@ def create_app():
 
 @pytest.fixture(scope='session')
 def app():
+    """Create application for the tests."""
     app = create_app()
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
@@ -39,26 +40,33 @@ def app():
 
 @pytest.fixture(scope='function')
 def client(app):
+    """Create test client."""
     return app.test_client()
 
 @pytest.fixture(scope='function')
 def session(app):
+    """Create a new database session for each test with transaction rollback."""
+    # Start a transaction
     connection = db.engine.connect()
     transaction = connection.begin()
     
-    # Create a session using the connection
-    session = db.create_scoped_session(options={"bind": connection})
+    # Bind the session to the connection
+    options = dict(bind=connection, binds={})
+    session = db._make_scoped_session(options=options)
+    
+    # Replace the default session with our scoped session
     db.session = session
     
     yield session
     
-    # Cleanup
+    # Cleanup - rollback transaction and close connection
     transaction.rollback()
     connection.close()
     session.remove()
 
 @pytest.fixture
 def init_database(session):
+    """Initialize the database with some test data."""
     # This will run before each test that uses it
     yield session
     # Cleanup happens in the session fixture
