@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Create and configure a new app instance for tests
 @pytest.fixture(scope="session")
 def app():
-    """Create and configure a new app instance for tests."""
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -20,20 +20,18 @@ def app():
         yield app
         db.drop_all()
 
-# Creates a new database session for a test
+# Creates a clean database session for each test
 @pytest.fixture(scope="function")
 def session(app):
     with app.app_context():
         connection = db.engine.connect()
         transaction = connection.begin()
 
-        options = dict(bind=connection, binds={})
-        session = db.create_scoped_session(options=options)
-
-        db.session = session
+        session = db.session
 
         yield session
 
-        session.close()
+        # Roll back changes after test
+        session.rollback()
         transaction.rollback()
         connection.close()
