@@ -1,7 +1,7 @@
 import pytest
 import time
 from flask import Flask
-from ..models import db, User
+from models import db, User
 from dotenv import load_dotenv
 import os
 
