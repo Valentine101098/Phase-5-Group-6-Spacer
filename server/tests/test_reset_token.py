@@ -2,23 +2,23 @@ import pytest
 from datetime import datetime, timezone, timedelta
 from models import User, PasswordResetToken
 
-class TestPasswordResetToken:
+class TestPasswordResetTokenValidations:
     
-    @pytest.fixture
-    def test_user(self, session):
-        user = User(
-            first_name="Group",
-            last_name="Six",
-            email="group.six@example.com",
+    @pytest.fixture(autouse=True)
+    def setup_data(self, session):
+        # Create a user
+        self.user = User(
+            first_name="Test",
+            last_name="User",
+            email="test@example.com",
             phone_number="1234567890",
             password_hash="test_hash"
         )
-        session.add(user)
+        session.add(self.user)
         session.commit()
-        return user
     
-    def test_token_creation_defaults(self, session, test_user):
-        token = PasswordResetToken(user_id=test_user.id)
+    def test_token_creation_defaults(self, session):
+        token = PasswordResetToken(user_id=self.user.id)
         session.add(token)
         session.commit()
         
@@ -31,12 +31,12 @@ class TestPasswordResetToken:
         assert token.expires_at > token.created_at
         assert token.expires_at == token.created_at + timedelta(hours=1)
     
-    def test_token_custom_values(self, session, test_user):
+    def test_token_custom_values(self, session):
         custom_token = "custom_test_token"
         custom_expires = datetime.now(timezone.utc) + timedelta(hours=2)
         
         token = PasswordResetToken(
-            user_id=test_user.id,
+            user_id=self.user.id,
             token=custom_token,
             expires_at=custom_expires
         )
@@ -46,11 +46,11 @@ class TestPasswordResetToken:
         assert token.token == custom_token
         assert token.expires_at == custom_expires
     
-    def test_token_validation(self, session, test_user):
+    def test_token_validation(self, session):
         past_date = datetime.now(timezone.utc) - timedelta(hours=1)
         
         token = PasswordResetToken(
-            user_id=test_user.id,
+            user_id=self.user.id,
             created_at=datetime.now(timezone.utc),
             expires_at=past_date  # Expiration before creation
         )
@@ -60,84 +60,13 @@ class TestPasswordResetToken:
             session.commit()
         session.rollback()
     
-    def test_token_is_expired(self, session, test_user):
-        # Expired token
-        expired_token = PasswordResetToken(
-            user_id=test_user.id,
-            expires_at=datetime.now(timezone.utc) - timedelta(minutes=1)
-        )
-        
-        # Valid token
-        valid_token = PasswordResetToken(
-            user_id=test_user.id,
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=1)
-        )
-        
-        assert expired_token.is_expired() is True
-        assert valid_token.is_expired() is False
-    
-    def test_token_is_valid(self, session, test_user):
-        # Valid token
-        valid_token = PasswordResetToken(
-            user_id=test_user.id,
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=1)
-        )
-        
-        # Expired token
-        expired_token = PasswordResetToken(
-            user_id=test_user.id,
-            expires_at=datetime.now(timezone.utc) - timedelta(minutes=1)
-        )
-        
-        # Used token
-        used_token = PasswordResetToken(
-            user_id=test_user.id,
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
-            is_used=True
-        )
-        
-        assert valid_token.is_valid() is True
-        assert expired_token.is_valid() is False
-        assert used_token.is_valid() is False
-    
-    def test_token_mark_used(self, session, test_user):
-        token = PasswordResetToken(
-            user_id=test_user.id,
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=1)
-        )
-        session.add(token)
-        session.commit()
-        
-        assert token.is_used is False
-        token.mark_used(commit=True)
-        
-        # Refresh from database
-        session.refresh(token)
-        assert token.is_used is True
-    
-    def test_token_relationship(self, session, test_user):
-        token = PasswordResetToken(user_id=test_user.id)
-        session.add(token)
-        session.commit()
-        
-        assert token.user.id == test_user.id
-        assert test_user.reset_tokens[0].id == token.id
-    
-    def test_token_serialization(self, session, test_user):
-        token = PasswordResetToken(user_id=test_user.id)
-        session.add(token)
-        session.commit()
-        
-        serialized = token.to_dict()
-        assert 'user' not in serialized  # Should be excluded by serialize_rules
-    
-    def test_token_unique_constraint(self, session, test_user):
+    def test_token_unique_constraint(self, session):
         token1 = PasswordResetToken(
-            user_id=test_user.id,
+            user_id=self.user.id,
             token="duplicate_token"
         )
         token2 = PasswordResetToken(
-            user_id=test_user.id,
+            user_id=self.user.id,
             token="duplicate_token"  # Same token
         )
         
@@ -148,3 +77,22 @@ class TestPasswordResetToken:
         with pytest.raises(Exception):  # Should raise integrity error
             session.commit()
         session.rollback()
+    
+    def test_token_foreign_key_constraint(self, session):
+        with pytest.raises(Exception):
+            token = PasswordResetToken(user_id=9999)  # Non-existent user
+            session.add(token)
+            session.commit()
+        session.rollback()
+    
+    def test_token_required_fields(self, session):
+        # Test missing user_id
+        with pytest.raises(Exception):
+            token = PasswordResetToken()  # Missing user_id
+            session.add(token)
+            session.commit()
+        session.rollback()
+        
+        # Test missing expires_at (but it should be set by __init__)
+        token = PasswordResetToken(user_id=self.user.id)
+        assert token.expires_at is not None

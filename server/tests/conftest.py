@@ -5,8 +5,8 @@ import os
 
 load_dotenv()
 
-# Import your actual models and db instance
-from models import db, bcrypt, User, Role, User_Roles, PasswordResetToken, VALID_ROLES
+# Import your models and db instance
+from models import db, User, Role, User_Roles, PasswordResetToken, VALID_ROLES
 
 def create_app():
     app = Flask(__name__)
@@ -17,13 +17,11 @@ def create_app():
 
 @pytest.fixture(scope='session')
 def app():
-    """Create application for the tests."""
     app = create_app()
     app.config['TESTING'] = True
-    app.config['WTF_CSRF_ENABLED'] = False
     
-    # Create test database
     with app.app_context():
+        # Create test database tables
         db.create_all()
         
         # Create default roles
@@ -35,30 +33,26 @@ def app():
         
         yield app
         
-        # Teardown
+        # Teardown - drop all tables
         db.drop_all()
 
 @pytest.fixture(scope='function')
-def client(app):
-    """Create test client."""
-    return app.test_client()
-
-@pytest.fixture(scope='function')
 def session(app):
-    """Create a new database session for each test with transaction rollback."""
-    # This approach uses the standard db.session but handles rollback manually
-    
-    # Start a nested transaction
-    connection = db.engine.connect()
-    transaction = connection.begin()
-    
-    # Bind the session to the connection
-    db.session.close()  # Close any existing session
-    db.session = db.create_session(options={'bind': connection})
-    
-    yield db.session
-    
-    # Cleanup - rollback transaction and close connection
-    transaction.rollback()
-    connection.close()
-    db.session.remove()
+    with app.app_context():
+        # Start a transaction
+        connection = db.engine.connect()
+        transaction = connection.begin()
+        
+        # Bind the session to this connection
+        options = dict(bind=connection, binds={})
+        testing_session = db.create_scoped_session(options=options)
+        
+        # Replace the default session
+        db.session = testing_session
+        
+        yield testing_session
+        
+        # Rollback and cleanup
+        transaction.rollback()
+        connection.close()
+        testing_session.remove()
