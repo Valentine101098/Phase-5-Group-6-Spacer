@@ -1,7 +1,7 @@
 from flask_bcrypt import Bcrypt
 from sqlalchemy_serializer import SerializerMixin
 from datetime import timezone, datetime, date, timedelta
-from sqlalchemy import Enum
+from sqlalchemy import Enum, CheckConstraint, UniqueConstraint
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
 import re
@@ -27,7 +27,11 @@ class User(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     user_roles = db.relationship("User_Roles", back_populates= "user", cascade="all, delete-orphan")
-    reset_tokens = db.relationship("Password_reset_token", back_populates="user")
+    reset_tokens = db.relationship("PasswordResetToken", back_populates="user")
+    bookings = db.relationship("Booking", back_populates="user")
+    agreement_templates = db.relationship("AgreementTemplate", back_populates="owner")
+    agreements_issued = db.relationship("AgreementInstance", foreign_keys="AgreementInstance.owner_id", back_populates="owner")
+    agreements_received = db.relationship("AgreementInstance", foreign_keys="AgreementInstance.client_id", back_populates="client")
     serialize_rules = ('-password_hash', '-reset_tokens.user', '-user_roles.user')
 
     def __repr__(self):
@@ -100,7 +104,7 @@ class User_Roles(db.Model,SerializerMixin):
 
     serialize_rules = ('-user.user_roles', '-role.user_roles')
 
-class Password_reset_token(db.Model, SerializerMixin):
+class PasswordResetToken(db.Model, SerializerMixin):
     __tablename__ = "reset_tokens"
 
     id = db.Column(db.Integer,primary_key=True)
@@ -115,7 +119,7 @@ class Password_reset_token(db.Model, SerializerMixin):
     serialize_rules = ('-user.reset_tokens')
 
     def __repr__(self):
-        return f"<Password_reset_token {self.token}>"
+        return f"<PasswordResetToken {self.token}>"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -135,13 +139,13 @@ class Password_reset_token(db.Model, SerializerMixin):
 
     def is_valid(self):
         return not self.is_used and not self.is_expired()
-    
+
     def mark_used(self, commit=False): # Mark token as used
         self.is_used = True
         if commit:
             db.session.commit()
 
-    
+
 class Space(db.Model, SerializerMixin):
     __tablename__ = "spaces"
 
@@ -157,6 +161,9 @@ class Space(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     owner = db.relationship("User", backref="spaces")
+    bookings = db.relationship("Booking", back_populates="space")
+    agreement_templates = db.relationship("AgreementTemplate", back_populates="space")
+    agreement_instances = db.relationship("AgreementInstance", back_populates="space")
 
     serialize_rules = ('-owner.spaces',)
 
@@ -168,20 +175,20 @@ class Space(db.Model, SerializerMixin):
         if capacity < 1:
             raise ValueError("Capacity must be at least 1")
         return capacity
-    
+
     @validates('price_per_hour')
     def validate_price(self, key, price):
         if price < 0:
             raise ValueError("Price per hour must be non-negative")
         return price
-    
+
     @validates('status')
     def validate_status(self, key, status):
         valid_statuses = {'available', 'booked'}
         if status not in valid_statuses:
             raise ValueError(f"Invalid status: {status}. Must be one of {valid_statuses}")
         return status
-    
+
 class Review(db.Model, SerializerMixin):
     __tablename__ = "reviews"
 
@@ -193,7 +200,7 @@ class Review(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     user = db.relationship("User", backref="reviews")
-    booking = db.relationship("Booking", backref="review")
+    booking = db.relationship("Booking", back_populates="review")
 
     serialize_rules = ('-user.user_roles', '-booking.review')
 
@@ -205,3 +212,193 @@ class Review(db.Model, SerializerMixin):
         if not (1 <= rating <= 5):
             raise ValueError("Rating must be between 1 and 5")
         return rating
+
+class Booking(db.Model, SerializerMixin):
+    __tablename__ = "bookings"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    space_id = db.Column(db.Integer, db.ForeignKey("spaces.id"), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
+    end_time = db.Column(db.DateTime, nullable=False)
+    total_amount = db.Column(db.Numeric, nullable=False)
+    status = db.Column(Enum("pending", "confirmed", "cancelled", name="booking_status"), nullable=False, default="pending")
+    estimated_guests = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
+    __table_args__ = (
+        CheckConstraint("end_time > start_time", name="ck_booking_valid_time"),
+        CheckConstraint("total_amount >= 0", name="ck_booking_non_negative_amount"),
+        CheckConstraint("estimated_guests IS NULL OR estimated_guests >= 1", name="ck_booking_estimated_guests_positive"),
+    )
+
+    user = db.relationship("User", back_populates="bookings")
+    space = db.relationship("Space", back_populates="bookings")
+    agreement_instance = db.relationship(
+        "AgreementInstance", back_populates="booking", uselist=False, cascade="all, delete-orphan"
+    )
+    invoice = db.relationship(
+        "Invoice", back_populates="booking", uselist=False, cascade="all, delete-orphan"
+    )
+    review = db.relationship(
+        "Review", back_populates="booking", uselist=False, cascade="all, delete-orphan"
+    )
+
+    @validates('start_time')
+    def validate_start_time(self, key, value):
+        if value < datetime.now(timezone.utc).replace(second=0, microsecond=0):
+            raise ValueError("Booking start time cannot be in the past")
+        return value
+
+    @validates('end_time')
+    def validate_end_time(self, key, value):
+        if self.start_time and value:
+            if value <= self.start_time:
+                raise ValueError("End time must be after start time")
+
+            duration = value - self.start_time
+            if duration.total_seconds() < 3600:
+                raise ValueError("Booking duration must be at least 1 hour")
+        return value
+
+
+    @validates('total_amount')
+    def validate_total_amount(self, key, amount):
+        if amount is None:
+            raise ValueError("Total amount is required")
+        if float(amount) < 0:
+            raise ValueError("Total amount cannot be negative")
+        return amount
+
+    @validates('estimated_guests')
+    def validate_estimated_guests(self, key, guests):
+        if guests is not None:
+            if guests < 1:
+                raise ValueError("Estimated guests must be at least 1")
+        return guests
+
+    @validates('status')
+    def validate_status(self, key, status):
+        valid_statuses = ["pending", "confirmed", "cancelled"]
+        if status not in valid_statuses:
+            raise ValueError(f"Invalid booking status. Must be one of: {', '.join(valid_statuses)}")
+        return status
+
+class AgreementTemplate(db.Model, SerializerMixin):
+    __tablename__ = "agreement_templates"
+
+    id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    space_id = db.Column(db.Integer, db.ForeignKey("spaces.id"), nullable=False)
+    terms = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
+    owner = db.relationship("User", back_populates="agreement_templates")
+    space = db.relationship("Space", back_populates="agreement_templates")
+    instances = db.relationship("AgreementInstance", back_populates="template", cascade="all, delete-orphan")
+
+    @validates("terms")
+    def validate_terms(self, key, terms):
+        if not terms or not terms.strip():
+            raise ValueError("Agreement template terms cannot be empty")
+        if len(terms.strip()) < 10:
+            raise ValueError("Agreement template terms must be at least 10 characters long")
+        if len(terms) > 50000:
+            raise ValueError("Agreement template terms exceed maximum length")
+        return terms.strip()
+
+class AgreementInstance(db.Model, SerializerMixin):
+    __tablename__ = "agreement_instances"
+
+    id = db.Column(db.Integer, primary_key=True)
+    template_id = db.Column(db.Integer, db.ForeignKey("agreement_templates.id"), nullable=False)
+    owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    space_id = db.Column(db.Integer, db.ForeignKey("spaces.id"), nullable=False)
+    booking_id = db.Column(db.Integer, db.ForeignKey("bookings.id"), unique=True, nullable=False)
+    terms = db.Column(db.Text, nullable=False)
+    status = db.Column(
+        Enum("draft", "accepted", "declined", name="agreement_instance_status"),
+        nullable=False,
+        default="draft"
+    )
+    signed_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
+    template = db.relationship("AgreementTemplate", back_populates="instances")
+    owner = db.relationship("User", foreign_keys=[owner_id], back_populates="agreements_issued")
+    client = db.relationship("User", foreign_keys=[client_id], back_populates="agreements_received")
+    space = db.relationship("Space", back_populates="agreement_instances")
+    booking = db.relationship("Booking", back_populates="agreement_instance")
+
+    __table_args__ = (
+        CheckConstraint(
+            "(status != 'accepted') OR (signed_at IS NOT NULL)",
+            name="ck_agreement_instance_signed_at_required"
+        ),
+    )
+
+    @validates("status")
+    def validate_status(self, key, status):
+        valid_statuses = ["draft", "accepted", "declined"]
+        if status not in valid_statuses:
+            raise ValueError(f"Invalid agreement status. Must be one of: {', '.join(valid_statuses)}")
+        if status == "accepted" and not self.signed_at:
+            raise ValueError("Agreement cannot be accepted without a signature date")
+        return status
+
+class Invoice(db.Model, SerializerMixin):
+    __tablename__ = "invoices"
+
+    id = db.Column(db.Integer, primary_key=True)
+    booking_id = db.Column(db.Integer, db.ForeignKey("bookings.id"), unique=True, nullable=False)
+    amount = db.Column(db.Numeric, nullable=False)
+    status = db.Column(Enum("unpaid", "paid", "failed", name="invoice_status"), nullable=False, default="unpaid")
+    payment_method = db.Column(Enum("credit_card", "mpesa", "paypal", "simulated", name="payment_method"))
+    transaction_id = db.Column(db.String, unique=True)
+    paid_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
+    __table_args__ = (
+        CheckConstraint("amount >= 0", name="ck_invoice_non_negative_amount"),
+        CheckConstraint(
+            "(status != 'paid') OR (paid_at IS NOT NULL)",
+            name="ck_invoice_paid_requires_paid_at"
+        ),
+    )
+
+    booking = db.relationship("Booking", back_populates="invoice")
+
+    @validates('amount')
+    def validate_amount(self, key, amount):
+        if amount is None:
+            raise ValueError("Invoice amount is required")
+        if float(amount) < 0:
+            raise ValueError("Invoice amount cannot be negative")
+        return amount
+
+    @validates('status')
+    def validate_status(self, key, status):
+        valid_statuses = ["unpaid", "paid", "failed"]
+        if status not in valid_statuses:
+            raise ValueError(f"Invalid invoice status. Must be one of: {', '.join(valid_statuses)}")
+
+        if status == "paid" and not self.paid_at:
+            raise ValueError("Invoice cannot be marked as paid without a payment date")
+
+        return status
+
+    @validates('paid_at')
+    def validate_paid_at(self, key, paid_at):
+        if paid_at is not None:
+            if paid_at > datetime.now(timezone.utc):
+                raise ValueError("Payment date cannot be in the future")
+        return paid_at
+
+    @validates('payment_method')
+    def validate_payment_method(self, key, payment_method):
+        if payment_method is not None:
+            valid_methods = ["credit_card", "mpesa", "paypal", "simulated"]
+            if payment_method not in valid_methods:
+                raise ValueError(f"Invalid payment method. Must be one of: {', '.join(valid_methods)}")
+        return payment_method
