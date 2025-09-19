@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from ..models import Review, User, Booking, db
+from server.models import Review, User, Booking, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 reviews_bp = Blueprint('reviews', __name__)  
