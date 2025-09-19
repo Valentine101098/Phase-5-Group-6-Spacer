@@ -15,6 +15,7 @@ def create_app():
     return app
 
 # Ensure reset token can be generated and verified correctly
+@pytest.mark.usefixtures("session")
 def test_reset_token_generation_and_verification(session):
     user = User(first_name="Group", last_name="Six",
                 email="group6_reset@example.com", phone_number="0712345681")
