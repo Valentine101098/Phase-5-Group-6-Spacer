@@ -7,7 +7,7 @@ from flask_jwt_extended import (
 from functools import wraps
 from datetime import timedelta, datetime, timezone
 import secrets
-from models import db, User, Role, User_Roles, Password_reset_token, VALID_ROLES
+from models import db, User, Role, User_Roles, PasswordResetToken, VALID_ROLES
 import re
 
 # Create Blueprint
@@ -487,7 +487,7 @@ def forgot_password():
 
         # Create reset token
         token = secrets.token_urlsafe(32)
-        reset_token = Password_reset_token(
+        reset_token = PasswordResetToken(
             user_id=user.id,
             token=token
         )
@@ -534,7 +534,7 @@ def reset_password():
             }), 400
 
         # Find reset token
-        reset_token = Password_reset_token.query.filter_by(token=token).first()
+        reset_token = PasswordResetToken.query.filter_by(token=token).first()
         if not reset_token or not reset_token.is_valid():
             return jsonify({
                 'message': 'Invalid or expired reset token',
