@@ -46,27 +46,19 @@ def client(app):
 @pytest.fixture(scope='function')
 def session(app):
     """Create a new database session for each test with transaction rollback."""
-    # Start a transaction
+    # This approach uses the standard db.session but handles rollback manually
+    
+    # Start a nested transaction
     connection = db.engine.connect()
     transaction = connection.begin()
     
     # Bind the session to the connection
-    options = dict(bind=connection, binds={})
-    session = db._make_scoped_session(options=options)
+    db.session.close()  # Close any existing session
+    db.session = db.create_session(options={'bind': connection})
     
-    # Replace the default session with our scoped session
-    db.session = session
-    
-    yield session
+    yield db.session
     
     # Cleanup - rollback transaction and close connection
     transaction.rollback()
     connection.close()
-    session.remove()
-
-@pytest.fixture
-def init_database(session):
-    """Initialize the database with some test data."""
-    # This will run before each test that uses it
-    yield session
-    # Cleanup happens in the session fixture
+    db.session.remove()
