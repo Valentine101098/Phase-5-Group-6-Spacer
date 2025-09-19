@@ -26,7 +26,7 @@ def configure_logging(app):
 
 class Config:
     """Base configuration for all environments."""
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://user:password@localhost:5432/myapp_dev')
+    # SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://user:password@localhost:5432/myapp_dev')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # JWT Configuration
