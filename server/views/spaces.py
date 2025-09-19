@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from ..models import Space, User, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-spaces_bp = Blueprint('spaces', __name__, url_prefix='/spaces')
+spaces_bp = Blueprint('spaces', __name__)
 
 # Create a new space
 @spaces_bp.route('/', methods=['POST'])
