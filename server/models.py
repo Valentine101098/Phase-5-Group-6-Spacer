@@ -13,7 +13,7 @@ bcrypt = Bcrypt()
 ROLE_ADMIN = 'admin'
 ROLE_OWNER = 'owner'
 ROLE_CLIENT = 'client'
-VALID_ROLES = {ROLE_ADMIN, ROLE_OWNER, ROLE_CLIENT}
+VALID_ROLES = [ROLE_ADMIN, ROLE_OWNER, ROLE_CLIENT]
 
 class User(db.Model, SerializerMixin):
     __tablename__ = "users"
@@ -79,7 +79,7 @@ class Role(db.Model, SerializerMixin):
 
     user_roles = db.relationship("User_Roles", back_populates= "role")
 
-    serialize_rules = ('-user_roles.role')
+    serialize_rules = ('-user_roles.role',)
 
     def __repr__(self):
         return f"<Role {self.role}>"
