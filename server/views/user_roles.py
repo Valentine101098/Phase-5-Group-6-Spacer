@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-from ..models import db, User_Roles, User, Role
-from auth import roles_required
+from models import db, User_Roles, User, Role
+from views.auth import roles_required
 
 user_roles_bp = Blueprint("user_roles", __name__)
 

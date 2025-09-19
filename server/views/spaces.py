@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from ..models import Space, User, db
+from models import Space, User, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 spaces_bp = Blueprint('spaces', __name__)
@@ -27,7 +27,7 @@ def create_space():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
-    
+
 # Get all spaces
 @spaces_bp.route('/', methods=['GET'])
 def get_spaces():
@@ -50,7 +50,7 @@ def update_space(space_id):
     current_user = User.query.get(current_user_id)
     if space.owner_id != current_user_id:
         return jsonify({'error': 'Only the owner can update this space'}), 403
-    
+
     data = request.get_json()
     updatable_fields = ['title', 'description', 'price_per_hour', 'status', 'images', 'space_type', 'max_guests']
     data = {key: value for key, value in data.items() if key in updatable_fields}
@@ -62,7 +62,7 @@ def update_space(space_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
-    
+
 # Delete a specific space by ID
 @spaces_bp.route('/<int:space_id>', methods=['DELETE'])
 @jwt_required()
@@ -73,10 +73,10 @@ def delete_space(space_id):
     current_user = User.query.get(current_user_id)
     if not current_user:
         return jsonify({'error': 'User not found'}), 404
-    
+
     if space.owner_id != current_user_id and current_user.role != 'admin':
         return jsonify({'error': 'You do not have access to delete this space'}), 403
-    
+
     try:
         db.session.delete(space)
         db.session.commit()
