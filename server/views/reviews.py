@@ -70,6 +70,9 @@ def update_review(review_id):
     data = request.get_json()
     updatable_fields = ['rating', 'comment']
     data = {key: value for key, value in data.items() if key in updatable_fields}
+
+    if not data:
+        return jsonify({'error': 'No valid fields to update'}), 400
     
     if 'rating' in data and not (1 <= data['rating'] <= 5):
         return jsonify({'error': 'Rating must be between 1 and 5'}), 400    
