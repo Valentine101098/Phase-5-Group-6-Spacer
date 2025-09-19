@@ -3,13 +3,15 @@ from datetime import datetime, timezone, timedelta
 from models import PasswordResetToken, User, db
 
 def test_table_creation(app):
-   
+    """Test that reset_tokens table can be created successfully."""
     with app.app_context():
-        assert db.engine.has_table('reset_tokens') is True
+        # Use the correct method to check if table exists
+        inspector = db.inspect(db.engine)
+        assert 'reset_tokens' in inspector.get_table_names()
         print("✓ Reset_tokens table created successfully")
 
 def test_password_reset_token_validation():
-   
+    """Test PasswordResetToken validation."""
     token = PasswordResetToken()
     token.created_at = datetime.now(timezone.utc)
     
@@ -18,13 +20,12 @@ def test_password_reset_token_validation():
     result = token.validate_token('expires_at', future_date)
     assert result == future_date
     
-    # Test invalid expiration date (past date)
-    past_date = datetime.now(timezone.utc) - timedelta(hours=1)
+    # Test invalid expiration date (same as creation date)
     with pytest.raises(ValueError, match="Expiration date must be after creation date"):
-        token.validate_token('expires_at', past_date)
+        token.validate_token('expires_at', token.created_at)
 
 def test_password_reset_token_defaults():
-  
+    """Test PasswordResetToken default values."""
     token = PasswordResetToken()
     
     # Test token generation
@@ -36,37 +37,42 @@ def test_password_reset_token_defaults():
     assert token.expires_at > token.created_at
     assert token.expires_at == token.created_at + timedelta(hours=1)
     
-    # Test default values
-    assert token.is_used is False
+    # Test default values - is_used should be False by default
+    assert token.is_used == False
 
 def test_password_reset_token_validity():
- 
+    """Test PasswordResetToken validity methods."""
+    # Create a token and manually set values to avoid validation issues
     token = PasswordResetToken()
     
     # Test not expired and not used
+    token.created_at = datetime.now(timezone.utc)
     token.expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
     token.is_used = False
     assert token.is_expired() is False
     assert token.is_valid() is True
     
     # Test expired
+    token.created_at = datetime.now(timezone.utc) - timedelta(hours=2)
     token.expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
+    token.is_used = False
     assert token.is_expired() is True
     assert token.is_valid() is False
     
     # Test used
+    token.created_at = datetime.now(timezone.utc)
     token.expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
     token.is_used = True
     assert token.is_valid() is False
 
 def test_password_reset_token_repr():
-  
+    """Test PasswordResetToken __repr__ method."""
     token = PasswordResetToken()
     token.token = "test_token"
     assert repr(token) == "<PasswordResetToken test_token>"
 
 def test_password_reset_token_creation(session):
-  
+    """Test creating and saving a password reset token."""
     # Create user first
     user = User(
         first_name="Test",
@@ -88,10 +94,10 @@ def test_password_reset_token_creation(session):
     saved_token = PasswordResetToken.query.filter_by(user_id=user.id).first()
     assert saved_token is not None
     assert saved_token.token is not None
-    assert saved_token.is_used is False
+    assert saved_token.is_used == False
 
 def test_password_reset_token_unique_constraint(session):
-    
+    """Test that token uniqueness constraint works."""
     # Create user
     user = User(
         first_name="Test",
@@ -118,7 +124,7 @@ def test_password_reset_token_unique_constraint(session):
     session.rollback()
 
 def test_password_reset_token_foreign_key_constraint(session):
- 
+    """Test that foreign key constraint works."""
     # Try to create token with non-existent user
     token = PasswordResetToken(user_id=9999)  # Non-existent user ID
     

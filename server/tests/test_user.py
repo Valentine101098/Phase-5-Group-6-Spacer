@@ -3,13 +3,15 @@ import re
 from models import User, db, bcrypt
 
 def test_table_creation(app):
-   
+    """Test that users table can be created successfully."""
     with app.app_context():
-        assert db.engine.has_table('users') is True
+        # Use the correct method to check if table exists
+        inspector = db.inspect(db.engine)
+        assert 'users' in inspector.get_table_names()
         print("✓ Users table created successfully")
 
 def test_user_email_validation():
-
+    """Test User email validation."""
     user = User()
     
     # Test valid emails
@@ -38,7 +40,7 @@ def test_user_email_validation():
             user.validate_email('email', email)
 
 def test_user_phone_validation():
-
+    """Test User phone validation."""
     user = User()
     
     # Test valid phone numbers
@@ -61,7 +63,7 @@ def test_user_phone_validation():
             user.validate_phone('phone_number', phone)
 
 def test_user_password_hashing():
- 
+    """Test User password hashing."""
     user = User()
     
     # Test password hashing
@@ -74,12 +76,12 @@ def test_user_password_hashing():
     assert user.check_password("wrongpassword") is False
 
 def test_user_repr():
-   
+    """Test User __repr__ method."""
     user = User(first_name="John", last_name="Doe")
     assert repr(user) == "<User John Doe>"
 
 def test_user_creation_and_save(session):
-  
+    """Test creating and saving a user."""
     user = User(
         first_name="Test",
         last_name="User",
@@ -99,6 +101,7 @@ def test_user_creation_and_save(session):
     assert saved_user.check_password("password123") is True
 
 def test_user_unique_email_constraint(session):
+    """Test that email uniqueness constraint works."""
     user1 = User(
         first_name="User1",
         last_name="Test",

@@ -2,14 +2,17 @@ import pytest
 from models import Role, User, User_Roles, VALID_ROLES, db
 
 def test_table_creation(app):
-  
+    """Test that roles and user_roles tables can be created successfully."""
     with app.app_context():
-        assert db.engine.has_table('roles') is True
-        assert db.engine.has_table('user_roles') is True
+        # Use the correct method to check if table exists
+        inspector = db.inspect(db.engine)
+        table_names = inspector.get_table_names()
+        assert 'roles' in table_names
+        assert 'user_roles' in table_names
         print("✓ Roles and user_roles tables created successfully")
 
 def test_role_validation():
-   
+    """Test Role validation."""
     role = Role()
     
     # Test valid roles
@@ -22,12 +25,12 @@ def test_role_validation():
         role.validate_role('role', "invalid_role")
 
 def test_role_repr():
-  
+    """Test Role __repr__ method."""
     role = Role(role="admin")
     assert repr(role) == "<Role admin>"
 
 def test_role_creation_and_save(session):
-   
+    """Test creating and saving a role."""
     role = Role(role="admin")
     
     session.add(role)
@@ -39,7 +42,7 @@ def test_role_creation_and_save(session):
     assert saved_role.role == "admin"
 
 def test_role_unique_constraint(session):
-   
+    """Test that role uniqueness constraint works."""
     role1 = Role(role="admin")
     role2 = Role(role="admin")  # Duplicate role
     
@@ -52,7 +55,7 @@ def test_role_unique_constraint(session):
     session.rollback()
 
 def test_user_role_association(session):
- 
+    """Test user-role association."""
     # Create user
     user = User(
         first_name="Test",
@@ -78,7 +81,7 @@ def test_user_role_association(session):
     assert saved_association is not None
 
 def test_user_role_unique_constraint(session):
- 
+    """Test that user-role uniqueness constraint works."""
     # Create user
     user = User(
         first_name="Test",
