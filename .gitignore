@@ -1,5 +1,6 @@
 client/.env
 server/.env
+
 # Logs
 logs
 *.log
@@ -25,3 +26,4 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.*
