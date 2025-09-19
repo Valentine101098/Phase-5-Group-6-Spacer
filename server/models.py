@@ -27,6 +27,7 @@ class User(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     user_roles = db.relationship("User_Roles", back_populates= "user", cascade="all, delete-orphan")
+    roles = db.relationship("Role", secondary="user_roles", back_populates="users")
     reset_tokens = db.relationship("PasswordResetToken", back_populates="user")
     bookings = db.relationship("Booking", back_populates="user")
     agreement_templates = db.relationship("AgreementTemplate", back_populates="owner")
@@ -78,6 +79,7 @@ class Role(db.Model, SerializerMixin):
     role = db.Column(Enum(*VALID_ROLES, name= 'role_enum'), nullable=False, unique=True)
 
     user_roles = db.relationship("User_Roles", back_populates= "role")
+    users = db.relationship("User", secondary="user_roles", back_populates="roles")
 
     serialize_rules = ('-user_roles.role',)
 
@@ -122,11 +124,15 @@ class PasswordResetToken(db.Model, SerializerMixin):
         return f"<PasswordResetToken {self.token}>"
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        db.Model.__init__(self, **kwargs)  # explicit
+        if not self.created_at:
+            self.created_at = datetime.now(timezone.utc)
         if not self.token:
-            self.token = secrets.token_urlsafe(32) # generate a secure random token if not provided
+            self.token = secrets.token_urlsafe(32)
         if not self.expires_at:
-            self.expires_at = self.created_at + timedelta(hours=1) #expire 1 hour after creation
+            self.expires_at = self.created_at + timedelta(hours=1)
+
+
 
     @validates("expires_at")
     def validate_token(self, key, expires_at):
