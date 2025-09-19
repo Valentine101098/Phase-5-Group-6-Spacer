@@ -10,9 +10,12 @@ load_dotenv()
 @pytest.fixture(scope="session")
 def app():
     app = Flask(__name__)
+
+    # Use the Postgres DB URI from .env (must point to a TEST database, not dev/prod!)
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["TESTING"] = True
+
     db.init_app(app)
 
     with app.app_context():
@@ -20,18 +23,22 @@ def app():
         yield app
         db.drop_all()
 
-# Creates a clean database session for each test
+# Provide a fresh database session for each test
 @pytest.fixture(scope="function")
 def session(app):
-    with app.app_context():
-        connection = db.engine.connect()
-        transaction = connection.begin()
+    connection = db.engine.connect()
+    transaction = connection.begin()
 
-        session = db.session
+    # Bind a new scoped session to this connection
+    options = dict(bind=connection, binds={})
+    sess = db.create_scoped_session(options=options)
 
-        yield session
+    # Swap out the global session for this test
+    db.session = sess
 
-        # Roll back changes after test
-        session.rollback()
-        transaction.rollback()
-        connection.close()
+    yield sess
+
+    # Cleanup — rollback everything after the test
+    transaction.rollback()
+    connection.close()
+    sess.remove()

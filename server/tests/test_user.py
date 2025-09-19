@@ -13,6 +13,7 @@ def create_app():
     db.init_app(app)
     return app
 
+
 # Ensure password is hashed and verified correctly
 def test_set_and_check_password(session):
     user = User(first_name="Group", last_name="Six",
@@ -22,6 +23,7 @@ def test_set_and_check_password(session):
     assert user.password_hash != "secure123"  # Hash must differ from plain text
     assert user.check_password("secure123")
     assert not user.check_password("wrongpass")
+
 
 # Ensure emails are normalized and invalid ones rejected
 def test_email_validation(session):
