@@ -9,6 +9,11 @@ reviews_bp = Blueprint('reviews', __name__, url_prefix='/reviews')
 @jwt_required()
 def create_review():
     current_user_id = get_jwt_identity()
+    logged_user = User.query.get(current_user_id)
+
+    if not logged_user or logged_user.role != 'client':
+        return jsonify({'error': 'Only clients can create reviews'}), 403
+    
     data = request.get_json()
 
     if 'booking_id' not in data or 'space_id' not in data or 'rating' not in data:
@@ -52,8 +57,13 @@ def get_review(review_id):
 @jwt_required()
 def update_review(review_id):
     current_user_id = get_jwt_identity()
+    logged_user = User.query.get(current_user_id)
+
     review = Review.query.get_or_404(review_id)
 
+    if not logged_user or logged_user.role != 'client':
+        return jsonify({'error': 'Only clients can update reviews'}), 403
+    
     if review.user_id != current_user_id:
         return jsonify({'error': 'You do not have access to update this review'}), 403
     
@@ -78,7 +88,11 @@ def update_review(review_id):
 @jwt_required()
 def delete_review(review_id):
     current_user_id = get_jwt_identity()
+    logged_user = User.query.get(current_user_id)
     review = Review.query.get_or_404(review_id)
+
+    if not logged_user or logged_user.role != 'client':
+        return jsonify({'error': 'Only clients can delete reviews'}), 403
 
     if review.user_id != current_user_id:
         return jsonify({'error': 'You do not have access to delete this review'}), 403
