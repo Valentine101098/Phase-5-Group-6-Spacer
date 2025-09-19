@@ -1,6 +1,29 @@
 import pytest
-import re
-from models import User, db, bcrypt
+from flask import Flask
+from models import db, User
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    return app
+
+
+
+@pytest.fixture
+def app():
+    app = create_app()
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        yield app
+        db.session.remove()
+        db.drop_all()
 
 def test_table_creation(app):
     """Test that users table can be created successfully."""

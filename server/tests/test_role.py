@@ -1,5 +1,27 @@
 import pytest
-from models import Role, User, User_Roles, VALID_ROLES, db
+from flask import Flask
+from models import db, User, Role, User_Roles, VALID_ROLES
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    return app
+
+@pytest.fixture
+def app():
+    app = create_app()
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        yield app
+        db.session.remove()
+        db.drop_all()
 
 def test_table_creation(app):
     """Test that roles and user_roles tables can be created successfully."""
