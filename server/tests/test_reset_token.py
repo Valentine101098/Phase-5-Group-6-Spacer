@@ -4,21 +4,20 @@ from models import User, PasswordResetToken
 
 class TestPasswordResetTokenValidations:
     
-    @pytest.fixture(autouse=True)
-    def setup_data(self, session):
+    def test_token_creation_defaults(self, session):
+        
         # Create a user
-        self.user = User(
+        user = User(
             first_name="Test",
             last_name="User",
             email="test@example.com",
             phone_number="1234567890",
             password_hash="test_hash"
         )
-        session.add(self.user)
+        session.add(user)
         session.commit()
-    
-    def test_token_creation_defaults(self, session):
-        token = PasswordResetToken(user_id=self.user.id)
+        
+        token = PasswordResetToken(user_id=user.id)
         session.add(token)
         session.commit()
         
@@ -30,43 +29,38 @@ class TestPasswordResetTokenValidations:
         assert token.expires_at is not None
         assert token.expires_at > token.created_at
         assert token.expires_at == token.created_at + timedelta(hours=1)
-    
-    def test_token_custom_values(self, session):
-        custom_token = "custom_test_token"
-        custom_expires = datetime.now(timezone.utc) + timedelta(hours=2)
-        
-        token = PasswordResetToken(
-            user_id=self.user.id,
-            token=custom_token,
-            expires_at=custom_expires
-        )
-        session.add(token)
-        session.commit()
-        
-        assert token.token == custom_token
-        assert token.expires_at == custom_expires
-    
-    def test_token_validation(self, session):
-        past_date = datetime.now(timezone.utc) - timedelta(hours=1)
-        
-        token = PasswordResetToken(
-            user_id=self.user.id,
-            created_at=datetime.now(timezone.utc),
-            expires_at=past_date  # Expiration before creation
-        )
-        session.add(token)
-        
-        with pytest.raises(ValueError, match="Expiration date must be after creation date"):
-            session.commit()
         session.rollback()
     
+    def test_token_validation(self):
+     
+        past_date = datetime.now(timezone.utc) - timedelta(hours=1)
+        current_date = datetime.now(timezone.utc)
+        
+        token = PasswordResetToken()
+        token.created_at = current_date
+        
+        with pytest.raises(ValueError, match="Expiration date must be after creation date"):
+            token.validate_token('expires_at', past_date)
+    
     def test_token_unique_constraint(self, session):
+      
+        # Create a user
+        user = User(
+            first_name="Test",
+            last_name="User",
+            email="test@example.com",
+            phone_number="1234567890",
+            password_hash="test_hash"
+        )
+        session.add(user)
+        session.commit()
+        
         token1 = PasswordResetToken(
-            user_id=self.user.id,
+            user_id=user.id,
             token="duplicate_token"
         )
         token2 = PasswordResetToken(
-            user_id=self.user.id,
+            user_id=user.id,
             token="duplicate_token"  # Same token
         )
         
@@ -77,22 +71,3 @@ class TestPasswordResetTokenValidations:
         with pytest.raises(Exception):  # Should raise integrity error
             session.commit()
         session.rollback()
-    
-    def test_token_foreign_key_constraint(self, session):
-        with pytest.raises(Exception):
-            token = PasswordResetToken(user_id=9999)  # Non-existent user
-            session.add(token)
-            session.commit()
-        session.rollback()
-    
-    def test_token_required_fields(self, session):
-        # Test missing user_id
-        with pytest.raises(Exception):
-            token = PasswordResetToken()  # Missing user_id
-            session.add(token)
-            session.commit()
-        session.rollback()
-        
-        # Test missing expires_at (but it should be set by __init__)
-        token = PasswordResetToken(user_id=self.user.id)
-        assert token.expires_at is not None

@@ -17,6 +17,7 @@ def create_app():
 
 @pytest.fixture(scope='session')
 def app():
+
     app = create_app()
     app.config['TESTING'] = True
     
@@ -38,21 +39,9 @@ def app():
 
 @pytest.fixture(scope='function')
 def session(app):
+   
     with app.app_context():
-        # Start a transaction
-        connection = db.engine.connect()
-        transaction = connection.begin()
-        
-        # Bind the session to this connection
-        options = dict(bind=connection, binds={})
-        testing_session = db.create_scoped_session(options=options)
-        
-        # Replace the default session
-        db.session = testing_session
-        
-        yield testing_session
-        
-        # Rollback and cleanup
-        transaction.rollback()
-        connection.close()
-        testing_session.remove()
+        # Simple approach - just use the existing session
+        # We'll handle cleanup by rolling back after each test
+        yield db.session
+        db.session.rollback()

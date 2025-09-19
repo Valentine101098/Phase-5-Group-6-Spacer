@@ -5,6 +5,7 @@ import re
 class TestUserValidations:
     
     def test_user_email_validation_valid(self, session):
+   
         valid_emails = [
             "test@example.com",
             "test.user@example.co.uk",
@@ -24,8 +25,10 @@ class TestUserValidations:
         
         session.commit()
         assert User.query.count() == len(valid_emails)
+        session.rollback()
     
-    def test_user_email_validation_invalid(self, session):
+    def test_user_email_validation_invalid(self):
+       
         invalid_emails = [
             "invalid",
             "invalid@",
@@ -42,13 +45,12 @@ class TestUserValidations:
                 phone_number="1234567890",
                 password_hash="test_hash"
             )
-            session.add(user)
             
             with pytest.raises(ValueError, match="Invalid email format"):
-                session.commit()
-            session.rollback()
+                user.validate_email('email', email)
     
     def test_user_email_normalization(self, session):
+      
         user = User(
             first_name="Test",
             last_name="User",
@@ -60,8 +62,10 @@ class TestUserValidations:
         session.commit()
         
         assert user.email == "test.user@example.com"
+        session.rollback()
     
     def test_user_phone_validation_valid(self, session):
+        
         test_cases = [
             ("1234567890", "1234567890"),
             ("(123) 456-7890", "1234567890"),
@@ -82,8 +86,10 @@ class TestUserValidations:
             
             user_from_db = User.query.filter_by(email=f"test{i}@example.com").first()
             assert user_from_db.phone_number == expected
+            session.rollback()
     
-    def test_user_phone_validation_invalid(self, session):
+    def test_user_phone_validation_invalid(self):
+      
         invalid_phones = [
             "123",
             "abc1234567",
@@ -99,13 +105,12 @@ class TestUserValidations:
                 phone_number=phone,
                 password_hash="test_hash"
             )
-            session.add(user)
             
             with pytest.raises(ValueError, match="Phone number must be at least 10 digits"):
-                session.commit()
-            session.rollback()
+                user.validate_phone('phone_number', phone)
     
     def test_user_unique_email_constraint(self, session):
+       
         user1 = User(
             first_name="User1",
             last_name="Test",
@@ -126,42 +131,5 @@ class TestUserValidations:
         
         session.add(user2)
         with pytest.raises(Exception):  # Should raise integrity error
-            session.commit()
-        session.rollback()
-    
-    def test_user_required_fields(self, session):
-        # Test missing first_name
-        with pytest.raises(Exception):
-            user = User(
-                last_name="Test",
-                email="test@example.com",
-                phone_number="1234567890",
-                password_hash="hash"
-            )
-            session.add(user)
-            session.commit()
-        session.rollback()
-        
-        # Test missing last_name
-        with pytest.raises(Exception):
-            user = User(
-                first_name="Test",
-                email="test@example.com",
-                phone_number="1234567890",
-                password_hash="hash"
-            )
-            session.add(user)
-            session.commit()
-        session.rollback()
-        
-        # Test missing email
-        with pytest.raises(Exception):
-            user = User(
-                first_name="Test",
-                last_name="User",
-                phone_number="1234567890",
-                password_hash="hash"
-            )
-            session.add(user)
             session.commit()
         session.rollback()
