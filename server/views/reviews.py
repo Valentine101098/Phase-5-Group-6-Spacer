@@ -16,7 +16,7 @@ def create_review():
     
     data = request.get_json()
 
-    if 'booking_id' not in data or 'space_id' not in data or 'rating' not in data:
+    if 'booking_id' not in data or 'rating' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
     
     if not (1 <= data['rating'] <= 5):
