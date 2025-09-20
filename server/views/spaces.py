@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models import Space, User, db
+from server.models import Space, User, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 spaces_bp = Blueprint('spaces', __name__)
