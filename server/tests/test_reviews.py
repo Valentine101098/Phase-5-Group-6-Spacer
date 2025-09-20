@@ -49,12 +49,12 @@ def create_app():
     @jwt_required()
     def create_review():
         user_id = get_jwt_identity()
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user or not any(ur.role.role == 'client' for ur in user.user_roles):
             return jsonify({'error': 'Only clients can create reviews'}), 403
 
         data = request.get_json()
-        booking = Booking.query.get(data.get('booking_id'))
+        booking = db.session.get(Booking, data.get('booking_id'))
         if not booking or booking.user_id != user_id:
             return jsonify({'error': 'Invalid booking'}), 400
 
@@ -135,7 +135,6 @@ def setup_data(app):
         db.session.add(booking)
         db.session.commit()
 
-        # Return IDs instead of objects to avoid detached instance errors
         return {
             'owner_user_id': owner_user.id,
             'client_user_id': client_user.id,
@@ -149,8 +148,8 @@ def get_token(app, user_id):
 
 def test_create_review(client, app, setup_data):
     with app.app_context():
-        client_user = User.query.get(setup_data['client_user_id'])
-        booking = Booking.query.get(setup_data['booking_id'])
+        client_user = db.session.get(User, setup_data['client_user_id'])
+        booking = db.session.get(Booking, setup_data['booking_id'])
         token = get_token(app, client_user.id)
 
     response = client.post('/reviews/', json={
@@ -168,8 +167,8 @@ def test_create_review(client, app, setup_data):
 
 def test_non_client_cannot_create_review(client, app, setup_data):
     with app.app_context():
-        owner_user = User.query.get(setup_data['owner_user_id'])
-        booking = Booking.query.get(setup_data['booking_id'])
+        owner_user = db.session.get(User, setup_data['owner_user_id'])
+        booking = db.session.get(Booking, setup_data['booking_id'])
         token = get_token(app, owner_user.id)
 
     response = client.post('/reviews/', json={

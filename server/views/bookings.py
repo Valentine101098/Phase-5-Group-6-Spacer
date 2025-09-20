@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from flask_restful import Api, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 # from extensions import db
-from models import Booking, Space, AgreementTemplate, AgreementInstance, Invoice, db
+from server.models import Booking, Space, AgreementTemplate, AgreementInstance, Invoice, db
 from .auth import roles_required
 from datetime import datetime,  timedelta, timezone
 

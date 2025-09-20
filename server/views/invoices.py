@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_restful import Api, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 # from extensions import db
-from models import Invoice, Booking, db
+from server.models import Invoice, Booking, db
 from .auth import roles_required
 from datetime import datetime, timezone
 

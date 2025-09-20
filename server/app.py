@@ -6,8 +6,8 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from werkzeug.exceptions import HTTPException
-from models import db, bcrypt
-from views.auth import jwt_blocklist
+from server.models import db, bcrypt
+from server.views.auth import jwt_blocklist
 from dotenv import load_dotenv
 import logging
 
@@ -119,8 +119,8 @@ def create_app(config_class=None):
     migrate = Migrate(app, db)
 
 
-    from views import api_bp
-    from views.auth import auth_bp
+    from server.views import api_bp
+    from server.views.auth import auth_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(api_bp, url_prefix='/api')

@@ -3,7 +3,7 @@ from flask_restful import Api, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from sqlalchemy.exc import IntegrityError
 # from extensions import db
-from models import AgreementTemplate, AgreementInstance, Booking, Space, User, db
+from server.models import AgreementTemplate, AgreementInstance, Booking, Space, User, db
 from datetime import datetime, timezone
 
 from .auth import roles_required
