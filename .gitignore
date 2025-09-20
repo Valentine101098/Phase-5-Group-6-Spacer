@@ -27,5 +27,8 @@ dist-ssr
 *.sw?
 .env
 .env.*
+# Environment files
+*.env
+*.env.*
 server/tree.txt
 server/migrations
