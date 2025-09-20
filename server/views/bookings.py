@@ -194,13 +194,20 @@ class BookingResource(Resource):
     @jwt_required()
     @roles_required("admin")
     def delete(self, booking_id):
-        """Admin deletes a booking"""
+        """Admin cancels a booking"""
         booking = Booking.query.get_or_404(booking_id)
-        space = booking.space  
-        db.session.delete(booking)
-        update_space_status(space)
+
+        if booking.status == "cancelled":
+            return {"error": "Booking already cancelled"}, 400
+
+        booking.status = "cancelled"
+        update_space_status(booking.space)
         db.session.commit()
-        return {"message": "Booking deleted"}, 200
+
+        return {
+            "message": "Booking cancelled by admin",
+            "data": booking_to_dict_safe(booking)
+        }, 200
 
 
 class BookingCancelResource(Resource):

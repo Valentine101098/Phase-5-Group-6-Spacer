@@ -32,3 +32,4 @@ dist-ssr
 *.env.*
 server/tree.txt
 server/migrations
+server/temp_seed.py
