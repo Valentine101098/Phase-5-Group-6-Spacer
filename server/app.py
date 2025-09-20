@@ -69,16 +69,17 @@ class TestingConfig(Config):
 def create_app(config_class=None):
     app = Flask(__name__)
 
-    # Load configuration based on FLASK_ENV
     if config_class is None:
         env = os.getenv('FLASK_ENV', 'development')
         if env == 'production':
             app.config.from_object(ProductionConfig)
         elif env == 'testing':
             app.config.from_object(TestingConfig)
-
+        else:
+            app.config.from_object(DevelopmentConfig)   # 👈 add this
     else:
         app.config.from_object(config_class)
+
 
     # --- Initialize Extensions ---
     # CORS

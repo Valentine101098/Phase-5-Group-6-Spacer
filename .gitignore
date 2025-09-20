@@ -26,4 +26,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
-.env.*
+# Environment files
+*.env
+*.env.*
+

@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timezone
 from models import db, PasswordResetToken, User
-from auth import roles_required
+from views.auth import roles_required
 
 reset_tokens_bp = Blueprint("reset_tokens", __name__)
 
