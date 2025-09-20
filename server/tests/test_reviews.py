@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request
 from flask_jwt_extended import create_access_token, JWTManager, jwt_required, get_jwt_identity
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from server.models import db, User, Review, Booking, Space, Role, User_Roles, bcrypt
+from models import db, User, Review, Booking, Space, Role, User_Roles, bcrypt
 from dotenv import load_dotenv
 import os
 
