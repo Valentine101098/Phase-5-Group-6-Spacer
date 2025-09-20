@@ -214,12 +214,16 @@ def login():
             }), 401
 
         # Create JWT tokens
+        roles = user.get_roles()
+        claims = {'roles': roles}
         access_token = create_access_token(
             identity=user.id,
+            additional_claims=claims,
             expires_delta=timedelta(hours=1)
         )
         refresh_token = create_refresh_token(
             identity=user.id,
+            additional_claims=claims,
             expires_delta=timedelta(days=30)
         )
 
