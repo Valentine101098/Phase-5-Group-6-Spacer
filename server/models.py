@@ -27,7 +27,7 @@ class User(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     user_roles = db.relationship("User_Roles", back_populates= "user", cascade="all, delete-orphan")
-    roles = db.relationship("Role", secondary="user_roles", back_populates="users", overlaps="user_roles")
+    # roles = db.relationship("Role", secondary="user_roles", back_populates="users", overlaps="user_roles")
     reset_tokens = db.relationship("PasswordResetToken", back_populates="user")
     bookings = db.relationship("Booking", back_populates="user")
     agreement_templates = db.relationship("AgreementTemplate", back_populates="owner")
@@ -79,7 +79,7 @@ class Role(db.Model, SerializerMixin):
     role = db.Column(Enum(*VALID_ROLES, name= 'role_enum'), nullable=False, unique=True)
 
     user_roles = db.relationship("User_Roles", back_populates= "role")
-    users = db.relationship("User", secondary="user_roles", back_populates="roles", overlaps="user_roles")
+    # users = db.relationship("User", secondary="user_roles", back_populates="roles", overlaps="user_roles")
 
     serialize_rules = ('-user_roles.role',)
 
