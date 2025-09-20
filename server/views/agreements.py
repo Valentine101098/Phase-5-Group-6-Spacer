@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from sqlalchemy.exc import IntegrityError
 # from extensions import db
 from models import AgreementTemplate, AgreementInstance, Booking, Space, User, db
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .auth import roles_required
 
@@ -133,7 +133,7 @@ class AgreementInstanceResource(Resource):
         action = data.get("action")
 
         if action == "accept":
-            agreement.signed_at = datetime.utcnow()
+            agreement.signed_at = datetime.now(timezone.utc)
             agreement.status = "accepted"
             
         elif action == "decline":

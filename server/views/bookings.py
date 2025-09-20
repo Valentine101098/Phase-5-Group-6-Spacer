@@ -4,10 +4,14 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 # from extensions import db
 from models import Booking, Space, AgreementTemplate, AgreementInstance, Invoice, db
 from .auth import roles_required
-from datetime import datetime,  timedelta
+from datetime import datetime,  timedelta, timezone
 
 bookings_bp = Blueprint("bookings", __name__)
 bookings_api = Api(bookings_bp)
+
+def parse_datetime(value: str) -> datetime:
+    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
 def update_space_status(space):
@@ -80,8 +84,8 @@ class BookingListResource(Resource):
                 return {"error": "Terms not agreed"}, 422
 
             
-            start_time = datetime.fromisoformat(data["start_time"]) if isinstance(data["start_time"], str) else data["start_time"]
-            end_time = datetime.fromisoformat(data["end_time"]) if isinstance(data["end_time"], str) else data["end_time"]
+            start_time = parse_datetime(data["start_time"])
+            end_time = parse_datetime(data["end_time"])
 
             # Check if space is available
             overlapping = Booking.query.filter(
@@ -123,9 +127,9 @@ class BookingListResource(Resource):
                 space_id=booking.space_id,
                 booking_id=booking.id,
                 terms=template.terms,
-                signed_at=datetime.utcnow(),
+                signed_at=datetime.now(timezone.utc),
                 status="accepted",
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
             )
             db.session.add(instance)
 
@@ -137,7 +141,7 @@ class BookingListResource(Resource):
                 payment_method=None,  
                 transaction_id=None,  
                 paid_at=None,  
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
             )
             db.session.add(invoice)
             db.session.flush()  

@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 # from extensions import db
 from models import Invoice, Booking, db
 from .auth import roles_required
-from datetime import datetime
+from datetime import datetime, timezone
 
 invoices_bp = Blueprint("invoices", __name__)
 invoices_api = Api(invoices_bp)
@@ -105,7 +105,7 @@ class InvoiceResource(Resource):
             return {"error": "Missing payment_complete_id"}, 400
 
         
-        invoice.paid_at = datetime.utcnow()
+        invoice.paid_at = datetime.now(timezone.utc)
         invoice.payment_method = "mpesa"
         invoice.status = "paid"
         invoice.transaction_id = f"{payment_code}_{invoice.id}"
@@ -121,7 +121,7 @@ class InvoiceResource(Resource):
         overlapping = Booking.query.filter(
             Booking.space_id == space.id,
             Booking.status == "confirmed",
-            Booking.end_time > datetime.utcnow()
+            Booking.end_time > datetime.now(timezone.utc)
         ).count()
         space.status = "booked" if overlapping > 0 else "available"
 
