@@ -33,3 +33,7 @@ dist-ssr
 server/tree.txt
 server/migrations
 server/temp_seed.py
+*__pycache__*
+*.pytest_cache
+server/tools
+*.pyc*

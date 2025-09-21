@@ -1,6 +1,6 @@
 import pytest
 from flask import Flask
-from models import db, User, Role, User_Roles, VALID_ROLES
+from app.models import db, User, Role, User_Roles, VALID_ROLES
 from dotenv import load_dotenv
 import os
 

@@ -1,6 +1,6 @@
 import pytest
 from flask import Flask
-from models import db, User
+from app.models import db, User
 from dotenv import load_dotenv
 import os
 
