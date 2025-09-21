@@ -9,6 +9,7 @@ from datetime import timedelta, datetime, timezone
 import secrets
 from app.models import db, User, Role, User_Roles, PasswordResetToken, VALID_ROLES
 import re
+from flask_restful import Resource
 
 # Create Blueprint
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -46,10 +47,7 @@ def revoked_token_callback(jwt_header, jwt_payload):
     return jsonify({'message': 'Token has been revoked', 'error': 'token_revoked'}), 401
 
 # Role-based access control decorator
-from functools import wraps
-from flask import jsonify, request, redirect, url_for, flash, abort
-from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
-from flask_restful import Resource
+
 
 def roles_required(*required_roles):
     """Decorator to require specific roles for access"""
