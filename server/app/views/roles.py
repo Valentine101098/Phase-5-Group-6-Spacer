@@ -16,7 +16,7 @@ def get_roles():
 @jwt_required()
 def create_role():
     data = request.get_json()
-    new_role = Role(name=data["name"])
+    new_role = Role(role=data["role"])
     db.session.add(new_role)
     db.session.commit()
 

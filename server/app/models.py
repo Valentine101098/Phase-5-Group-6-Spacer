@@ -26,31 +26,35 @@ class User(db.Model, SerializerMixin):
     password_hash = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
-    user_roles = db.relationship("User_Roles", back_populates= "user", cascade="all, delete-orphan")
-    # roles = db.relationship("Role", secondary="user_roles", back_populates="users", overlaps="user_roles")
+    user_roles = db.relationship("User_Roles", back_populates="user", cascade="all, delete-orphan")
     reset_tokens = db.relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
     bookings = db.relationship("Booking", back_populates="user")
     agreement_templates = db.relationship("AgreementTemplate", back_populates="owner")
     agreements_issued = db.relationship("AgreementInstance", foreign_keys="AgreementInstance.owner_id", back_populates="owner")
     agreements_received = db.relationship("AgreementInstance", foreign_keys="AgreementInstance.client_id", back_populates="client")
-    serialize_rules = ('-password_hash', '-reset_tokens.user', '-user_roles.user')
+
+    # Most restrictive approach - only include basic fields and minimal relations
+    serialize_only = (
+        'id', 'first_name', 'last_name', 'email', 'phone_number', 'created_at',
+        'user_roles.role.role'  # Only include the role name, nothing else
+    )
 
     def __repr__(self):
         return f"<User {self.first_name} {self.last_name}>"
 
-    def set_password(self,password):
+    def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
-    def check_password(self,password):
+    def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
 
-    def has_role(self, role_name): #Check if user has a specific role
+    def has_role(self, role_name):
         return any(ur.role.role == role_name for ur in self.user_roles)
 
-    def get_roles(self):#Get list of user's role names
+    def get_roles(self):
         return [ur.role.role for ur in self.user_roles]
 
-    def add_role(self, role_name, commit=False):#Add a role to the user
+    def add_role(self, role_name, commit=False):
         role = Role.query.filter_by(role=role_name).first()
         if role and not self.has_role(role_name):
             user_role = User_Roles(user_id=self.id, role_id=role.id)
@@ -75,13 +79,12 @@ class User(db.Model, SerializerMixin):
 class Role(db.Model, SerializerMixin):
     __tablename__ = 'roles'
 
-    id = db.Column(db.Integer, primary_key = True)
-    role = db.Column(Enum(*VALID_ROLES, name= 'role_enum'), nullable=False, unique=True)
+    id = db.Column(db.Integer, primary_key=True)
+    role = db.Column(Enum(*VALID_ROLES, name='role_enum'), nullable=False, unique=True)
 
-    user_roles = db.relationship("User_Roles", back_populates= "role")
-    # users = db.relationship("User", secondary="user_roles", back_populates="roles", overlaps="user_roles")
+    user_roles = db.relationship("User_Roles", back_populates="role")
 
-    serialize_rules = ('-user_roles.role',)
+    serialize_only = ('id', 'role')
 
     def __repr__(self):
         return f"<Role {self.role}>"
@@ -92,7 +95,7 @@ class Role(db.Model, SerializerMixin):
             raise ValueError(f"Invalid role: {value}. Must be one of {VALID_ROLES}")
         return value
 
-class User_Roles(db.Model,SerializerMixin):
+class User_Roles(db.Model, SerializerMixin):
     __tablename__ = "user_roles"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -104,12 +107,12 @@ class User_Roles(db.Model,SerializerMixin):
     user = db.relationship("User", back_populates="user_roles")
     role = db.relationship("Role", back_populates="user_roles")
 
-    serialize_rules = ('-user.user_roles', '-role.user_roles')
+    serialize_only = ('id', 'user_id', 'role_id', 'role.role')
 
 class PasswordResetToken(db.Model, SerializerMixin):
     __tablename__ = "reset_tokens"
 
-    id = db.Column(db.Integer,primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     token = db.Column(db.String, nullable=False, unique=True, index=True)
     is_used = db.Column(db.Boolean, default=False)
@@ -118,21 +121,19 @@ class PasswordResetToken(db.Model, SerializerMixin):
 
     user = db.relationship("User", back_populates="reset_tokens")
 
-    serialize_rules = ('-user.reset_tokens')
+    serialize_only = ('id', 'user_id', 'is_used', 'created_at', 'expires_at')
 
     def __repr__(self):
         return f"<PasswordResetToken {self.token}>"
 
     def __init__(self, **kwargs):
-        db.Model.__init__(self, **kwargs)  # explicit
+        db.Model.__init__(self, **kwargs)
         if not self.created_at:
             self.created_at = datetime.now(timezone.utc)
         if not self.token:
             self.token = secrets.token_urlsafe(32)
         if not self.expires_at:
             self.expires_at = self.created_at + timedelta(hours=1)
-
-
 
     @validates("expires_at")
     def validate_token(self, key, expires_at):
@@ -146,11 +147,10 @@ class PasswordResetToken(db.Model, SerializerMixin):
     def is_valid(self):
         return not self.is_used and not self.is_expired()
 
-    def mark_used(self, commit=False): # Mark token as used
+    def mark_used(self, commit=False):
         self.is_used = True
         if commit:
             db.session.commit()
-
 
 class Space(db.Model, SerializerMixin):
     __tablename__ = "spaces"
@@ -171,7 +171,12 @@ class Space(db.Model, SerializerMixin):
     agreement_templates = db.relationship("AgreementTemplate", back_populates="space")
     agreement_instances = db.relationship("AgreementInstance", back_populates="space")
 
-    serialize_rules = ('-owner.spaces',)
+    # Only serialize space fields and basic owner info
+    serialize_only = (
+        'id', 'owner_id', 'title', 'description', 'price_per_hour',
+        'status', 'images', 'space_type', 'max_guests', 'created_at',
+        'owner.id', 'owner.first_name', 'owner.last_name'
+    )
 
     def __repr__(self):
         return f"<Space {self.title} owned by User {self.owner_id}>"
@@ -208,7 +213,10 @@ class Review(db.Model, SerializerMixin):
     user = db.relationship("User", backref="reviews")
     booking = db.relationship("Booking", back_populates="review")
 
-    serialize_rules = ('-user.user_roles', '-booking.review')
+    serialize_only = (
+        'id', 'user_id', 'booking_id', 'rating', 'comment', 'created_at',
+        'user.first_name', 'user.last_name'
+    )
 
     def __repr__(self):
         return f"<Review {self.id} by User {self.user_id}>"
@@ -250,6 +258,13 @@ class Booking(db.Model, SerializerMixin):
         "Review", back_populates="booking", uselist=False, cascade="all, delete-orphan"
     )
 
+    serialize_only = (
+        'id', 'user_id', 'space_id', 'start_time', 'end_time',
+        'total_amount', 'status', 'estimated_guests', 'created_at',
+        'user.first_name', 'user.last_name',
+        'space.title', 'space.space_type'
+    )
+
     @validates('start_time')
     def validate_start_time(self, key, value):
         if value < datetime.now(timezone.utc).replace(second=0, microsecond=0):
@@ -261,12 +276,10 @@ class Booking(db.Model, SerializerMixin):
         if self.start_time and value:
             if value <= self.start_time:
                 raise ValueError("End time must be after start time")
-
             duration = value - self.start_time
             if duration.total_seconds() < 3600:
                 raise ValueError("Booking duration must be at least 1 hour")
         return value
-
 
     @validates('total_amount')
     def validate_total_amount(self, key, amount):
@@ -303,6 +316,11 @@ class AgreementTemplate(db.Model, SerializerMixin):
     space = db.relationship("Space", back_populates="agreement_templates")
     instances = db.relationship("AgreementInstance", back_populates="template", cascade="all, delete-orphan")
 
+    serialize_only = (
+        'id', 'owner_id', 'space_id', 'terms', 'created_at',
+        'space.title'
+    )
+
     @validates("terms")
     def validate_terms(self, key, terms):
         if not terms or not terms.strip():
@@ -337,6 +355,11 @@ class AgreementInstance(db.Model, SerializerMixin):
     space = db.relationship("Space", back_populates="agreement_instances")
     booking = db.relationship("Booking", back_populates="agreement_instance")
 
+    serialize_only = (
+        'id', 'template_id', 'owner_id', 'client_id', 'space_id',
+        'booking_id', 'terms', 'status', 'signed_at', 'created_at'
+    )
+
     __table_args__ = (
         CheckConstraint(
             "(status != 'accepted') OR (signed_at IS NOT NULL)",
@@ -365,6 +388,11 @@ class Invoice(db.Model, SerializerMixin):
     paid_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
+    serialize_only = (
+        'id', 'booking_id', 'amount', 'status', 'payment_method',
+        'transaction_id', 'paid_at', 'created_at'
+    )
+
     __table_args__ = (
         CheckConstraint("amount >= 0", name="ck_invoice_non_negative_amount"),
         CheckConstraint(
@@ -388,10 +416,8 @@ class Invoice(db.Model, SerializerMixin):
         valid_statuses = ["unpaid", "paid", "failed"]
         if status not in valid_statuses:
             raise ValueError(f"Invalid invoice status. Must be one of: {', '.join(valid_statuses)}")
-
         if status == "paid" and not self.paid_at:
             raise ValueError("Invoice cannot be marked as paid without a payment date")
-
         return status
 
     @validates('paid_at')
