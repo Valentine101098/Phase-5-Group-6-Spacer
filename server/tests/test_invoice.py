@@ -4,7 +4,7 @@ from flask import Flask
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
-from models import db, Invoice, User, Space, Booking
+from app.models import db, Invoice, User, Space, Booking
 from dotenv import load_dotenv
 import os
 

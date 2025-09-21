@@ -1,7 +1,7 @@
 import pytest
 from flask import Flask
 from datetime import datetime, timezone, timedelta
-from models import db, User, PasswordResetToken
+from app.models import db, User, PasswordResetToken
 from dotenv import load_dotenv
 import os
 

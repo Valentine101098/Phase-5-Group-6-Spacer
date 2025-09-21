@@ -2,7 +2,7 @@ import pytest
 from flask import Flask
 from dotenv import load_dotenv
 import os
-from models import db
+from app.models import db
 
 load_dotenv()
 

@@ -3,32 +3,32 @@ from flask import Flask
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
-from models import db, AgreementTemplate, AgreementInstance, User, Space, Booking
+from app.models import db, AgreementTemplate, AgreementInstance, User, Space, Booking
 import os
 from dotenv import load_dotenv
 
 
-load_dotenv()
+# load_dotenv()
 
 
-def create_app():
-    app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
-    return app
+# def create_app():
+#     app = Flask(__name__)
+#     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
+#     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+#     db.init_app(app)
+#     return app
 
 
 
-@pytest.fixture
-def app():
-    app = create_app()
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
-        yield app
-        db.session.remove()
-        db.drop_all()
+# @pytest.fixture
+# def app():
+#     app = create_app()
+#     with app.app_context():
+#         db.drop_all()
+#         db.create_all()
+#         yield app
+#         db.session.remove()
+#         db.drop_all()
 
 
 

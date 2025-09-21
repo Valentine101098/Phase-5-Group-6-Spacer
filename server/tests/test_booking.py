@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from sqlalchemy.exc import IntegrityError
 import os
-from models import db, User, Space, Booking
+from app.models import db, User, Space, Booking
 from dotenv import load_dotenv
 import os
 

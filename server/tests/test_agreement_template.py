@@ -3,7 +3,7 @@ from flask import Flask
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 import os
-from models import db, AgreementTemplate, User, Space
+from app.models import db, AgreementTemplate, User, Space
 from dotenv import load_dotenv
 import os
 
