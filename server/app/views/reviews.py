@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from server.models import Review, User, Booking, db
+from app.models import Review, User, Booking, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 reviews_bp = Blueprint('reviews', __name__)
@@ -9,7 +9,7 @@ reviews_bp = Blueprint('reviews', __name__)
 @jwt_required()
 def create_review():
     current_user_id = get_jwt_identity()
-    logged_user = User.query.get(current_user_id)
+    logged_user = db.session.get(User, current_user_id)
 
     if not logged_user or logged_user.role != 'client':
         return jsonify({'error': 'Only clients can create reviews'}), 403
@@ -22,7 +22,7 @@ def create_review():
     if not (1 <= data['rating'] <= 5):
         return jsonify({'error': 'Rating must be between 1 and 5'}), 400
 
-    booking = Booking.query.get(data['booking_id'])
+    booking = db.session.get(Booking, data['booking_id'])
     if not booking or booking.user_id != current_user_id:
         return jsonify({'error': 'Invalid booking for this review'}), 400
 
@@ -57,7 +57,7 @@ def get_review(review_id):
 @jwt_required()
 def update_review(review_id):
     current_user_id = get_jwt_identity()
-    logged_user = User.query.get(current_user_id)
+    logged_user = db.session.get(User, current_user_id)
 
     review = Review.query.get_or_404(review_id)
 
@@ -91,7 +91,7 @@ def update_review(review_id):
 @jwt_required()
 def delete_review(review_id):
     current_user_id = get_jwt_identity()
-    logged_user = User.query.get(current_user_id)
+    logged_user = db.session.get(User, current_user_id)
     review = Review.query.get_or_404(review_id)
 
     if not logged_user or logged_user.role != 'client':

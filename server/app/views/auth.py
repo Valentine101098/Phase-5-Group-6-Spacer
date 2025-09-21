@@ -7,7 +7,7 @@ from flask_jwt_extended import (
 from functools import wraps
 from datetime import timedelta, datetime, timezone
 import secrets
-from server.models import db, User, Role, User_Roles, PasswordResetToken, VALID_ROLES
+from app.models import db, User, Role, User_Roles, PasswordResetToken, VALID_ROLES
 import re
 
 # Create Blueprint
@@ -53,7 +53,7 @@ def roles_required(*required_roles):
         def decorated_function(*args, **kwargs):
             verify_jwt_in_request()
             current_user_id = get_jwt_identity()
-            user = User.query.get(current_user_id)
+            user = db.session.get(User, current_user_id)
 
             if not user:
                 return jsonify({'message': 'User not found', 'error': 'user_not_found'}), 404
@@ -270,7 +270,7 @@ def token_refresh():
     """Refresh access token using refresh token"""
     try:
         current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
+        user = db.session.get(User, current_user_id)
 
         if not user:
             return jsonify({'message': 'User not found', 'error': 'user_not_found'}), 404
@@ -297,7 +297,7 @@ def get_current_user():
     """Get current user information"""
     try:
         current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
+        user = db.session.get(User, current_user_id)
 
         if not user:
             return jsonify({'message': 'User not found', 'error': 'user_not_found'}), 404
@@ -326,7 +326,7 @@ def update_current_user():
     """Update current user information"""
     try:
         current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
+        user = db.session.get(User, current_user_id)
 
         if not user:
             return jsonify({'message': 'User not found', 'error': 'user_not_found'}), 404
@@ -415,7 +415,7 @@ def update_user_role():
             }), 400
 
         # Find user
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return jsonify({'message': 'User not found', 'error': 'user_not_found'}), 404
 

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-from server.models import db, User_Roles, User, Role
-from server.views.auth import roles_required
+from app.models import db, User_Roles, User, Role
+from app.views.auth import roles_required
 
 user_roles_bp = Blueprint("user_roles", __name__)
 
@@ -43,12 +43,12 @@ def assign_role():
             return jsonify({'message': 'user_id and role_id are required'}), 400
 
         # Check if user exists
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return jsonify({'message': 'User not found'}), 404
 
         # Check if role exists
-        role = Role.query.get(role_id)
+        role = db.session.get(Role, role_id)
         if not role:
             return jsonify({'message': 'Role not found'}), 404
 

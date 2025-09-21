@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from flask_restful import Api, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 # from extensions import db
-from server.models import Booking, Space, AgreementTemplate, AgreementInstance, Invoice, db
+from app.models import Booking, Space, AgreementTemplate, AgreementInstance, Invoice, db
 from .auth import roles_required
 from datetime import datetime,  timedelta, timezone
 
@@ -47,16 +47,23 @@ def booking_to_dict_safe(booking):
 class BookingListResource(Resource):
     @jwt_required()
     def get(self):
-        """Get all bookings (admin sees all, client sees own)"""
+        """Get all bookings (admin sees all, client sees own, owner sees bookings of their spaces)"""
         user_id = get_jwt_identity()
         roles = get_jwt().get("roles", [])
 
         if "admin" in roles:
             bookings = Booking.query.all()
+        elif "owner" in roles:
+            bookings = (
+                Booking.query.join(Space)
+                .filter(Space.owner_id == user_id)
+                .all()
+            )
         else:
             bookings = Booking.query.filter_by(user_id=user_id).all()
 
         return {"data": [booking_to_dict_safe(b) for b in bookings]}, 200
+
         
     @jwt_required()
     @roles_required("client")
@@ -191,44 +198,47 @@ class BookingResource(Resource):
 
         return {"data": booking_to_dict_safe(booking)}, 200
 
-    @jwt_required()
-    @roles_required("admin")
-    def delete(self, booking_id):
-        """Admin cancels a booking"""
-        booking = Booking.query.get_or_404(booking_id)
-
-        if booking.status == "cancelled":
-            return {"error": "Booking already cancelled"}, 400
-
-        booking.status = "cancelled"
-        update_space_status(booking.space)
-        db.session.commit()
-
-        return {
-            "message": "Booking cancelled by admin",
-            "data": booking_to_dict_safe(booking)
-        }, 200
-
-
 class BookingCancelResource(Resource):
     @jwt_required()
-    @roles_required("client")
     def put(self, booking_id):
-        """Client cancels booking (only before start)"""
+        """Cancel booking (client or admin)"""
         booking = Booking.query.get_or_404(booking_id)
-        client_id = get_jwt_identity()
+        user_id = get_jwt_identity()
+        claims = get_jwt()  
 
-        if booking.user_id != client_id:
-            return {"error": "Not authorized"}, 403
-        if booking.status == "cancelled":
-            return {"error": "Booking already cancelled"}, 400
-        if booking.start_time <= datetime.utcnow():
-            return {"error": "Cannot cancel after booking has started"}, 400
+        
+        if "admin" in claims.get("roles", []):
+            if booking.status == "cancelled":
+                return {"error": "Booking already cancelled"}, 400
 
-        booking.status = "cancelled"
-        update_space_status(booking.space)
-        db.session.commit()
-        return {"message": "Booking cancelled", "data": booking_to_dict_safe(booking)}, 200
+            booking.status = "cancelled"
+            update_space_status(booking.space)
+            db.session.commit()
+            return {
+                "message": "Booking cancelled by admin",
+                "data": booking_to_dict_safe(booking),
+            }, 200
+
+        
+        if "client" in claims.get("roles", []):
+            if booking.user_id != user_id:
+                return {"error": "Not authorized"}, 403
+            if booking.status == "cancelled":
+                return {"error": "Booking already cancelled"}, 400
+            if booking.start_time <= datetime.utcnow():
+                return {"error": "Cannot cancel after booking has started"}, 400
+
+            booking.status = "cancelled"
+            update_space_status(booking.space)
+            db.session.commit()
+            return {
+                "message": "Booking cancelled",
+                "data": booking_to_dict_safe(booking),
+            }, 200
+
+        
+        return {"error": "Not authorized"}, 403
+
 
 
 
