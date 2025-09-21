@@ -28,7 +28,7 @@ class User(db.Model, SerializerMixin):
 
     user_roles = db.relationship("User_Roles", back_populates= "user", cascade="all, delete-orphan")
     # roles = db.relationship("Role", secondary="user_roles", back_populates="users", overlaps="user_roles")
-    reset_tokens = db.relationship("PasswordResetToken", back_populates="user")
+    reset_tokens = db.relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
     bookings = db.relationship("Booking", back_populates="user")
     agreement_templates = db.relationship("AgreementTemplate", back_populates="owner")
     agreements_issued = db.relationship("AgreementInstance", foreign_keys="AgreementInstance.owner_id", back_populates="owner")

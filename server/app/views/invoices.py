@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_restful import Api, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 # from extensions import db
-from app.models import Invoice, Booking, db
+from app.models import Invoice, Booking, db, Space
 from .auth import roles_required
 from datetime import datetime, timezone
 
@@ -25,11 +25,13 @@ class InvoiceListResource(Resource):
             )
         elif role == "owner":
             invoices = (
-                Invoice.query.join(Booking)
-                .join("space")
-                .filter(Booking.space.has(owner_id=user_id))
+                Invoice.query
+                .join(Invoice.booking)      
+                .join(Booking.space)        
+                .filter(Space.owner_id == user_id)
                 .all()
             )
+
         else:  # admin
             invoices = Invoice.query.all()
 
