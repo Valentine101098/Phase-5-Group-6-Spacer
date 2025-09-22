@@ -9,6 +9,7 @@ from datetime import timedelta, datetime, timezone
 import secrets
 from app.models import db, User, Role, User_Roles, PasswordResetToken, VALID_ROLES
 import re
+from flask_restful import Resource
 
 # Create Blueprint
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -46,26 +47,33 @@ def revoked_token_callback(jwt_header, jwt_payload):
     return jsonify({'message': 'Token has been revoked', 'error': 'token_revoked'}), 401
 
 # Role-based access control decorator
+
+
 def roles_required(*required_roles):
     """Decorator to require specific roles for access"""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+            # Check if is Flask-RESTful Resource
+            is_resource_method = isinstance(args[0] if args else None, Resource)
+            
             verify_jwt_in_request()
             current_user_id = get_jwt_identity()
             user = db.session.get(User, current_user_id)
 
             if not user:
+                if is_resource_method:
+                    return {'message': 'User not found', 'error': 'user_not_found'}, 404
                 return jsonify({'message': 'User not found', 'error': 'user_not_found'}), 404
 
             user_roles = user.get_roles()
 
             # Check if user has any of the required roles
             if not any(role in user_roles for role in required_roles):
-                return jsonify({
-                    'message': f'Access denied. Required roles: {", ".join(required_roles)}',
-                    'error': 'insufficient_permissions'
-                }), 403
+                error_msg = f'Access denied. Required roles: {", ".join(required_roles)}'
+                if is_resource_method:
+                    return {'message': error_msg, 'error': 'insufficient_permissions'}, 403
+                return jsonify({'message': error_msg, 'error': 'insufficient_permissions'}), 403
 
             return f(*args, **kwargs)
         return decorated_function
