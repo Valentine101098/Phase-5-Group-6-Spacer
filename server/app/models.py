@@ -28,10 +28,12 @@ class User(db.Model, SerializerMixin):
 
     user_roles = db.relationship("User_Roles", back_populates="user", cascade="all, delete-orphan")
     reset_tokens = db.relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
-    bookings = db.relationship("Booking", back_populates="user")
+    spaces = db.relationship("Space", back_populates="owner", cascade="all, delete-orphan")
+    bookings = db.relationship("Booking", back_populates="user", cascade="all, delete-orphan")
+    reviews = db.relationship("Review", back_populates="user", cascade="all, delete-orphan")
     agreement_templates = db.relationship("AgreementTemplate", back_populates="owner")
-    agreements_issued = db.relationship("AgreementInstance", foreign_keys="AgreementInstance.owner_id", back_populates="owner")
-    agreements_received = db.relationship("AgreementInstance", foreign_keys="AgreementInstance.client_id", back_populates="client")
+    agreements_issued = db.relationship("AgreementInstance", foreign_keys="AgreementInstance.owner_id", back_populates="owner", cascade="all, delete-orphan")
+    agreements_received = db.relationship("AgreementInstance", foreign_keys="AgreementInstance.client_id", back_populates="client", cascade="all, delete-orphan")
 
     # Most restrictive approach - only include basic fields and minimal relations
     serialize_only = (
@@ -156,7 +158,7 @@ class Space(db.Model, SerializerMixin):
     __tablename__ = "spaces"
 
     id = db.Column(db.Integer, primary_key=True)
-    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="CASCADE"), nullable=False)
     title = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=True)
     price_per_hour = db.Column(db.Numeric, nullable=False)
@@ -166,10 +168,10 @@ class Space(db.Model, SerializerMixin):
     max_guests = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
-    owner = db.relationship("User", backref="spaces")
-    bookings = db.relationship("Booking", back_populates="space")
-    agreement_templates = db.relationship("AgreementTemplate", back_populates="space")
-    agreement_instances = db.relationship("AgreementInstance", back_populates="space")
+    owner = db.relationship("User", back_populates="spaces", passive_deletes=True)
+    bookings = db.relationship("Booking", back_populates="space", cascade="all, delete-orphan")
+    agreement_templates = db.relationship("AgreementTemplate", back_populates="space", cascade="all, delete-orphan")
+    agreement_instances = db.relationship("AgreementInstance", back_populates="space", cascade="all, delete-orphan")
 
     # Only serialize space fields and basic owner info
     serialize_only = (
@@ -210,7 +212,7 @@ class Review(db.Model, SerializerMixin):
     comment = db.Column(db.String(250), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
-    user = db.relationship("User", backref="reviews")
+    user = db.relationship("User", back_populates="reviews")
     booking = db.relationship("Booking", back_populates="review")
 
     serialize_only = (
