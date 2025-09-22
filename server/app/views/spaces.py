@@ -9,6 +9,14 @@ spaces_bp = Blueprint('spaces', __name__)
 @jwt_required()
 def create_space():
     current_user_id = get_jwt_identity()
+    current_user = db.session.get(User, current_user_id)
+
+    if not current_user:
+        return jsonify({'error': 'User not found'}), 404
+
+    if "owner" not in current_user.get_roles():
+        return jsonify({'error': 'Only owners can create spaces'}), 403
+    
     data = request.get_json()
     try:
         space = Space(
