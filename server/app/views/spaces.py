@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models import Space, User, db
+from app.models import Space, User, AgreementTemplate, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 spaces_bp = Blueprint('spaces', __name__)
@@ -30,7 +30,16 @@ def create_space():
             max_guests=data['max_guests'],
         )
         db.session.add(space)
+        db.session.flush()  
+
+        template = AgreementTemplate(
+            owner_id=current_user_id,
+            space_id=space.id,
+            terms=data['terms']
+        )
+        db.session.add(template)
         db.session.commit()
+        
         return jsonify(space.to_dict()), 201
     except Exception as e:
         db.session.rollback()
