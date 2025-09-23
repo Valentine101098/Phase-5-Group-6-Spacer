@@ -57,7 +57,7 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
     # Ensure DATABASE_URL is set in the production environment
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL' ,'postgresql://spacer_db_gd12_user:PASSWORD@WezI7nwwnuOBbmoltqP0HgR0dkdhosTz/spacer_db_gd12')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL' ,'postgresql://spacer_db_gd12_user:WezI7nwwnuOBbmoltqP0HgR0dkdhosTz@dpg-d34iv8bipnbc7381a00g-a.frankfurt-postgres.render.com:5432/spacer_db_gd12')
 
 class TestingConfig(Config):
     TESTING = True
