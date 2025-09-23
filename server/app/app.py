@@ -236,11 +236,10 @@ def register_health_checks(app):
             'api_base': '/api'
         })
 
-
+app = create_app()
 
 # --- Create and Run the App ---
 if __name__ == '__main__':
-    app = create_app()
 
     port = int(os.getenv('PORT', 5000))
     debug_mode = app.config['DEBUG']
