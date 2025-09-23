@@ -50,18 +50,18 @@ class DevelopmentConfig(Config):
     """Development specific configuration."""
     DEBUG = True
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URL', 'postgresql://postgres:Aloise101098%23@localhost:5432/spacer_dev')
 
 class ProductionConfig(Config):
     """Production specific configuration."""
     DEBUG = False
     TESTING = False
     # Ensure DATABASE_URL is set in the production environment
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL' ,'postgresql://spacer_db_gd12_user:PASSWORD@WezI7nwwnuOBbmoltqP0HgR0dkdhosTz/spacer_db_gd12')
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'postgresql://postgres:Aloise101098%23@localhost:5432/test_db')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=5)
 
 
