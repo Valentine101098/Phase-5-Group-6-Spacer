@@ -1,4 +1,4 @@
-// src/pages/HomePage.jsx
+
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Home, MapPin, Star, Users, Shield } from "lucide-react";

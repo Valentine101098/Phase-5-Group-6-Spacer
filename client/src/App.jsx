@@ -1,98 +1,86 @@
-// App.jsx
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+// src/App.js
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-// Layout
-import Navbar from "./pages/navbar";
+import Login from './components/Login';
+import Signup from './components/Signup';
+import Profile from './components/Profile';
+import LogoutButton from './components/LogoutButton';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
+import HomePage from './components/HomePage';
+import NoPage from './components/NoPage';
 
-// Pages
-import HomePage from "./pages/HomePage";
-import LoginForm from "./pages/LoginForm";
-import SignupForm from "./pages/SignupForm";
-import OwnerDashboard from "./pages/OwnerDashboard";
-import ClientDashboard from "./pages/ClientDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 
-import NoPage from "./pages/NoPage";
-
-// ✅ check auth status via localStorage
-const isAuthenticated = () => {
-  return localStorage.getItem("user") !== null && localStorage.getItem("accessToken") !== null;
-};
-
-const getUser = () => {
-  try {
-    return JSON.parse(localStorage.getItem("user"));
-  } catch {
-    return null;
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) {
+    return <div className="text-center py-8 text-lg text-primary">Loading authentication...</div>;
   }
-};
-
-// ✅ Layouts
-const AuthenticatedLayout = ({ children }) => (
-  <div className="min-h-screen bg-gray-100">
-    <Navbar />
-    <main className="p-6">{children}</main>
-  </div>
-);
-
-const PublicLayout = ({ children }) => (
-  <div className="min-h-screen bg-gray-50">
-    <Navbar isPublic={true} />
-    <main className="p-6">{children}</main>
-  </div>
-);
-
-// ✅ Route Wrappers
-const PrivateRoute = ({ element }) => {
-  return isAuthenticated() ? (
-    <AuthenticatedLayout>{element}</AuthenticatedLayout>
-  ) : (
-    <Navigate to="/auth/login" />
-  );
-};
-
-const PublicOnlyRoute = ({ element }) => {
-  return isAuthenticated() ? (
-    <Navigate to="/dashboard" />
-  ) : (
-    <PublicLayout>{element}</PublicLayout>
-  );
-};
-
-// ✅ Role-based dashboard resolver
-const RoleBasedDashboardResolver = () => {
-  const user = getUser();
-
-  if (!user) return <Navigate to="/auth/login" />;
-
-  switch (user.role) {
-    case "landlord":
-      return <OwnerDashboard />;
-    case "tenant":
-      return <ClientDashboard />;
-    case "admin":
-      return <AdminDashboard />;
-    default:
-      return <Navigate to="/auth/login" />;
+  if (!isAuthenticated && !loading) {
+    return <Login />;
   }
+  return children;
 };
 
-export default function App() {
+function AppContent() {
+  const { isAuthenticated, user } = useAuth();
+
+  return (
+    <>
+      <nav className="bg-primary text-white p-4 flex justify-between items-center shadow-md">
+        <Link to="/" className="text-2xl font-bold text-white no-underline">Spacer</Link>
+        <div className="flex space-x-6">
+          <Link to="/" className="text-white hover:text-secondary hover:underline transition-colors duration-200">Home</Link>
+          {!isAuthenticated ? (
+            <>
+              <Link to="/login">Login</Link>
+              <Link to="/signup">Sign Up</Link>
+            </>
+          ) : (
+            <>
+              <Link to="/profile">Profile</Link>
+              {user && user.roles && user.roles.includes('admin') && (
+                <Link to="/admin-dashboard">Admin Dashboard</Link>
+              )}
+              <LogoutButton />
+            </>
+          )}
+        </div>
+      </nav>
+      <div className="flex-grow p-8 flex justify-center items-start min-h-screen bg-lightblue-lighter">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }
+          />
+
+          <Route path="*" element={<NoPage />} /> 
+        </Routes>
+      </div>
+    </>
+  );
+}
+
+function App() {
   return (
     <Router>
-      <Routes>
-        {/* Public */}
-        <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
-        <Route path="/auth/register" element={<PublicOnlyRoute element={<SignupForm />} />} />
-        <Route path="/auth/login" element={<PublicOnlyRoute element={<LoginForm />} />} />
-
-        {/* Protected - Main dashboard that routes based on role */}
-        <Route path="/dashboard" element={<PrivateRoute element={<RoleBasedDashboardResolver />} />} />
-
-        {/* Catch-all */}
-        <Route path="*" element={<NoPage />} />
-      </Routes>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </Router>
   );
 }
+
+export default App;
