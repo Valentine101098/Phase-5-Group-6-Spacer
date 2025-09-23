@@ -48,42 +48,23 @@ def create_space():
 # Get all spaces
 @spaces_bp.route('/', methods=['GET'])
 def get_spaces():
-    spaces = Space.query.all()
+    spaces = db.session.query(Space).all()
     return jsonify([space.to_dict() for space in spaces]), 200
 
 # Get a specific space by ID
 @spaces_bp.route('/<int:space_id>', methods=['GET'])
 def get_space(space_id):
-    space = Space.query.get_or_404(space_id)
-
-
-    latest_template = (
-        AgreementTemplate.query
-        .filter_by(space_id=space.id)
-        .order_by(AgreementTemplate.created_at.desc())
-        .first()
-    )
-
-    response_data = space.to_dict()
-
-    if latest_template:
-        response_data["agreement"] = {
-            "template_id": latest_template.id,
-            "terms": latest_template.terms
-        }
-    else:
-        response_data["agreement"] = None
-
-    return jsonify(response_data), 200
-
-
+    space = db.session.get(Space, space_id)
+    if not space:
+        return jsonify({'error': 'Space not found'}), 404
+    return jsonify(space.to_dict()), 200
 
 # Update a specific space by ID
 @spaces_bp.route('/<int:space_id>', methods=['PATCH'])
 @jwt_required()
 def update_space(space_id):
     current_user_id = get_jwt_identity()
-    space = Space.query.get_or_404(space_id)
+    space = db.session.get(Space, space_id)
 
     current_user = db.session.get(User, current_user_id)
     if space.owner_id != current_user_id:
@@ -106,7 +87,7 @@ def update_space(space_id):
 @jwt_required()
 def delete_space(space_id):
     current_user_id = get_jwt_identity()
-    space = Space.query.get_or_404(space_id)
+    space = db.session.get(Space, space_id)
 
     current_user = db.session.get(User, current_user_id)
     if not current_user:
