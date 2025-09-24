@@ -15,11 +15,11 @@ def create_space():
             owner_id=current_user_id,
             title=data['title'],
             description=data.get('description'),
-            price_per_hour=data['price_per_hour'],
+            price_per_hour=int(data['price_per_hour']),
             status=data.get('status', 'available'),
             images=data.get('images', []),
             space_type=data.get('space_type'),
-            max_guests=data['max_guests'],
+            max_guests=int(data['max_guests']),
         )
         db.session.add(space)
         db.session.commit()
