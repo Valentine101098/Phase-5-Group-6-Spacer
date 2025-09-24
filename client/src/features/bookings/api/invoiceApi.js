@@ -1,8 +1,8 @@
-import { bearerToken } from '../components/tokens';
+// import { bearerToken } from '../components/tokens';
 
 const BASE_URL = 'http://127.0.0.1:5000/api';
 
-export async function fetchInvoiceById(id) {
+export async function fetchInvoiceById(id, bearerToken) {
   const response = await fetch(`${BASE_URL}/invoices/${id}`, {
     headers: { Authorization: `Bearer ${bearerToken}` },
   });
@@ -12,7 +12,7 @@ export async function fetchInvoiceById(id) {
   return response.json();
 }
 
-export async function validateInvoicePayment(id, confirmationCode) {
+export async function validateInvoicePayment(id, confirmationCode, bearerToken) {
   const response = await fetch(`${BASE_URL}/invoices/${id}`, {
     method: 'PUT',
     headers: {

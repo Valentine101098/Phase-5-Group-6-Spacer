@@ -1,11 +1,13 @@
 // features/temp/usePayment.js
 import { useState } from 'react';
 import { validateInvoicePayment } from '../api/invoiceApi';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export function usePayment(invoiceId) {
   const [validating, setValidating] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const { accessToken } = useAuth() 
 
   const validatePayment = async (confirmationCode) => {
     if (!confirmationCode.trim()) {
@@ -17,7 +19,7 @@ export function usePayment(invoiceId) {
     setPaymentError(null);
 
     try {
-      await validateInvoicePayment(invoiceId, confirmationCode.trim());
+      await validateInvoicePayment(invoiceId, confirmationCode.trim(), accessToken);
       setPaymentSuccess(true);
     } catch (err) {
       setPaymentError(err.message);

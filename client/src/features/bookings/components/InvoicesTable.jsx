@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronUp, ChevronDown, DollarSign, Calendar } from 'lucide-react';
-import { bearerToken } from './tokens';
+// import { bearerToken } from './tokens';
+import { useAuth } from '../../../contexts/AuthContext';
+
 
 export function InvoicesTable() {
   const [invoices, setInvoices] = useState([]);
@@ -9,14 +11,18 @@ export function InvoicesTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [statusFilter, setStatusFilter] = useState('all');
+  const { accessToken  } = useAuth()
 
   useEffect(() => {
+    if (!accessToken) {
+      return
+    }    
     const fetchInvoices = async () => {
       try {
         setLoading(true);
         const response = await fetch('http://127.0.0.1:5000/api/invoices/', {
           headers: {
-            'Authorization': `Bearer ${bearerToken}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
         });
@@ -33,7 +39,7 @@ export function InvoicesTable() {
     };
 
     fetchInvoices();
-  }, []);
+  }, [accessToken]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '—';

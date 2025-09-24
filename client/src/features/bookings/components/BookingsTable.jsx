@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronUp, ChevronDown, Calendar, Users, DollarSign, Clock, X } from 'lucide-react';
 import { bearerToken } from './tokens';
+import { useAuth } from '../../../contexts/AuthContext';
 
 
 export function BookingsTable() {
@@ -10,14 +11,18 @@ export function BookingsTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [statusFilter, setStatusFilter] = useState('all');
+  const { accessToken  } = useAuth()
   // Fetch bookings from API
   useEffect(() => {
+    if (!accessToken) {
+      return
+    }
     const fetchBookings = async () => {
       try {
         setLoading(true);
         const response = await fetch('http://127.0.0.1:5000/api/bookings/', {
           headers: {
-            'Authorization': `Bearer ${bearerToken}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
         });
@@ -31,6 +36,7 @@ export function BookingsTable() {
         console.log(data.data);
       } catch (err) {
         setError(err.message);
+        console.log("failed_accesstoken: ", accessToken)
         
       } finally {
         setLoading(false);
@@ -38,7 +44,7 @@ export function BookingsTable() {
     };
 
     fetchBookings();
-  }, []);
+  }, [accessToken]);
 
   // Calculate duration in hours
   const calculateDuration = (startTime, endTime) => {
@@ -212,7 +218,7 @@ export function BookingsTable() {
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-            Error: {error} (showing mock data for demo)
+            Error: {error} ()
           </div>
         )}
       </div>
