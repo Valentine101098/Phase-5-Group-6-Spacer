@@ -36,7 +36,7 @@ def booking_to_dict_safe(booking):
         'status': booking.status,
         'estimated_guests': booking.estimated_guests,
         'created_at': booking.created_at.isoformat() if booking.created_at else None,
-        
+
         'space_title': booking.space.title if booking.space else None,
         'has_agreement_instance': booking.agreement_instance is not None,
         'has_invoice': booking.invoice is not None,
@@ -64,7 +64,7 @@ class BookingListResource(Resource):
 
         return {"data": [booking_to_dict_safe(b) for b in bookings]}, 200
 
-        
+
     @jwt_required()
     @roles_required("client")
     def post(self):
@@ -73,7 +73,7 @@ class BookingListResource(Resource):
         user_id = get_jwt_identity()
 
         try:
-            
+
             required = [
                 "space_id",
                 "agreement_template_id",
@@ -86,11 +86,11 @@ class BookingListResource(Resource):
                 if field not in data:
                     return {"error": f"Missing required field: {field}"}, 400
 
-            
+
             if not data["terms_accepted"]:
                 return {"error": "Terms not agreed"}, 422
 
-            
+
             start_time = parse_datetime(data["start_time"])
             end_time = parse_datetime(data["end_time"])
 
@@ -115,7 +115,7 @@ class BookingListResource(Resource):
                 status="pending",
             )
             db.session.add(booking)
-            db.session.flush()  
+            db.session.flush()
 
             # Validate the agreement template (must belong to this space)
             template = AgreementTemplate.query.filter_by(
@@ -144,14 +144,14 @@ class BookingListResource(Resource):
             invoice = Invoice(
                 booking_id=booking.id,
                 amount=booking.total_amount,
-                status="unpaid",  
-                payment_method=None,  
-                transaction_id=None,  
-                paid_at=None,  
+                status="unpaid",
+                payment_method=None,
+                transaction_id=None,
+                paid_at=None,
                 created_at=datetime.now(timezone.utc),
             )
             db.session.add(invoice)
-            db.session.flush()  
+            db.session.flush()
 
             db.session.commit()
 
@@ -159,7 +159,7 @@ class BookingListResource(Resource):
                 "message": "Booking created successfully (pending payment)",
                 "data": {
                     **booking_to_dict_safe(booking),
-                    
+
                     "invoice": {
                         "id": invoice.id,
                         "amount": float(invoice.amount),
@@ -204,9 +204,9 @@ class BookingCancelResource(Resource):
         """Cancel booking (client or admin)"""
         booking = Booking.query.get_or_404(booking_id)
         user_id = get_jwt_identity()
-        claims = get_jwt()  
+        claims = get_jwt()
 
-        
+
         if "admin" in claims.get("roles", []):
             if booking.status == "cancelled":
                 return {"error": "Booking already cancelled"}, 400
@@ -219,13 +219,13 @@ class BookingCancelResource(Resource):
                 "data": booking_to_dict_safe(booking),
             }, 200
 
-        
+
         if "client" in claims.get("roles", []):
             if booking.user_id != user_id:
                 return {"error": "Not authorized"}, 403
             if booking.status == "cancelled":
                 return {"error": "Booking already cancelled"}, 400
-            if booking.start_time <= datetime.utcnow():
+            if booking.start_time <= datetime.now(timezone.utc):
                 return {"error": "Cannot cancel after booking has started"}, 400
 
             booking.status = "cancelled"
@@ -236,7 +236,7 @@ class BookingCancelResource(Resource):
                 "data": booking_to_dict_safe(booking),
             }, 200
 
-        
+
         return {"error": "Not authorized"}, 403
 
 

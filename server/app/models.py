@@ -18,6 +18,7 @@ ROLE_CLIENT = 'client'
 VALID_ROLES = [ROLE_ADMIN, ROLE_OWNER, ROLE_CLIENT]
 
 # --- Custom UTCDateTime Type ---
+
 class UTCDateTime(TypeDecorator):
     """
     Ensures that datetimes are always stored and retrieved as timezone-aware UTC.
@@ -27,14 +28,15 @@ class UTCDateTime(TypeDecorator):
     cache_ok = True
 
     def process_bind_param(self, value, dialect):
-        if value is not None and value.tzinfo is None:
-            # If a naive datetime is passed, raise an error
-            raise TypeError("tzinfo is required for UTCDateTime bind parameter. Value received: " + str(value))
+        if value is not None:
+            if value.tzinfo is None:
+
+                value = value.replace(tzinfo=timezone.utc)
+                # --- END RENDER SUGGESTION FIX ---
         return value
 
     def process_result_value(self, value, dialect):
         if value is not None and value.tzinfo is None:
-            # If a naive datetime is retrieved from DB, assume UTC and make it aware
             return value.replace(tzinfo=timezone.utc)
         return value
 
