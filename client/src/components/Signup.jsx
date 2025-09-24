@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const BASE_URL = 'postgresql://spacer_db_gd12_user:PASSWORD@WezI7nwwnuOBbmoltqP0HgR0dkdhosTz/spacer_db_gd12'; 
+const BASE_URL = 'http://127.0.0.1:5000'; 
 
 function Signup() {
   const [firstName, setFirstName] = useState('');

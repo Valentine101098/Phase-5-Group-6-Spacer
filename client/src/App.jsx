@@ -11,6 +11,7 @@ import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import HomePage from './components/HomePage';
 import NoPage from './components/NoPage';
+import AdminDashboard from './components/AdminDashboard';
 
 
 const PrivateRoute = ({ children }) => {
@@ -62,6 +63,15 @@ function AppContent() {
             element={
               <PrivateRoute>
                 <Profile />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/admin-dashboard"
+            element={
+              <PrivateRoute>
+                  <AdminDashboard />
               </PrivateRoute>
             }
           />

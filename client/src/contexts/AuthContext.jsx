@@ -1,9 +1,8 @@
-// src/contexts/AuthContext.js
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
 const AuthContext = createContext(null);
 
-const BASE_URL = 'postgresql://spacer_db_gd12_user:PASSWORD@WezI7nwwnuOBbmoltqP0HgR0dkdhosTz/spacer_db_gd12'; // Replace with your Flask backend URL
+const BASE_URL = 'http://127.0.0.1:5000';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -95,21 +94,35 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     setLoading(true);
-    const result = await makeAuthenticatedRequest('/auth/login', 'POST', { email, password });
-    setLoading(false);
+    try {
+      const response = await fetch(`${BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (result.success) {
-      const { access_token, refresh_token, user: userData } = result.data;
-      localStorage.setItem('accessToken', access_token);
-      localStorage.setItem('refreshToken', refresh_token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setAccessToken(access_token);
-      setRefreshToken(refresh_token);
-      setUser(userData);
-      return { success: true };
-    } else {
-      console.error('Login failed:', result.error);
-      return { success: false, error: result.error };
+      const data = await response.json();
+      setLoading(false);
+
+      if (response.ok && data.access_token) {
+        // Store tokens + user
+        localStorage.setItem("accessToken", data.access_token);
+        localStorage.setItem("refreshToken", data.refresh_token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        setAccessToken(data.access_token);
+        setRefreshToken(data.refresh_token);
+        setUser(data.user);
+
+        return { success: true };
+      } else {
+        console.error("Login failed:", data.message || "No access token");
+        return { success: false, error: data.message || "Login failed" };
+      }
+    } catch (err) {
+      setLoading(false);
+      console.error("Network error:", err);
+      return { success: false, error: "Network error. Please check your connection." };
     }
   };
 
