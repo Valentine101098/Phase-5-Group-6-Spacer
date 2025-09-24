@@ -3,22 +3,41 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+
+const getDashboardPath = (roles) => {
+  if (!roles || roles.length === 0) {
+
+    return '/profile';
+  }
+  if (roles.includes('admin')) {
+    return '/admin/dashboard';
+  }
+  if (roles.includes('owner')) {
+    return '/owner/dashboard';
+  }
+
+  return '/client/dashboard';
+};
+
+
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, loading, isAuthenticated } = useAuth();
+  const { login, loading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
+
   React.useEffect(() => {
-    if (!loading && isAuthenticated) {
-      navigate('/profile'); // Redirect if already logged in
+    if (!loading && isAuthenticated && user) {
+      const dashboardPath = getDashboardPath(user.roles);
+      navigate(dashboardPath);
     }
-  }, [isAuthenticated, loading, navigate]); // Added loading to dependency array
+  }, [isAuthenticated, loading, navigate, user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Clear previous errors
+    setError('');
 
     if (!email || !password) {
       setError('Email and password are required.');
@@ -29,7 +48,7 @@ function Login() {
     if (!result.success) {
       setError(result.error || 'Login failed. Please try again.');
     } else {
-      navigate('/profile'); // Redirect to profile on successful login
+
     }
   };
 
@@ -37,7 +56,6 @@ function Login() {
     return <div className="text-center py-8 text-lg text-primary">Loading authentication...</div>;
   }
 
-  // If isAuthenticated is true, useEffect will handle navigation.
   if (isAuthenticated) {
     return null;
   }

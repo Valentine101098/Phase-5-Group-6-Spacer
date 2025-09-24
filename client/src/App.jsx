@@ -77,7 +77,7 @@ function AppContent() {
             }
           />
 
-          <Route path="*" element={<NoPage />} /> 
+          <Route path="*" element={<NoPage />} />
         </Routes>
       </div>
     </>

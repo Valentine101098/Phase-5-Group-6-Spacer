@@ -1,20 +1,22 @@
 // src/components/ForgotPassword.js
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Import Link
 
-const BASE_URL = 'postgresql://spacer_db_gd12_user:PASSWORD@WezI7nwwnuOBbmoltqP0HgR0dkdhosTz/spacer_db_gd12';
+const BASE_URL = 'http://localhost:5000';
 
 function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetTokenForDev, setResetTokenForDev] = useState(null); // New state to hold the token
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
+    setResetTokenForDev(null); // Clear token on new submission
 
     if (!email) {
       setError('Please enter your email address.');
@@ -37,6 +39,7 @@ function ForgotPassword() {
         setMessage(data.message);
         if (data.reset_token) {
             console.log("DEBUG: Reset token (for development):", data.reset_token);
+            setResetTokenForDev(data.reset_token); // Store the token in state
         }
       } else {
         setError(data.message || 'Failed to request password reset.');
@@ -66,6 +69,21 @@ function ForgotPassword() {
         </div>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         {message && <p className="text-green-500 text-sm mb-4">{message}</p>}
+
+        {resetTokenForDev && (
+          <div className="mt-4 p-3 bg-lightblue-lighter rounded">
+            <p className="text-gray-800 text-sm mb-2">
+             Click here to use the reset token:
+            </p>
+            <Link
+              to={`/reset-password?token=${resetTokenForDev}`}
+              className="bg-secondary hover:bg-primary text-white font-bold py-2 px-4 rounded transition-colors duration-200"
+            >
+              Reset Password Now
+            </Link>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={loading}
@@ -75,7 +93,7 @@ function ForgotPassword() {
         </button>
       </form>
       <p className="mt-4 text-gray-600">
-        Remember your password? <a href="/login" className="text-primary hover:text-secondary hover:underline">Login</a>
+        Remember your password? <Link to="/login" className="text-primary hover:text-secondary hover:underline">Login</Link>
       </p>
     </div>
   );
