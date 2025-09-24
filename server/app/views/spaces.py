@@ -54,10 +54,29 @@ def get_spaces():
 # Get a specific space by ID
 @spaces_bp.route('/<int:space_id>', methods=['GET'])
 def get_space(space_id):
-    space = db.session.get(Space, space_id)
-    if not space:
-        return jsonify({'error': 'Space not found'}), 404
-    return jsonify(space.to_dict()), 200
+    space = Space.query.get_or_404(space_id)
+
+
+    latest_template = (
+        AgreementTemplate.query
+        .filter_by(space_id=space.id)
+        .order_by(AgreementTemplate.created_at.desc())
+        .first()
+    )
+
+    response_data = space.to_dict()
+
+    if latest_template:
+        response_data["agreement"] = {
+            "template_id": latest_template.id,
+            "terms": latest_template.terms
+        }
+    else:
+        response_data["agreement"] = None
+
+    return jsonify(response_data), 200
+
+
 
 # Update a specific space by ID
 @spaces_bp.route('/<int:space_id>', methods=['PATCH'])
