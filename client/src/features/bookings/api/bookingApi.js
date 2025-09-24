@@ -1,7 +1,9 @@
 // features/temp/api.js
-import { bearerToken } from '../components/tokens';
+// import { bearerToken } from '../components/tokens';
+// import { useAuth } from '../../../contexts/AuthContext';
 
 const BASE_URL = 'http://127.0.0.1:5000/api';
+
 
 export async function fetchSpaceById(id) {
   const response = await fetch(`${BASE_URL}/spaces/${id}`);
@@ -11,7 +13,7 @@ export async function fetchSpaceById(id) {
   return response.json();
 }
 
-export async function createBooking(bookingData) {
+export async function createBooking(bookingData, bearerToken) {
   const response = await fetch(`${BASE_URL}/bookings/`, {
     method: 'POST',
     headers: {
@@ -23,6 +25,7 @@ export async function createBooking(bookingData) {
 
   if (!response.ok) {
     const errorData = await response.json();
+    
     throw new Error(errorData.error || 'Failed to create booking');
   }
   return response.json();

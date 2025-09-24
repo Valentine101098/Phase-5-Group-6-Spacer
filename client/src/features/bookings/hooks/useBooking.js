@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { createBooking } from '../api/bookingApi';
 import { calculateTotalAmount } from '../utils/utils';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export function useBooking(space, id, navigate) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const { accessToken } = useAuth() 
 
   const proceedToBooking = async ({ startDate, endDate, startTime, endTime, termsAccepted }) => {
     if (!termsAccepted) {
@@ -32,7 +34,7 @@ export function useBooking(space, id, navigate) {
         terms_accepted: termsAccepted
       };
 
-      const result = await createBooking(bookingData);
+      const result = await createBooking(bookingData, accessToken);
       const invoiceId = result.data.invoice.id;
       navigate(`/invoices/${invoiceId}`);
     } catch (err) {
