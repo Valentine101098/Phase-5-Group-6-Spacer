@@ -52,6 +52,20 @@ def get_review(review_id):
     review = Review.query.get_or_404(review_id)
     return jsonify(review.to_dict()), 200
 
+# Get all reviews for a specific space by space ID with optional limit
+@reviews_bp.route('/spaces/<int:space_id>', methods=['GET'])
+def get_reviews_by_space(space_id):
+    limit = request.args.get('limit', default=5, type=int)
+
+    reviews = (db.session.query(Review)
+    .join(Booking, Review.booking_id == Booking.id)
+    .filter(Booking.space_id == space_id)
+    .order_by(Review.rating.desc(), Review.created_at.desc())
+    .limit(limit)
+    .all())
+
+    return jsonify([review.to_dict() for review in reviews]), 200
+
 # Update a specific review by ID
 @reviews_bp.route('/<int:review_id>', methods=['PATCH'])
 @jwt_required()
