@@ -248,11 +248,11 @@ def seed_database():
         # Create agreement templates
         print("📄 Creating agreement templates...")
         agreement_templates = []
-        for i, space in enumerate(spaces[:3]):  # Create templates for first 3 spaces
+        for i, space in enumerate(spaces):  # Create templates for first 3 spaces
             template = AgreementTemplate(
                 owner_id=space.owner_id,
                 space_id=space.id,
-                terms=AGREEMENT_TERMS_TEMPLATES[i],
+                terms=AGREEMENT_TERMS_TEMPLATES[0],
                 created_at=fake.date_time_between(start_date='-3M', end_date='now', tzinfo=timezone.utc)
             )
             db.session.add(template)

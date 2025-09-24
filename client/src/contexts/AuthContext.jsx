@@ -1,21 +1,21 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-
+ 
 const AuthContext = createContext(null);
-
+ 
 const BASE_URL = 'http://127.0.0.1:5000';
-
+ 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [refreshToken, setRefreshToken] = useState(null);
   const [loading, setLoading] = useState(true);
-
-
+ 
+ 
   useEffect(() => {
     const storedAccessToken = localStorage.getItem('accessToken');
     const storedRefreshToken = localStorage.getItem('refreshToken');
     const storedUser = localStorage.getItem('user');
-
+ 
     if (storedAccessToken && storedRefreshToken && storedUser) {
       setAccessToken(storedAccessToken);
       setRefreshToken(storedRefreshToken);
@@ -28,33 +28,33 @@ export const AuthProvider = ({ children }) => {
     }
     setLoading(false);
   }, []);
-
-
+ 
+ 
   const makeAuthenticatedRequest = async (url, method, data = null, isRefreshTokenRequest = false) => {
     let currentAccessToken = accessToken;
-
+ 
     if (!isRefreshTokenRequest && !currentAccessToken) {
       console.error("No access token available for authenticated request.");
       return { success: false, error: 'No access token' };
     }
-
+ 
     let headers = {
       'Content-Type': 'application/json',
     };
-
+ 
     if (isRefreshTokenRequest) {
       headers['Authorization'] = `Bearer ${refreshToken}`;
     } else if (currentAccessToken) {
       headers['Authorization'] = `Bearer ${currentAccessToken}`;
     }
-
+ 
     try {
       const response = await fetch(`${BASE_URL}${url}`, {
         method: method,
         headers: headers,
         body: data ? JSON.stringify(data) : null,
       });
-
+ 
       if (response.ok) {
         return { success: true, data: await response.json() };
       } else if (response.status === 401 && !isRefreshTokenRequest) {
@@ -88,10 +88,10 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: 'Network error. Please check your connection.' };
     }
   };
-
-
+ 
+ 
   // --- Authentication Functions ---
-
+ 
   const login = async (email, password) => {
     setLoading(true);
     try {
@@ -100,20 +100,20 @@ export const AuthProvider = ({ children }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+ 
       const data = await response.json();
       setLoading(false);
-
+ 
       if (response.ok && data.access_token) {
         // Store tokens + user
         localStorage.setItem("accessToken", data.access_token);
         localStorage.setItem("refreshToken", data.refresh_token);
         localStorage.setItem("user", JSON.stringify(data.user));
-
+ 
         setAccessToken(data.access_token);
         setRefreshToken(data.refresh_token);
         setUser(data.user);
-
+ 
         return { success: true };
       } else {
         console.error("Login failed:", data.message || "No access token");
@@ -125,7 +125,7 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: "Network error. Please check your connection." };
     }
   };
-
+ 
   const logout = async () => {
     setLoading(true);
     // Invalidate token on the backend
@@ -137,7 +137,7 @@ export const AuthProvider = ({ children }) => {
     } else {
       console.log("No access token to revoke, proceeding with local logout.");
     }
-
+ 
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
@@ -147,12 +147,12 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
     return { success: true };
   };
-
+ 
   const refreshAccessToken = async () => {
     setLoading(true);
     const result = await makeAuthenticatedRequest('/auth/refresh', 'POST', null, true); // Pass true for isRefreshTokenRequest
     setLoading(false);
-
+ 
     if (result.success) {
       const newAccessToken = result.data.access_token;
       localStorage.setItem('accessToken', newAccessToken);
@@ -165,7 +165,7 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: result.error };
     }
   };
-
+ 
   const value = {
     user,
     accessToken,
@@ -177,10 +177,10 @@ export const AuthProvider = ({ children }) => {
     refreshAccessToken,
     makeAuthenticatedRequest, // Expose for other components
   };
-
+ 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
+ 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

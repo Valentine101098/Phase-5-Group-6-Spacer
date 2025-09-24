@@ -43,7 +43,8 @@ class InvoiceListResource(Resource):
                     "amount": str(i.amount),
                     "status": i.status,
                     "payment_method": i.payment_method,
-                    "paid_at": i.paid_at,
+                    "paid_at": i.paid_at.isoformat() if i.paid_at else None,
+                    "space_title": i.booking.space.title if i.booking and i.booking.space else None,
                 }
                 for i in invoices
             ]

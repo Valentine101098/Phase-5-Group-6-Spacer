@@ -11,6 +11,10 @@ import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import HomePage from './components/HomePage';
 import NoPage from './components/NoPage';
+import { BookingPage } from "./features/bookings/components/BookingPage";
+import { PaymentPage } from './features/bookings/components/PaymentPage';
+import { BookingsTable } from './features/bookings/components/BookingsTable';
+import { InvoicesTable } from './features/bookings/components/InvoicesTable';
 
 
 const PrivateRoute = ({ children }) => {
@@ -56,6 +60,13 @@ function AppContent() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+       
+        <Route path="/spaces/:id/booking" element={<BookingPage />} />
+       
+       <Route path="/invoices/:id" element={<PaymentPage />} />
+     
+      <Route path="/dashboard/bookings" element={<BookingsTable />} />
+       <Route path="/dashboard/invoices" element={<InvoicesTable />} />          
 
           <Route
             path="/profile"
