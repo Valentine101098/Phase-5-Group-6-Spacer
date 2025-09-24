@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function SpaceReviewForm({ spaceId, onReviewSubmitted, onCancel, editingReview}) {
+export default function SpaceReviewForm({ spaceId, booking_id, onReviewSubmitted, onCancel, editingReview}) {
 
     const [rating, setRating] = useState(5)
     const [comment, setComment] = useState("")
@@ -16,15 +16,16 @@ export default function SpaceReviewForm({ spaceId, onReviewSubmitted, onCancel, 
         e.preventDefault();
 
         const method = editingReview ? 'PATCH' : 'POST';
-        const url = editingReview ? `/api/reviews/${editingReview.id}` : '/api/reviews';
+        const url = editingReview ? `http://127.0.0.1:5000/api/reviews/${editingReview.id}` : 'http://127.0.0.1:5000/api/reviews/';
         
         fetch(url, {
             method: method,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
             body: JSON.stringify({
-                booking_id: editingReview ? editingReview.booking_id : null,
+                booking_id: editingReview ? editingReview.booking_id : booking_id,
                 rating,
                 comment,
             }),
@@ -39,8 +40,8 @@ export default function SpaceReviewForm({ spaceId, onReviewSubmitted, onCancel, 
     }
 
     return (
-        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2">
-            <label className="font-semibold">Rating</label>
+        <form onSubmit={handleSubmit} className="mt-4 bg-blue-600 flex flex-col gap-2">
+            <label className="font-semibold text-white">Rating</label>
             <input 
                 type="number" 
                 min="1" 
@@ -50,16 +51,16 @@ export default function SpaceReviewForm({ spaceId, onReviewSubmitted, onCancel, 
                 className="border p-2 rounded"
             />
 
-            <label className="font-semibold">Comment</label>
+            <label className="font-semibold text-white">Comment</label>
             <textarea 
                 value={comment} 
                 onChange={(e) => setComment(e.target.value)} 
-                className="border p-2 rounded"
+                className="border p-2 rounded mb-2"
             ></textarea>
 
             <button
                 type="submit"
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-900 transition"
             >
                 {editingReview ? "Update Review" : "Submit Review"}
             </button>
