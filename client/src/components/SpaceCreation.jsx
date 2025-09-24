@@ -1,12 +1,14 @@
 import { useState } from "react";   
+import { useAuth } from "../contexts/AuthContext";
 
 export default function SpaceCreation({ onSpaceCreated }) {
+    const { accessToken } = useAuth();
     const [form, setForm] = useState({
         title: "",
         description: "",
-        price_per_hour: Number(""),
+        price_per_hour: 0,
         space_type: "",
-        max_guests: "",
+        max_guests: 0,
         images: [""],
         terms: "",
     });
@@ -46,7 +48,7 @@ export default function SpaceCreation({ onSpaceCreated }) {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                    Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify(form),
             });
