@@ -14,7 +14,7 @@ def create_space():
     if not current_user:
         return jsonify({'error': 'User not found'}), 404
 
-    if "owner" not in current_user.get_roles():
+    if "owner" not in current_user.get_roles() and "admin" not in current_user.get_roles():
         return jsonify({'error': 'Only owners can create spaces'}), 403
     
     data = request.get_json()
