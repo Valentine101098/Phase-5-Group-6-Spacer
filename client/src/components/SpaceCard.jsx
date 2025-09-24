@@ -23,18 +23,18 @@ export default function SpaceCard({ space }) {
             <div className="p-4 flex flex-col flex-grow">
                 <h3 className="text-lg font-semibold mb-2">{space.title}</h3>
                 <p className="text-gray-600 mb-4 flex-grow">{space.description}</p>
-                <p className="text-sm text-gray-500 mb-2">Type: {space.space_type}</p>
-                <p className="text-sm text-gray-500 mb-4">Price: Kshs {space.price_per_hour}/hr</p>
+                <p className="text-sm text-black mb-2"><strong>Type:</strong> {space.space_type}</p>
                 <div className="flex justify-between items-center mt-2">
                     <span 
                         className={`px-2 py-1 text-xs font-semibold rounded ${space.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
                         {space.status}
                     </span>
-                    <span className="font-bold text-indigo-600">
-                        Kshs {space.price_per_hour}/hr
-                    </span>
+                    
                 </div>
+                <span className="font-bold mt-2 text-indigo-600">
+                    Kshs {space.price_per_hour}/hr
+                </span>
                 <div className="mt-3 flex flex-col gap-2">
                     <button className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300" onClick={() => setShowDetails(true)}>
                         More Details
