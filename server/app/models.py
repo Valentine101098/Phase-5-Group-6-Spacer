@@ -183,7 +183,7 @@ class PasswordResetToken(db.Model, SerializerMixin):
             self.expires_at = self.created_at + timedelta(hours=1)
 
     @validates("expires_at")
-    def validate_expires_at(self, key, expires_at):
+    def validate_token(self, key, expires_at):
         if expires_at is None:
             raise ValueError("Expiration date is required")
         if expires_at.tzinfo is None:
