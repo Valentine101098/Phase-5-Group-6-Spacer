@@ -212,7 +212,7 @@ class Space(db.Model, SerializerMixin):
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="CASCADE"), nullable=False)
     title = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=True)
-    price_per_hour = db.Column(db.Numeric, nullable=False)
+    price_per_hour = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String, nullable=False, default='available')
     images = db.Column(db.ARRAY(db.Text), default=[], nullable=True) # db.ARRAY(db.Text)
     space_type = db.Column(db.String, nullable=False)

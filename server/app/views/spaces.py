@@ -14,7 +14,7 @@ def create_space():
     if not current_user:
         return jsonify({'error': 'User not found'}), 404
 
-    if "owner" not in current_user.get_roles():
+    if "owner" not in current_user.get_roles() and "admin" not in current_user.get_roles():
         return jsonify({'error': 'Only owners can create spaces'}), 403
 
     data = request.get_json()
@@ -23,11 +23,11 @@ def create_space():
             owner_id=current_user_id,
             title=data['title'],
             description=data.get('description'),
-            price_per_hour=data['price_per_hour'],
+            price_per_hour=int(data['price_per_hour']),
             status=data.get('status', 'available'),
             images=data.get('images', []),
             space_type=data.get('space_type'),
-            max_guests=data['max_guests'],
+            max_guests=int(data['max_guests']),
         )
         db.session.add(space)
         db.session.flush()

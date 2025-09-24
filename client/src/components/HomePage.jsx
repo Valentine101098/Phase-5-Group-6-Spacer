@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Home, MapPin, Star, Users, Shield } from "lucide-react";
+import Spaces from "./Spaces";
+import SpaceCreation from "./SpaceCreation";
 
 const HomePage = () => {
   const [spaces, setSpaces] = useState([]);
@@ -13,7 +15,7 @@ const HomePage = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch("http://localhost:5000/api/spaces");
+        const response = await fetch("http://127.0.0.1:5000/api/spaces");
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`HTTP error! status: ${response.status}, Body: ${errorText}`);
@@ -112,18 +114,17 @@ const HomePage = () => {
       <div className="max-w-7xl mx-auto px-4 pb-16">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">
+            <h2 className="text-3xl ml-4 font-bold text-gray-900">
               Featured Spaces
             </h2>
-            <p className="text-gray-600 mt-2">
-              {spaces.length} available spaces
-            </p>
+            <Spaces />
+            <SpaceCreation onSpaceCreated={(newspace) => {setSpaces((prev) => [newspace, ...prev])}}/>
           </div>
+        </div>
           <div className="flex items-center text-blue-600">
             <MapPin className="h-5 w-5 mr-2" />
             <span className="font-medium">Nairobi, Kenya</span>
           </div>
-        </div>
 
         {loading ? (
           <div className="flex justify-center items-center h-64">
