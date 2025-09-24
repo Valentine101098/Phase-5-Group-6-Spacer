@@ -1,14 +1,12 @@
 import { useState } from "react";
-import SpaceReview from "./SpaceReview";
 import SpaceDetails from "./SpaceDetails";
 
 export default function SpaceCard({ space }) {
     const [showDetails, setShowDetails] = useState(false);
-    const [showReviews, setShowReviews] = useState(false);
 
     return (
-        <div className="border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="relative w-full h-48 overflow-hidden"> {/* Fixed height for the image container */}
+        <div className="border w-full h-full rounded-lg overflow-hidden shadow-lg hover:shadow-[0_10px_20px_rgba(0,0,0,0.8)] hover:shadow-xl transition-shadow duration-300">
+            <div className="relative w-full h-60 overflow-hidden"> {/* Fixed height for the image container */}
                 <div className="flex w-full h-full overflow-x-auto snap-x snap-mandatory">
                     {space.images.map((imgUrl, index) => (
                         <img
@@ -39,19 +37,13 @@ export default function SpaceCard({ space }) {
                     <button className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300" onClick={() => setShowDetails(true)}>
                         More Details
                     </button>
+                    {space.status === "available" ?
                     <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
                         Book
-                    </button>
-                    <button
-                        onClick={() => setShowReviews((prev) => !prev)}
-                        className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600"
-                    >
-                        Reviews ⭐
-                    </button>
+                    </button> : null}
                 </div>
             </div>
             {showDetails && (<SpaceDetails space={space} onClose={() => setShowDetails(false)} />)}
-            {showReviews && (<SpaceReview spaceId={space.id} onClose={() => setShowReviews(false)} />)}
         </div>
     )
 }
