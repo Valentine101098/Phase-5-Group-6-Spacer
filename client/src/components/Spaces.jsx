@@ -38,7 +38,6 @@ export default function Spaces() {
 
     return (
         <div className="container mx-auto p-4">
-            <h2 className="text-2xl font-bold mb-4">Available Spaces</h2>
             {spaces.length === 0 ? (
                 <p>No spaces available at the moment.</p>
             ) : (
