@@ -16,7 +16,7 @@ def create_space():
 
     if "owner" not in current_user.get_roles():
         return jsonify({'error': 'Only owners can create spaces'}), 403
-    
+
     data = request.get_json()
     try:
         space = Space(
@@ -30,7 +30,7 @@ def create_space():
             max_guests=data['max_guests'],
         )
         db.session.add(space)
-        db.session.flush()  
+        db.session.flush()
 
         template = AgreementTemplate(
             owner_id=current_user_id,
@@ -39,7 +39,7 @@ def create_space():
         )
         db.session.add(template)
         db.session.commit()
-        
+
         return jsonify(space.to_dict()), 201
     except Exception as e:
         db.session.rollback()
@@ -56,11 +56,11 @@ def get_spaces():
 def get_space(space_id):
     space = Space.query.get_or_404(space_id)
 
-    
+
     latest_template = (
         AgreementTemplate.query
         .filter_by(space_id=space.id)
-        .order_by(AgreementTemplate.created_at.desc()) 
+        .order_by(AgreementTemplate.created_at.desc())
         .first()
     )
 
