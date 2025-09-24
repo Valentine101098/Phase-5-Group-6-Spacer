@@ -355,8 +355,13 @@ def seed_database():
             transaction_id_value = None
             if status == "paid":
                 # Ensure paid_at_value is also explicitly timezone-aware (UTC)
-                paid_at_value = (invoice_created_at + timedelta(hours=random.randint(1, 72))).replace(tzinfo=timezone.utc)
+                latest_possible_paid_at = datetime.now(timezone.utc)
+                paid_at_value = (fake.date_time_between(start_date=invoice_created_at, end_date=latest_possible_paid_at, tzinfo=timezone.utc))
                 transaction_id_value = f"TXN_{fake.uuid4()[:12].upper()}"
+            
+            else:
+                paid_at_value = None
+                transaction_id_value = None
 
             invoice = Invoice(
                 booking_id=booking.id,
