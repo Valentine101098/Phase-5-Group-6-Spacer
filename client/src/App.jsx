@@ -12,6 +12,11 @@ import ResetPassword from './components/ResetPassword';
 import HomePage from './components/HomePage';
 import NoPage from './components/NoPage';
 import AdminDashboard from './components/AdminDashboard';
+import { BookingPage } from './components/BookingPage';
+import { BookingsTable } from './components/BookingsTable';
+import { PaymentForm } from './components/PaymentForm';
+import { PaymentPage } from './components/PaymentPage';
+import { InvoicesTable } from './components/InvoicesTable';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
