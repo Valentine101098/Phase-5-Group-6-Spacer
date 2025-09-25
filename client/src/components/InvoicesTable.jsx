@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronUp, ChevronDown, DollarSign, Calendar } from 'lucide-react';
 // import { bearerToken } from './tokens';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 
 export function InvoicesTable() {
