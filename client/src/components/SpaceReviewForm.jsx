@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
-export default function SpaceReviewForm({ spaceId, booking_id, onReviewSubmitted, onCancel, editingReview}) {
+export default function SpaceReviewForm({ booking_id, onReviewSubmitted, onCancel, editingReview }) {
 
     const [rating, setRating] = useState(5)
     const [comment, setComment] = useState("")
-    
+    const { accessToken } = useAuth();
+
     useEffect(() => {
         if (editingReview) {
             setRating(editingReview.rating);
@@ -17,12 +19,12 @@ export default function SpaceReviewForm({ spaceId, booking_id, onReviewSubmitted
 
         const method = editingReview ? 'PATCH' : 'POST';
         const url = editingReview ? `http://127.0.0.1:5000/api/reviews/${editingReview.id}` : 'http://127.0.0.1:5000/api/reviews/';
-        
+
         fetch(url, {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${accessToken}`,
             },
             body: JSON.stringify({
                 booking_id: editingReview ? editingReview.booking_id : booking_id,
@@ -30,31 +32,31 @@ export default function SpaceReviewForm({ spaceId, booking_id, onReviewSubmitted
                 comment,
             }),
         })
-        .then(() => {
-            setRating(5);
-            setComment("");
-            onReviewSubmitted();
-            if (editingReview) onCancel()
-        })
-        .catch(err => console.error("Error submitting review:", err));
+            .then(() => {
+                setRating(5);
+                setComment("");
+                onReviewSubmitted();
+                if (editingReview) onCancel()
+            })
+            .catch(err => console.error("Error submitting review:", err));
     }
 
     return (
         <form onSubmit={handleSubmit} className="mt-4 bg-blue-600 flex flex-col gap-2">
             <label className="font-semibold text-white">Rating</label>
-            <input 
-                type="number" 
-                min="1" 
-                max="5" 
-                value={rating} 
-                onChange={(e) => setRating(Number(e.target.value))} 
+            <input
+                type="number"
+                min="1"
+                max="5"
+                value={rating}
+                onChange={(e) => setRating(Number(e.target.value))}
                 className="border p-2 rounded"
             />
 
             <label className="font-semibold text-white">Comment</label>
-            <textarea 
-                value={comment} 
-                onChange={(e) => setComment(e.target.value)} 
+            <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
                 className="border p-2 rounded mb-2"
             ></textarea>
 
