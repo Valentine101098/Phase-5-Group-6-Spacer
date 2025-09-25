@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { fetchInvoiceById } from '../api/invoiceApi';
 import { PaymentForm } from './PaymentForm';
 import { usePayment } from '../hooks/usePayment';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export function PaymentPage() {
   const { id } = useParams();
@@ -10,6 +11,7 @@ export function PaymentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [paymentConfirmationCode, setPaymentConfirmationCode] = useState('');
+  const { accessToken } = useAuth()
 
   const {
     validatePayment,
@@ -19,11 +21,14 @@ export function PaymentPage() {
   } = usePayment(id);
 
   useEffect(() => {
-    fetchInvoiceById(id)
+    if (!accessToken) {
+      return
+    }    
+    fetchInvoiceById(id, accessToken)
       .then(setInvoice)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [accessToken]);
 
   const handleValidatePayment = async (e) => {
     e.preventDefault();
