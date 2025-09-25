@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronUp, ChevronDown, Calendar, Users, DollarSign, Clock, X } from 'lucide-react';
-import { bearerToken } from './tokens';
-import { useAuth } from '../../../contexts/AuthContext';
+import { bearerToken } from '../features/bookings/components/tokens';
+import { useAuth } from '../contexts/AuthContext';
 
 
 export function BookingsTable() {

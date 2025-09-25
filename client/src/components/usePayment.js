@@ -1,7 +1,7 @@
 // features/temp/usePayment.js
 import { useState, useEffect } from 'react';
-import { validateInvoicePayment } from '../api/invoiceApi';
-import { useAuth } from '../../../contexts/AuthContext';
+import { validateInvoicePayment } from './invoiceApi';
+import { useAuth } from '../contexts/AuthContext';
 
 export function usePayment(invoiceId) {
   const [validating, setValidating] = useState(false);

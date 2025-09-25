@@ -11,10 +11,10 @@ import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import HomePage from './components/HomePage';
 import NoPage from './components/NoPage';
-import { BookingPage } from "./features/bookings/components/BookingPage";
-import { PaymentPage } from './features/bookings/components/PaymentPage';
-import { BookingsTable } from './features/bookings/components/BookingsTable';
-import { InvoicesTable } from './features/bookings/components/InvoicesTable';
+import { BookingPage } from "./components/BookingPage";
+import { PaymentPage } from './components/PaymentPage';
+import { BookingsTable } from './components/BookingsTable';
+import { InvoicesTable } from './components/InvoicesTable';
 
 
 const PrivateRoute = ({ children }) => {

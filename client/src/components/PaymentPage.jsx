@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchInvoiceById } from '../api/invoiceApi';
+import { fetchInvoiceById } from './invoiceApi';
 import { PaymentForm } from './PaymentForm';
-import { usePayment } from '../hooks/usePayment';
-import { useAuth } from '../../../contexts/AuthContext';
+import { usePayment } from './usePayment';
+import { useAuth } from '../contexts/AuthContext';
 
 export function PaymentPage() {
   const { id } = useParams();

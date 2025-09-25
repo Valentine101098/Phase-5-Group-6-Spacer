@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchSpaceById } from '../api/bookingApi';
-import { calculateTotalAmount } from '../utils/utils';
+import { fetchSpaceById } from './bookingApi';
+import { calculateTotalAmount } from './utils';
 import { BookingForm } from './BookingForm';
-import { useBooking } from '../hooks/useBooking';
+import { useBooking } from './useBooking';
 
 export function BookingPage() {
   const { id } = useParams();
