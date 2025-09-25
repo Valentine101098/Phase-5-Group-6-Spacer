@@ -78,7 +78,7 @@ export default function SpaceCreation({ onSpaceCreated }) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 bg-white dark:bg-blue-700 rounded-lg shadow">
+        <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 bg-white dark:bg-primary shadow-lg rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-4 text-white">Create New Space</h2>
             {error && <p className="text-red-500 mb-4">{error}</p>}
 
@@ -169,7 +169,7 @@ export default function SpaceCreation({ onSpaceCreated }) {
             <button
                 type="submit"
                 disabled={loading}
-                className={`w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-900 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
                 {loading ? "Saving..." : "Create Space"}
             </button>

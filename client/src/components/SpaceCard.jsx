@@ -1,11 +1,12 @@
 import { useState } from "react";
 import SpaceDetails from "./SpaceDetails";
+import { Star } from "lucide-react";
 
 export default function SpaceCard({ space }) {
     const [showDetails, setShowDetails] = useState(false);
 
     return (
-        <div className="border w-full h-full rounded-lg overflow-hidden shadow-lg hover:shadow-[0_10px_20px_rgba(0,0,0,0.8)] hover:shadow-xl transition-shadow duration-300">
+        <div className="border w-full h-full rounded-lg overflow-hidden shadow-lg hover:shadow-[0_10px_20px_rgba(0,0,0,0.8)] hover:shadow-xl transition-shadow duration-300 flex flex-col">
             <div className="relative w-full h-60 overflow-hidden"> {/* Fixed height for the image container */}
                 <div className="flex w-full h-full overflow-x-auto snap-x snap-mandatory">
                     {space.images.map((imgUrl, index) => (
@@ -17,17 +18,24 @@ export default function SpaceCard({ space }) {
                         />
                     ))}
                 </div>
+                <div className="absolute bottom-3 right-3 text-white text-xs px-3 py-1 rounded-full font-medium">
+                    <span
+                        className={`px-2 py-1 text-xs font-semibold rounded ${space.status === 'available' ? 'bg-green-300 text-green-800' : 'bg-red-300 text-red-800'
+                            }`}>
+                        {space.status}
+                    </span>
+                </div>
+                <div className="absolute top-3 left-3 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                    <Star className="inline h-3 w-3 mr-1" />
+                    Featured
+                </div>
             </div>
             <div className="p-4 flex flex-col flex-grow">
                 <h3 className="text-lg font-semibold mb-2">{space.title}</h3>
                 <p className="text-gray-600 mb-4 flex-grow">{space.description}</p>
                 <p className="text-sm text-black mb-2"><strong>Type:</strong> {space.space_type}</p>
                 <div className="flex justify-between items-center mt-2">
-                    <span 
-                        className={`px-2 py-1 text-xs font-semibold rounded ${space.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                        {space.status}
-                    </span>
+                    
                     
                 </div>
                 <span className="font-bold mt-2 text-indigo-600">
