@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models import Space, User, db
+from app.models import Space, User, AgreementTemplate, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 spaces_bp = Blueprint('spaces', __name__)
@@ -9,20 +9,37 @@ spaces_bp = Blueprint('spaces', __name__)
 @jwt_required()
 def create_space():
     current_user_id = get_jwt_identity()
+    current_user = db.session.get(User, current_user_id)
+
+    if not current_user:
+        return jsonify({'error': 'User not found'}), 404
+
+    if "owner" not in current_user.get_roles() and "admin" not in current_user.get_roles():
+        return jsonify({'error': 'Only owners can create spaces'}), 403
+
     data = request.get_json()
     try:
         space = Space(
             owner_id=current_user_id,
             title=data['title'],
             description=data.get('description'),
-            price_per_hour=data['price_per_hour'],
+            price_per_hour=int(data['price_per_hour']),
             status=data.get('status', 'available'),
             images=data.get('images', []),
             space_type=data.get('space_type'),
-            max_guests=data['max_guests'],
+            max_guests=int(data['max_guests']),
         )
         db.session.add(space)
+        db.session.flush()
+
+        template = AgreementTemplate(
+            owner_id=current_user_id,
+            space_id=space.id,
+            terms=data['terms']
+        )
+        db.session.add(template)
         db.session.commit()
+
         return jsonify(space.to_dict()), 201
     except Exception as e:
         db.session.rollback()
@@ -31,21 +48,42 @@ def create_space():
 # Get all spaces
 @spaces_bp.route('/', methods=['GET'])
 def get_spaces():
-    spaces = Space.query.all()
+    spaces = db.session.query(Space).all()
     return jsonify([space.to_dict() for space in spaces]), 200
 
 # Get a specific space by ID
 @spaces_bp.route('/<int:space_id>', methods=['GET'])
 def get_space(space_id):
     space = Space.query.get_or_404(space_id)
-    return jsonify(space.to_dict()), 200
+
+
+    latest_template = (
+        AgreementTemplate.query
+        .filter_by(space_id=space.id)
+        .order_by(AgreementTemplate.created_at.desc())
+        .first()
+    )
+
+    response_data = space.to_dict()
+
+    if latest_template:
+        response_data["agreement"] = {
+            "template_id": latest_template.id,
+            "terms": latest_template.terms
+        }
+    else:
+        response_data["agreement"] = None
+
+    return jsonify(response_data), 200
+
+
 
 # Update a specific space by ID
 @spaces_bp.route('/<int:space_id>', methods=['PATCH'])
 @jwt_required()
 def update_space(space_id):
     current_user_id = get_jwt_identity()
-    space = Space.query.get_or_404(space_id)
+    space = db.session.get(Space, space_id)
 
     current_user = db.session.get(User, current_user_id)
     if space.owner_id != current_user_id:
@@ -68,7 +106,7 @@ def update_space(space_id):
 @jwt_required()
 def delete_space(space_id):
     current_user_id = get_jwt_identity()
-    space = Space.query.get_or_404(space_id)
+    space = db.session.get(Space, space_id)
 
     current_user = db.session.get(User, current_user_id)
     if not current_user:

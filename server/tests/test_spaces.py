@@ -118,6 +118,7 @@ def test_create_space_success(client, setup_data, app):
         "images": ["http://example.com/image1.jpg", "http://example.com/image2.jpg"],
         "space_type": "conference_room",
         "max_guests": 50,
+        "terms": "Sample agreement terms for the space."
     }
  
     response = client.post('/spaces/', json=sample_space, headers={"Authorization": f"Bearer {token}"})

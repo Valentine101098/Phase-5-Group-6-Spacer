@@ -37,3 +37,4 @@ server/temp_seed.py
 *.pytest_cache
 server/tools
 *.pyc*
+client/src/features/temp

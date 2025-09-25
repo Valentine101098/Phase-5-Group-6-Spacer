@@ -13,7 +13,6 @@ import HomePage from './components/HomePage';
 import NoPage from './components/NoPage';
 import AdminDashboard from './components/AdminDashboard';
 
-
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) {
@@ -67,6 +66,13 @@ function AppContent() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+       
+        <Route path="/spaces/:id/booking" element={<BookingPage />} />
+       
+       <Route path="/invoices/:id" element={<PaymentPage />} />
+     
+      <Route path="/dashboard/bookings" element={<BookingsTable />} />
+       <Route path="/dashboard/invoices" element={<InvoicesTable />} />          
 
           <Route
             path="/profile"
@@ -76,7 +82,7 @@ function AppContent() {
               </PrivateRoute>
             }
           />
-
+              
           <Route
             path="/admin-dashboard"
             element={

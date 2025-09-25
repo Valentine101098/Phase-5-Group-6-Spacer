@@ -1,8 +1,9 @@
 // src/components/ResetPassword.js
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-const BASE_URL = 'postgresql://spacer_db_gd12_user:PASSWORD@WezI7nwwnuOBbmoltqP0HgR0dkdhosTz/spacer_db_gd12'; 
+const BASE_URL = 'http://127.0.0.1:5000'; // import.meta.env.VITE_BACKEND_URL for Vite
 
 function ResetPassword() {
   const [newPassword, setNewPassword] = useState('');
@@ -12,6 +13,7 @@ function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const token = searchParams.get('token');
 
   useEffect(() => {
@@ -58,10 +60,14 @@ function ResetPassword() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage('Password has been reset successfully! You can now log in with your new password.');
+        setMessage('Password has been reset successfully! Attempting to log you in...');
         setNewPassword('');
         setConfirmPassword('');
-        setTimeout(() => navigate('/login'), 3000);
+
+        setTimeout(() => {
+          navigate('/login', { state: { resetSuccess: true, email: 'your-email-here' } });
+        }, 3000);
+
       } else {
         setError(data.message || 'Failed to reset password.');
       }
