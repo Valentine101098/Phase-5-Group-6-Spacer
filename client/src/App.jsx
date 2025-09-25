@@ -42,8 +42,18 @@ function AppContent() {
           ) : (
             <>
               <Link to="/profile">Profile</Link>
-              {user && user.roles && user.roles.includes('admin') && (
-                <Link to="/admin-dashboard">Admin Dashboard</Link>
+              {user && user.roles && (
+                <>
+                  {user.roles.includes('admin') && (
+                    <Link to="/admin-dashboard">Admin Dashboard</Link>
+                  )}
+                  {user.roles.includes('client') && (
+                    <Link to="/client-dashboard">Client Dashboard</Link>
+                  )}
+                  {user.roles.includes('owner') && (
+                    <Link to="/owner-dashboard">Owner Dashboard</Link>
+                  )}
+                </>
               )}
               <LogoutButton />
             </>
@@ -71,7 +81,7 @@ function AppContent() {
             path="/admin-dashboard"
             element={
               <PrivateRoute>
-                  <AdminDashboard />
+                <AdminDashboard />
               </PrivateRoute>
             }
           />
