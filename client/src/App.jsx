@@ -11,11 +11,7 @@ import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import HomePage from './components/HomePage';
 import NoPage from './components/NoPage';
-import { BookingPage } from "./features/bookings/components/BookingPage";
-import { PaymentPage } from './features/bookings/components/PaymentPage';
-import { BookingsTable } from './features/bookings/components/BookingsTable';
-import { InvoicesTable } from './features/bookings/components/InvoicesTable';
-
+import AdminDashboard from './components/AdminDashboard';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -45,8 +41,18 @@ function AppContent() {
           ) : (
             <>
               <Link to="/profile">Profile</Link>
-              {user && user.roles && user.roles.includes('admin') && (
-                <Link to="/admin-dashboard">Admin Dashboard</Link>
+              {user && user.roles && (
+                <>
+                  {user.roles.includes('admin') && (
+                    <Link to="/admin-dashboard">Admin Dashboard</Link>
+                  )}
+                  {user.roles.includes('client') && (
+                    <Link to="/client-dashboard">Client Dashboard</Link>
+                  )}
+                  {user.roles.includes('owner') && (
+                    <Link to="/owner-dashboard">Owner Dashboard</Link>
+                  )}
+                </>
               )}
               <LogoutButton />
             </>
@@ -76,8 +82,17 @@ function AppContent() {
               </PrivateRoute>
             }
           />
+              
+          <Route
+            path="/admin-dashboard"
+            element={
+              <PrivateRoute>
+                <AdminDashboard />
+              </PrivateRoute>
+            }
+          />
 
-          <Route path="*" element={<NoPage />} />
+          <Route path="*" element={<NoPage />} /> 
         </Routes>
       </div>
     </>

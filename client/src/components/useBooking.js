@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { createBooking } from '../api/bookingApi';
-import { calculateTotalAmount } from '../utils/utils';
-import { useAuth } from '../../../contexts/AuthContext';
+import { createBooking } from './bookingApi';
+import { calculateTotalAmount } from './utils';
+import { useAuth } from '../contexts/AuthContext';
 
 export function useBooking(space, id, navigate) {
   const [submitting, setSubmitting] = useState(false);
