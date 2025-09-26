@@ -154,33 +154,10 @@ export function BookingPage() {
                 </div>
               </div>
 
-              {/* Description */}
-              {space?.description && (
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">About This Space</h3>
-                  <div className="prose prose-gray max-w-none">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {space.description}
-                    </p>
-                  </div>
-                </div>
-              )}
+
               
 
-              {/* Amenities */}
-              {space?.amenities && space.amenities.length > 0 && (
-                <div className="mt-8">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Amenities</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {space.amenities.map((amenity, index) => (
-                      <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                        <span className="text-sm text-gray-700">{amenity}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+
             </div>
           </div>
 
