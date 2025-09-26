@@ -80,7 +80,6 @@ export default function SpaceCreation({ onSpaceCreated }) {
     return (
         <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 bg-white dark:bg-primary shadow-lg rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-4 text-white">Create New Space</h2>
-            {error && <p className="text-red-500 mb-4">{error}</p>}
 
             <label className="block mb-2 font-semibold text-white">Title</label>
             <input 
@@ -136,7 +135,7 @@ export default function SpaceCreation({ onSpaceCreated }) {
                 required
             />
 
-            <label className="block mb-2 font-semibold text-white">Agreement Terms</label>
+            <label className="block mb-2 font-semibold text-white">Terms and Conditions</label>
             <textarea 
                 name="terms"
                 value={form.terms}
@@ -173,6 +172,7 @@ export default function SpaceCreation({ onSpaceCreated }) {
             >
                 {loading ? "Saving..." : "Create Space"}
             </button>
+            {error && <p className="text-red-500 mb-4 mt-6 text-center">{error}</p>}
         </form>
     )
 }
