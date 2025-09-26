@@ -9,16 +9,18 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.js'],
     css: true,
-    // Fix: Add this to handle URL-related issues
-    deps: {
-      inline: ['@testing-library/user-event']
+    // Fix the dependency issues
+    server: {
+      deps: {
+        inline: ['@testing-library/user-event']
+      }
     },
-    coverage: {
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'src/setupTests.js',
-      ]
+    // Add this to handle the webidl-conversions issue
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
     }
   }
 })

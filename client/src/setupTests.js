@@ -2,21 +2,51 @@
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
-// Mock IntersectionObserver
+// Ensure globals are available before any imports
+Object.defineProperty(global, 'URL', {
+  writable: true,
+  value: class URL {
+    constructor(url) {
+      this.href = url
+      this.search = ''
+      this.searchParams = new URLSearchParams()
+    }
+  }
+})
+
+Object.defineProperty(global, 'URLSearchParams', {
+  writable: true,
+  value: class URLSearchParams {
+    constructor(init) {
+      this.params = new Map()
+      if (typeof init === 'string') {
+        // Simple parsing for test purposes
+        init.split('&').forEach(pair => {
+          const [key, value] = pair.split('=')
+          if (key) this.params.set(key, decodeURIComponent(value || ''))
+        })
+      }
+    }
+    get(name) { return this.params.get(name) }
+    set(name, value) { this.params.set(name, value) }
+    has(name) { return this.params.has(name) }
+    delete(name) { this.params.delete(name) }
+  }
+})
+
+// Mock other browser APIs
 global.IntersectionObserver = vi.fn(() => ({
   disconnect: vi.fn(),
   observe: vi.fn(),
   unobserve: vi.fn(),
 }))
 
-// Mock ResizeObserver
 global.ResizeObserver = vi.fn(() => ({
   disconnect: vi.fn(),
   observe: vi.fn(),
   unobserve: vi.fn(),
 }))
 
-// Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation(query => ({
@@ -31,9 +61,4 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 })
 
-// Mock scrollTo
 global.scrollTo = vi.fn()
-
-// Fix: Ensure URL and URLSearchParams are properly available
-global.URL = global.URL || URL
-global.URLSearchParams = global.URLSearchParams || URLSearchParams
