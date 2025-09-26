@@ -76,7 +76,7 @@ export function PaymentPage() {
               <h3 className="font-semibold mb-2">Booking Details</h3>
               <p><strong>Invoice ID:</strong> {invoice?.id}</p>
               <p>
-                <strong>Amount Paid:</strong> $
+                <strong>Amount Paid:</strong> Kshs
                 {parseFloat(invoice?.amount || 0).toFixed(2)}
               </p>
               <p><strong>Confirmation Code:</strong> {paymentConfirmationCode}</p>
@@ -114,7 +114,7 @@ export function PaymentPage() {
               <div>
                 <span className="font-medium">Amount:</span>
                 <span className="ml-2 font-bold text-green-600">
-                  ${parseFloat(invoice.amount || 0).toFixed(2)}
+                  Kshs {parseFloat(invoice.amount || 0).toFixed(2)}
                 </span>
               </div>
               <div>
