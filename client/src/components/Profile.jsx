@@ -33,20 +33,26 @@ function Profile() {
   const fetchUserProfile = async () => {
     setLoading(true);
     setError('');
-    const result = await makeAuthenticatedRequest('/auth/me', 'GET');
-    if (result.success) {
-      setProfileData(result.data.user);
-      setFormValues({
-        first_name: result.data.user.first_name,
-        last_name: result.data.user.last_name,
-        email: result.data.user.email,
-        phone_number: result.data.user.phone_number,
-        password: '',
-      });
-    } else {
-      setError(result.error || 'Failed to fetch profile data.');
+    try {
+      const result = await makeAuthenticatedRequest('/auth/me', 'GET');
+      if (result?.success) {
+        setProfileData(result.data.user);
+        setFormValues({
+          first_name: result.data.user.first_name,
+          last_name: result.data.user.last_name,
+          email: result.data.user.email,
+          phone_number: result.data.user.phone_number,
+          password: '',
+        });
+      } else {
+        setError(result?.error || 'Failed to fetch profile data.');
+      }
+    } catch (err) {
+      console.error('Profile fetch error:', err);
+      setError('An unexpected error occurred while fetching profile data.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleFormChange = (e) => {
@@ -66,30 +72,35 @@ function Profile() {
     if (formValues.email !== profileData.email) payload.email = formValues.email;
     if (formValues.phone_number !== profileData.phone_number) payload.phone_number = formValues.phone_number;
     if (formValues.password) {
-        if (formValues.password.length < 8) {
-            setError('Password must be at least 8 characters long.');
-            setLoading(false);
-            return;
-        }
-        payload.password = formValues.password;
+      if (formValues.password.length < 8) {
+        setError('Password must be at least 8 characters long.');
+        setLoading(false);
+        return;
+      }
+      payload.password = formValues.password;
     }
 
     if (Object.keys(payload).length === 0) {
-        setError('No changes to save.');
-        setLoading(false);
-        setIsEditing(false);
-        return;
+      setError('No changes to save.');
+      setLoading(false);
+      setIsEditing(false);
+      return;
     }
 
-    const result = await makeAuthenticatedRequest('/auth/me', 'PUT', payload);
-    if (result.success) {
-      setSuccessMessage('Profile updated successfully!');
-      
-      fetchUserProfile();
-    } else {
-      setError(result.error || 'Failed to update profile.');
+    try {
+      const result = await makeAuthenticatedRequest('/auth/me', 'PUT', payload);
+      if (result?.success) {
+        setSuccessMessage('Profile updated successfully!');
+        fetchUserProfile();
+      } else {
+        setError(result?.error || 'Failed to update profile.');
+      }
+    } catch (err) {
+      console.error('Profile update error:', err);
+      setError('An unexpected error occurred while updating profile.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   if (authLoading || loading) {
@@ -97,13 +108,17 @@ function Profile() {
   }
 
   if (error && !profileData) {
-    return <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center text-red-500">Error: {error}</div>;
+    return (
+      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center text-red-500">
+        Error: {error}
+      </div>
+    );
   }
 
-  if (!profileData) { // Should not happen if auth is true and no error
+  if (!profileData) {
+    // Should not happen if auth is true and no error
     return <div className="text-center py-8 text-lg text-gray-700">No profile data available.</div>;
   }
-
 
   return (
     <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl text-center">
@@ -128,6 +143,7 @@ function Profile() {
         </div>
       ) : (
         <form onSubmit={handleUpdateProfile} className="profile-edit-form space-y-4 text-left">
+          {/* --- Form fields unchanged --- */}
           <div>
             <label htmlFor="first_name" className="block text-gray-700 text-sm font-bold mb-2">First Name:</label>
             <input
@@ -192,7 +208,12 @@ function Profile() {
             </button>
             <button
               type="button"
-              onClick={() => { setIsEditing(false); setFormValues(profileData); setError(''); setSuccessMessage(''); }}
+              onClick={() => {
+                setIsEditing(false);
+                setFormValues(profileData);
+                setError('');
+                setSuccessMessage('');
+              }}
               className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
             >
               Cancel
