@@ -89,15 +89,6 @@ export default function SpaceDetails({ space, onClose }) {
                 <p><strong>Maximum Guests:</strong> {space.max_guests}</p>
                 <p><strong>Price:</strong> Kshs {space.price_per_hour}/hr</p>
 
-                {space.template?.terms && (
-                    <div className="mt-4 border-t pt-4">
-                        <h3 className="text-xl font-semibold mb-2">Agreement Terms</h3>
-                        <div className="bg-blue-50 p-4 rounded-lg max-h-48 overflow-y-auto">
-                            {space.template.terms}
-                        </div>
-                    </div>
-                )}
-
                 {/* Reviews */}
                 <div className="mt-4 border-t pt-4 flex-1">
                     <h3 className="text-xl font-semibold mb-2">Recent Reviews</h3>
