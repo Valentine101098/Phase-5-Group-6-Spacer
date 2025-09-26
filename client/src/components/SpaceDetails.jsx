@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import SpaceReviewForm from "./SpaceReviewForm";
 import { useAuth } from "../contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 export default function SpaceDetails({ space, onClose }) {
     const [reviews, setReviews] = useState([]);
@@ -178,9 +179,11 @@ export default function SpaceDetails({ space, onClose }) {
                 {/* Book button pinned at bottom */}
                 <div className="mt-6 flex justify-end">
                     {space.status === "available" && (
+                        <Link to={`/spaces/${space.id}/booking`}>
                         <button className="bg-blue-500 text-white px-4 py-2 w-40 rounded-lg hover:bg-blue-600">
                             Book
                         </button>
+                        </Link>
                     )}
                 </div>
             </div>

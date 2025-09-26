@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronUp, ChevronDown, Calendar, Users, DollarSign, Clock, X } from 'lucide-react';
 // import { bearerToken } from '../features/bookings/components/tokens';
 import { useAuth } from '../contexts/AuthContext';
-
+import ReviewFormModal from './ReviewFormModal';
 
 export function BookingsTable() {
   const [bookings, setBookings] = useState([]);
@@ -11,7 +11,15 @@ export function BookingsTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [statusFilter, setStatusFilter] = useState('all');
-  const { accessToken  } = useAuth()
+  const { accessToken, user  } = useAuth()
+
+  
+const [reviewModalBooking, setReviewModalBooking] = useState(null);
+
+const handleLeaveReview = (booking) => {
+  setReviewModalBooking(booking);
+};
+
   // Fetch bookings from API
   useEffect(() => {
     if (!accessToken) {
@@ -55,13 +63,27 @@ export function BookingsTable() {
     return Math.round(diffInHours * 10) / 10; // Round to 1 decimal place
   };
 
+// plaec holder handlers — 
+// const handleLeaveReview = (bookingId) => {
+//   console.log(`Leave a review for booking ${bookingId}`);
+//   alert(`Leave a review for booking ${bookingId}`);
+// };
+
+const handlePayNow = (bookingId) => {
+  console.log(`Proceed to payment for booking ${bookingId}`);
+  alert(`Proceed to payment for booking ${bookingId}`);
+};
+
+
+
+
   // Cancel booking function
-  const handleCancel = async (bookingId) => {
+  const handleCancel = async (bookingId, accessToken) => {
     try {
       const response = await fetch(`http://127.0.0.1:5000/api/bookings/${bookingId}/cancel`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${bearerToken}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -130,9 +152,9 @@ export function BookingsTable() {
         let aValue, bValue;
         
         switch (sortConfig.key) {
-          case 'created':
-            aValue = new Date(a.created_at);
-            bValue = new Date(b.created_at);
+          case 'space_title':
+            aValue = a.space_title;
+            bValue = b.space_title;
             break;
           case 'checkin':
             aValue = new Date(a.start_time);
@@ -293,11 +315,11 @@ export function BookingsTable() {
               </th>
               <th 
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('created')}
+                onClick={() => handleSort('space_title')}
               >
                 <div className="flex items-center space-x-1">
-                  <span>Created</span>
-                  <SortIcon column="created" />
+                  <span>Space</span>
+                  <SortIcon column="space_title" />
                 </div>
               </th>
               <th 
@@ -366,7 +388,7 @@ export function BookingsTable() {
                   #{booking.id}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDate(booking.created_at)}
+                  {booking.space_title}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(booking.start_time)}
@@ -388,17 +410,32 @@ export function BookingsTable() {
                     {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  {booking.status !== 'cancelled' && (
-                    <button
-                      onClick={() => handleCancel(booking.id)}
-                      className="text-red-600 hover:text-red-900 flex items-center space-x-1"
-                    >
-                      <X className="w-4 h-4" />
-                      <span>Cancel</span>
-                    </button>
-                  )}
-                </td>
+<td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+  {user.roles.includes("client") && booking.status === "confirmed" ? (
+    <button
+      onClick={() => handleLeaveReview(booking)}
+      className="text-blue-600 hover:text-blue-900 flex items-center space-x-1"
+    >
+      <span>Leave a Review</span>
+    </button>
+  ) : user.roles.includes("client") && booking.status === "pending" ? (
+    <button
+      onClick={() => handlePayNow(booking.id)}
+      className="text-green-600 hover:text-green-900 flex items-center space-x-1"
+    >
+      <span>Pay Now</span>
+    </button>
+  ) : (
+    <button
+      onClick={() => handleCancel(booking.id)}
+      className="text-red-600 hover:text-red-900 flex items-center space-x-1"
+    >
+      <X className="w-4 h-4" />
+      <span>Cancel</span>
+    </button>
+  )}
+</td>
+
               </tr>
             ))}
           </tbody>
@@ -410,6 +447,17 @@ export function BookingsTable() {
           </div>
         )}
       </div>
+      {reviewModalBooking && (
+  <ReviewFormModal
+    spaceId={reviewModalBooking.space_id}
+    bookingId={reviewModalBooking.id}
+    onClose={() => setReviewModalBooking(null)}
+    onReviewAdded={(review) => {
+      console.log("New review saved:", review);
+    }}
+  />
+)}
+
     </div>
   );
 };
