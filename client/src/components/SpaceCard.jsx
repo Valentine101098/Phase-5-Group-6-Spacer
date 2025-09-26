@@ -1,6 +1,7 @@
 import { useState } from "react";
 import SpaceDetails from "./SpaceDetails";
 import { Star } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function SpaceCard({ space }) {
     const [showDetails, setShowDetails] = useState(false);
@@ -46,9 +47,10 @@ export default function SpaceCard({ space }) {
                         More Details
                     </button>
                     {space.status === "available" ?
+                    <Link to={`/spaces/${space.id}/booking`}>
                     <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
                         Book
-                    </button> : null}
+                    </button> </Link> : null}
                 </div>
             </div>
             {showDetails && (<SpaceDetails space={space} onClose={() => setShowDetails(false)} />)}

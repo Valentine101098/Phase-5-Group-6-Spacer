@@ -1,5 +1,5 @@
 import { useBooking } from './useBooking';
-import SpaceReview from './SpaceReview';
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchSpaceById } from './bookingApi';
