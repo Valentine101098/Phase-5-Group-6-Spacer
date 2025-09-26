@@ -8,8 +8,14 @@ function LogoutButton() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    try {
+      await logout();
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      // Navigate regardless of success/failure
+      navigate('/login');
+    }
   };
 
   if (!isAuthenticated) {

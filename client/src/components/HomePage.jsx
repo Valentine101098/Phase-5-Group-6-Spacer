@@ -153,10 +153,10 @@ const HomePage = () => {
               let images = [];
               if (typeof prop.images === "string") {
                 try {
-                  pictures = JSON.parse(prop.images);
+                  images = JSON.parse(prop.images);
                 } catch (e) {
                   console.error("Invalid pictures JSON:", prop.images);
-                  pictures = [];
+                  images = [];
                 }
               } else if (Array.isArray(prop.images)) {
                 images = prop.images;

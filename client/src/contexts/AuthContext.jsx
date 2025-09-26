@@ -1,8 +1,9 @@
+// src/contexts/AuthContext.js
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
 const AuthContext = createContext(null);
 
-const BASE_URL = 'http://127.0.0.1:5000';
+const BASE_URL = 'http://127.0.0.1:5000'; // Ensure this matches your backend URL (local or Render)
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -108,21 +109,24 @@ export const AuthProvider = ({ children }) => {
         // Store tokens + user
         localStorage.setItem("accessToken", data.access_token);
         localStorage.setItem("refreshToken", data.refresh_token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("user", JSON.stringify(data.user)); // Store the user data stringified
 
         setAccessToken(data.access_token);
         setRefreshToken(data.refresh_token);
-        setUser(data.user);
+        setUser(data.user); // Set the user object directly
 
-        return { success: true };
+        // Return a consistent structure for success, including the user data
+        return { success: true, data: { user: data.user } }; // <--- UPDATED RETURN
       } else {
         console.error("Login failed:", data.message || "No access token");
-        return { success: false, error: data.message || "Login failed" };
+        // Return a consistent structure for failure
+        return { success: false, error: data.message || "Login failed" }; // <--- UPDATED RETURN
       }
     } catch (err) {
       setLoading(false);
       console.error("Network error:", err);
-      return { success: false, error: "Network error. Please check your connection." };
+      // Return a consistent structure for network failure
+      return { success: false, error: "Network error. Please check your connection." }; // <--- UPDATED RETURN
     }
   };
 
@@ -188,3 +192,6 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// --- ADD THIS LINE ---
+export { AuthContext }; // Export the context object itself

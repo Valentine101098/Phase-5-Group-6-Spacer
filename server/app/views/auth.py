@@ -56,7 +56,7 @@ def roles_required(*required_roles):
         def decorated_function(*args, **kwargs):
             # Check if is Flask-RESTful Resource
             is_resource_method = isinstance(args[0] if args else None, Resource)
-            
+
             verify_jwt_in_request()
             current_user_id = get_jwt_identity()
             user = db.session.get(User, current_user_id)
