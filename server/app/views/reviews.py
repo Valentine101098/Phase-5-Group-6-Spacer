@@ -11,7 +11,7 @@ def create_review():
     current_user_id = get_jwt_identity()
     logged_user = db.session.get(User, current_user_id)
 
-    if not logged_user or logged_user.role != 'client':
+    if not logged_user or "client" not in logged_user.get_roles():
         return jsonify({'error': 'Only clients can create reviews'}), 403
 
     data = request.get_json()
@@ -75,7 +75,7 @@ def update_review(review_id):
 
     review = Review.query.get_or_404(review_id)
 
-    if not logged_user or logged_user.role != 'client':
+    if not logged_user or "client" not in logged_user.get_roles():
         return jsonify({'error': 'Only clients can update reviews'}), 403
 
     if review.user_id != current_user_id:
@@ -108,7 +108,7 @@ def delete_review(review_id):
     logged_user = db.session.get(User, current_user_id)
     review = Review.query.get_or_404(review_id)
 
-    if not logged_user or logged_user.role != 'client':
+    if not logged_user or "client" not in logged_user.get_roles():
         return jsonify({'error': 'Only clients can delete reviews'}), 403
 
     if review.user_id != current_user_id:
