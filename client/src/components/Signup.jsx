@@ -4,6 +4,13 @@ import { useNavigate } from 'react-router-dom';
 
 const BASE_URL = 'http://127.0.0.1:5000'; 
 
+// Utility function for email validation
+const validateEmail = (email) => {
+  // A common regex for email validation (matches your backend's intent)
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailPattern.test(email);
+};
+
 function Signup() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -26,6 +33,12 @@ function Signup() {
       return;
     }
 
+    // Client-side email validation
+    if (!validateEmail(email)) {
+      setError('Invalid email format.');
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(`${BASE_URL}/auth/register`, {
@@ -34,10 +47,10 @@ function Signup() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
           email,
-          phone_number: phoneNumber,
+          phone_number: phoneNumber.trim(),
           password,
         }),
       });
@@ -54,7 +67,10 @@ function Signup() {
         setConfirmPassword('');
         setTimeout(() => navigate('/login'), 2000);
       } else {
-        setError(data.message || (data.errors ? data.errors.join(', ') : 'Registration failed.'));
+        setError(
+          data.message ||
+            (data.errors ? data.errors.join(', ') : 'Registration failed.')
+        );
       }
     } catch (err) {
       setError('Network error or server unavailable.');
@@ -68,7 +84,12 @@ function Signup() {
       <h2 className="text-2xl font-semibold mb-6 text-primary">Sign Up</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="firstName" className="block text-left text-gray-700 text-sm font-bold mb-2">First Name:</label>
+          <label
+            htmlFor="firstName"
+            className="block text-left text-gray-700 text-sm font-bold mb-2"
+          >
+            First Name:
+          </label>
           <input
             type="text"
             id="firstName"
@@ -79,7 +100,12 @@ function Signup() {
           />
         </div>
         <div>
-          <label htmlFor="lastName" className="block text-left text-gray-700 text-sm font-bold mb-2">Last Name:</label>
+          <label
+            htmlFor="lastName"
+            className="block text-left text-gray-700 text-sm font-bold mb-2"
+          >
+            Last Name:
+          </label>
           <input
             type="text"
             id="lastName"
@@ -90,9 +116,14 @@ function Signup() {
           />
         </div>
         <div>
-          <label htmlFor="email" className="block text-left text-gray-700 text-sm font-bold mb-2">Email:</label>
+          <label
+            htmlFor="email"
+            className="block text-left text-gray-700 text-sm font-bold mb-2"
+          >
+            Email:
+          </label>
           <input
-            type="email"
+            type="email" // Use type="email" for better mobile keyboard and basic browser validation
             id="email"
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
             value={email}
@@ -101,7 +132,12 @@ function Signup() {
           />
         </div>
         <div>
-          <label htmlFor="phoneNumber" className="block text-left text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
+          <label
+            htmlFor="phoneNumber"
+            className="block text-left text-gray-700 text-sm font-bold mb-2"
+          >
+            Phone Number:
+          </label>
           <input
             type="tel"
             id="phoneNumber"
@@ -112,7 +148,12 @@ function Signup() {
           />
         </div>
         <div>
-          <label htmlFor="password" className="block text-left text-gray-700 text-sm font-bold mb-2">Password:</label>
+          <label
+            htmlFor="password"
+            className="block text-left text-gray-700 text-sm font-bold mb-2"
+          >
+            Password:
+          </label>
           <input
             type="password"
             id="password"
@@ -123,7 +164,12 @@ function Signup() {
           />
         </div>
         <div>
-          <label htmlFor="confirmPassword" className="block text-left text-gray-700 text-sm font-bold mb-2">Confirm Password:</label>
+          <label
+            htmlFor="confirmPassword"
+            className="block text-left text-gray-700 text-sm font-bold mb-2"
+          >
+            Confirm Password:
+          </label>
           <input
             type="password"
             id="confirmPassword"
@@ -134,7 +180,9 @@ function Signup() {
           />
         </div>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        {successMessage && <p className="text-green-500 text-sm mb-4">{successMessage}</p>}
+        {successMessage && (
+          <p className="text-green-500 text-sm mb-4">{successMessage}</p>
+        )}
         <button
           type="submit"
           disabled={loading}
@@ -144,7 +192,10 @@ function Signup() {
         </button>
       </form>
       <p className="mt-4 text-gray-600">
-        Already have an account? <a href="/login" className="text-primary hover:text-secondary hover:underline">Login</a>
+        Already have an account?{' '}
+        <a href="/login" className="text-primary hover:text-secondary hover:underline">
+          Login
+        </a>
       </p>
     </div>
   );
