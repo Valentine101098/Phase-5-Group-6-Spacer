@@ -75,6 +75,7 @@ class InvoiceResource(Resource):
             "payment_method": invoice.payment_method,
             "transaction_id": invoice.transaction_id,
             "paid_at": invoice.paid_at.isoformat() if invoice.paid_at else None,
+            "created_at": invoice.created_at.isoformat(),
             "booking": {
                 "id": invoice.booking.id,
                 "space_id": invoice.booking.space_id,
@@ -82,6 +83,7 @@ class InvoiceResource(Resource):
                 "end_time": invoice.booking.end_time.isoformat() if invoice.booking.end_time else None,
                 "estimated_guests": invoice.booking.estimated_guests,
                 "status": invoice.booking.status,
+                "space_title": invoice.booking.space.title if invoice.booking.space else None
             }
         }, 200
 
