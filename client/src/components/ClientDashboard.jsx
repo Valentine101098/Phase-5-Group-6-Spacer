@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Star, Clock, CreditCard, FileText, Search, Filter, Heart, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ClientDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -585,12 +586,23 @@ const ClientDashboard = () => {
                       <span className="text-sm text-gray-600">Max {space.max_guests || space.capacity} guests</span>
                       <span className="font-semibold text-gray-900">${parseFloat(space.price_per_hour || space.price || 0).toFixed(2)}/hr</span>
                     </div>
-                    <button 
-                      className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                      disabled={space.status !== 'available'}
-                    >
-                      {space.status === 'available' ? 'Book Now' : 'Unavailable'}
-                    </button>
+{space.status === 'available' ? (
+  <Link to={`/spaces/${space.id}/booking`}>
+    <button
+      className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+    >
+      Book Now
+    </button>
+  </Link>
+) : (
+  <button
+    className="w-full bg-gray-400 text-white py-2 rounded-lg cursor-not-allowed"
+    disabled
+  >
+    Unavailable
+  </button>
+)}
+
                   </div>
                 </div>
               ))}
