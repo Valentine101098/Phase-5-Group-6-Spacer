@@ -17,6 +17,8 @@ import { BookingsTable } from './components/BookingsTable';
 import { PaymentForm } from './components/PaymentForm';
 import { PaymentPage } from './components/PaymentPage';
 import { InvoicesTable } from './components/InvoicesTable';
+import ClientDashboard from './components/ClientDashboard';
+import OwnerDashboard from './components/OwnerDashboard';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -93,6 +95,24 @@ function AppContent() {
             element={
               <PrivateRoute>
                 <AdminDashboard />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/client-dashboard"
+            element={
+              <PrivateRoute>
+                <ClientDashboard />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/owner-dashboard"
+            element={
+              <PrivateRoute>
+                <OwnerDashboard />
               </PrivateRoute>
             }
           />
