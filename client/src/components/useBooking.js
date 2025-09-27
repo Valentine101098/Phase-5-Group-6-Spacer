@@ -8,7 +8,7 @@ export function useBooking(space, id, navigate) {
   const [error, setError] = useState(null);
   const { accessToken } = useAuth() 
 
-  const proceedToBooking = async ({ startDate, endDate, startTime, endTime, termsAccepted }) => {
+  const proceedToBooking = async ({ startDate, endDate, startTime, endTime, termsAccepted, guests }) => {
     if (!termsAccepted) {
       throw new Error('Please accept the terms and conditions');
     }
@@ -22,6 +22,7 @@ export function useBooking(space, id, navigate) {
         endDate,
         startTime,
         endTime,
+        guests,
         pricePerHour: space.price_per_hour
       });
 
@@ -31,7 +32,8 @@ export function useBooking(space, id, navigate) {
         start_time: `${startDate}T${startTime}:00`,
         end_time: `${endDate}T${endTime}:00`,
         total_amount: totalAmount.toFixed(2),
-        terms_accepted: termsAccepted
+        terms_accepted: termsAccepted,
+        estimated_guests: guests
       };
 
       const result = await createBooking(bookingData, accessToken);

@@ -40,7 +40,9 @@ def booking_to_dict_safe(booking):
         'space_title': booking.space.title if booking.space else None,
         'has_agreement_instance': booking.agreement_instance is not None,
         'has_invoice': booking.invoice is not None,
-        'has_review': booking.review is not None
+        'has_review': booking.review is not None,
+        'invoice_id': booking.invoice.id if booking.invoice else None
+        
     }
 
 
@@ -80,7 +82,8 @@ class BookingListResource(Resource):
                 "start_time",
                 "end_time",
                 "total_amount",
-                "terms_accepted"
+                "terms_accepted",
+                "estimated_guests"
             ]
             for field in required:
                 if field not in data:
@@ -199,15 +202,17 @@ class BookingResource(Resource):
         return {"data": booking_to_dict_safe(booking)}, 200
 
 class BookingCancelResource(Resource):
+
     @jwt_required()
     def put(self, booking_id):
         """Cancel booking (client or admin)"""
         booking = Booking.query.get_or_404(booking_id)
         user_id = get_jwt_identity()
         claims = get_jwt()
+        
 
 
-        if "admin" in claims.get("roles", []):
+        if "admin" in claims.get("roles", []) or "owner" in claims.get("roles", []):
             if booking.status == "cancelled":
                 return {"error": "Booking already cancelled"}, 400
 
@@ -215,7 +220,7 @@ class BookingCancelResource(Resource):
             update_space_status(booking.space)
             db.session.commit()
             return {
-                "message": "Booking cancelled by admin",
+                "message": "Booking cancelled by admin or owner.",
                 "data": booking_to_dict_safe(booking),
             }, 200
 

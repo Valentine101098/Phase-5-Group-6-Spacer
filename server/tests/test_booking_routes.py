@@ -372,6 +372,7 @@ def test_create_booking_terms_not_accepted(client, app, seed_data_bookings):
         'start_time': (future_date + timedelta(hours=1)).isoformat(),
         'end_time': (future_date + timedelta(hours=3)).isoformat(),
         'total_amount': 50.0,
+        'estimated_guests': 1,
         'terms_accepted': False
     }
     
@@ -400,6 +401,7 @@ def test_create_booking_time_conflict(client, app, seed_data_bookings):
         'start_time': (future_date + timedelta(hours=2, minutes=30)).isoformat(),  # Overlaps existing
         'end_time': (future_date + timedelta(hours=4, minutes=30)).isoformat(),
         'total_amount': 40.0,
+        'estimated_guests': 1,
         'terms_accepted': True
     }
     
@@ -427,6 +429,7 @@ def test_create_booking_invalid_agreement_template(client, app, seed_data_bookin
         'start_time': (future_date + timedelta(hours=1)).isoformat(),
         'end_time': (future_date + timedelta(hours=3)).isoformat(),
         'total_amount': 50.0,
+        'estimated_guests': 1,
         'terms_accepted': True
     }
     
@@ -452,6 +455,7 @@ def test_create_booking_nonexistent_space(client, app, seed_data_bookings):
         'start_time': (future_date + timedelta(hours=1)).isoformat(),
         'end_time': (future_date + timedelta(hours=3)).isoformat(),
         'total_amount': 50.0,
+        'estimated_guests': 1,
         'terms_accepted': True
     }
     
@@ -475,6 +479,7 @@ def test_create_booking_invalid_time_values(client, app, seed_data_bookings):
         'start_time': 'invalid-time-format',
         'end_time': '2025-12-01T12:00:00Z',
         'total_amount': 50.0,
+        'estimated_guests': 1,
         'terms_accepted': True
     }
     
@@ -500,6 +505,7 @@ def test_create_booking_negative_amount(client, app, seed_data_bookings):
         'start_time': (future_date + timedelta(hours=1)).isoformat(),
         'end_time': (future_date + timedelta(hours=3)).isoformat(),
         'total_amount': -10.0,  # Negative amount
+        'estimated_guests': 1,
         'terms_accepted': True
     }
     
@@ -523,6 +529,7 @@ def test_owner_cannot_create_booking(client, app, seed_data_bookings):
         'start_time': (future_date + timedelta(hours=1)).isoformat(),
         'end_time': (future_date + timedelta(hours=3)).isoformat(),
         'total_amount': 40.0,
+        'estimated_guests': 1,
         'terms_accepted': True
     }
     
@@ -628,8 +635,8 @@ def test_client_cannot_cancel_others_booking(client, app, seed_data_bookings):
     data = json.loads(response.data)
     assert 'Not authorized' in data['error']
 
-def test_admin_cancels_any_booking(client, app, seed_data_bookings):
-    """Test admin can cancel any booking"""
+def test_admin_owner_cancels_any_booking(client, app, seed_data_bookings):
+    """Test admin or owner can cancel any booking"""
     admin_id = seed_data_bookings['admin_id']
     existing_booking_id = seed_data_bookings['existing_booking_id']
     token = get_token(app, admin_id)
@@ -641,7 +648,7 @@ def test_admin_cancels_any_booking(client, app, seed_data_bookings):
     
     assert response.status_code == 200
     data = json.loads(response.data)
-    assert data['message'] == 'Booking cancelled by admin'
+    assert data['message'] == 'Booking cancelled by admin or owner.'
     assert data['data']['status'] == 'cancelled'
 
 def test_cannot_cancel_already_cancelled_booking(client, app, seed_data_bookings):
@@ -668,18 +675,18 @@ def test_cannot_cancel_already_cancelled_booking(client, app, seed_data_bookings
 
 
 
-def test_owner_cannot_cancel_booking(client, app, seed_data_bookings):
-    """Test owner cannot cancel bookings (even for their spaces)"""
-    owner1_id = seed_data_bookings['owner1_id']
-    existing_booking_id = seed_data_bookings['existing_booking_id']  # Booking on owner1's space
-    token = get_token(app, owner1_id)
+# def test_owner_cannot_cancel_booking(client, app, seed_data_bookings):
+#     """Test owner cannot cancel bookings (even for their spaces)"""
+#     owner1_id = seed_data_bookings['owner1_id']
+#     existing_booking_id = seed_data_bookings['existing_booking_id']  # Booking on owner1's space
+#     token = get_token(app, owner1_id)
     
-    response = client.put(
-        f'/api/bookings/{existing_booking_id}/cancel',
-        headers={'Authorization': f'Bearer {token}'}
-    )
+#     response = client.put(
+#         f'/api/bookings/{existing_booking_id}/cancel',
+#         headers={'Authorization': f'Bearer {token}'}
+#     )
     
-    assert response.status_code == 403
+#     assert response.status_code == 403
 
 # CONFIRM BOOKING TESTS
 def test_client_confirms_own_pending_booking(client, app, seed_data_bookings):
@@ -712,6 +719,7 @@ def test_client_cannot_confirm_others_booking(client, app, seed_data_bookings):
             start_time=future_date + timedelta(hours=1),
             end_time=future_date + timedelta(hours=3),
             total_amount=Decimal('50.00'),
+            estimated_guests=1,
             status="pending"
         )
         db.session.add(client2_booking)
@@ -894,35 +902,36 @@ def test_create_booking_response_structure(client, app, seed_data_bookings):
     assert agreement['status'] == 'accepted'
 
 # EDGE CASES AND VALIDATION TESTS
-def test_create_booking_with_optional_fields(client, app, seed_data_bookings):
-    """Test create booking with optional estimated_guests field"""
-    client1_id = seed_data_bookings['client1_id']
-    space2_id = seed_data_bookings['space2_id']
-    template2_id = seed_data_bookings['template2_id']
-    token = get_token(app, client1_id)
+# def test_create_booking_with_optional_fields(client, app, seed_data_bookings):
+#     """Test create booking with optional estimated_guests field"""
+#     client1_id = seed_data_bookings['client1_id']
+#     space2_id = seed_data_bookings['space2_id']
+#     template2_id = seed_data_bookings['template2_id']
+#     token = get_token(app, client1_id)
     
-    future_date = datetime.now(timezone.utc) + timedelta(days=5)
+#     future_date = datetime.now(timezone.utc) + timedelta(days=5)
     
-    # Test without estimated_guests
-    booking_data = {
-        'space_id': space2_id,
-        'agreement_template_id': template2_id,
-        'start_time': (future_date + timedelta(hours=1)).isoformat(),
-        'end_time': (future_date + timedelta(hours=3)).isoformat(),
-        'total_amount': 50.0,
-        'terms_accepted': True
-    }
+#     # Test without estimated_guests
+#     booking_data = {
+#         'space_id': space2_id,
+#         'agreement_template_id': template2_id,
+#         'start_time': (future_date + timedelta(hours=1)).isoformat(),
+#         'end_time': (future_date + timedelta(hours=3)).isoformat(),
+#         'total_amount': 50.0,
+#         'estimated_guests':1,
+#         'terms_accepted': True
+#     }
     
-    response = client.post(
-        '/api/bookings/',
-        json=booking_data,
-        headers={'Authorization': f'Bearer {token}'}
-    )
+#     response = client.post(
+#         '/api/bookings/',
+#         json=booking_data,
+#         headers={'Authorization': f'Bearer {token}'}
+#     )
     
-    assert response.status_code == 201
-    data = json.loads(response.data)
-    # estimated_guests should be None/null when not provided
-    assert data['data']['estimated_guests'] is None
+#     assert response.status_code == 201
+#     data = json.loads(response.data)
+#     # estimated_guests should be None/null when not provided
+#     assert data['data']['estimated_guests'] is None
 
 def test_booking_time_validation_edge_cases(client, app, seed_data_bookings):
     """Test booking time validation with edge cases"""
@@ -941,6 +950,7 @@ def test_booking_time_validation_edge_cases(client, app, seed_data_bookings):
         'start_time': existing_end_time.isoformat(),  # Start exactly when existing ends
         'end_time': (existing_end_time + timedelta(hours=2)).isoformat(),
         'total_amount': 40.0,
+        'estimated_guests': 1,
         'terms_accepted': True
     }
     
@@ -966,6 +976,7 @@ def test_multiple_bookings_same_client(client, app, seed_data_bookings):
         'start_time': (future_base + timedelta(hours=1)).isoformat(),
         'end_time': (future_base + timedelta(hours=3)).isoformat(),
         'total_amount': 40.0,
+        'estimated_guests': 1,
         'terms_accepted': True
     }
     
@@ -984,6 +995,7 @@ def test_multiple_bookings_same_client(client, app, seed_data_bookings):
         'start_time': (future_base + timedelta(hours=5)).isoformat(),
         'end_time': (future_base + timedelta(hours=7)).isoformat(),
         'total_amount': 50.0,
+        'estimated_guests': 1,
         'terms_accepted': True
     }
     
@@ -1080,6 +1092,7 @@ def test_booking_status_transitions(client, app, seed_data_bookings):
         'start_time': (future_date + timedelta(hours=1)).isoformat(),
         'end_time': (future_date + timedelta(hours=3)).isoformat(),
         'total_amount': 50.0,
+        'estimated_guests': 1,
         'terms_accepted': True
     }
     

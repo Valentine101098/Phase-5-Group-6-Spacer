@@ -74,12 +74,14 @@ function AppContent() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
        
-        <Route path="/spaces/:id/booking" element={<BookingPage />} />
-       
-       <Route path="/invoices/:id" element={<PaymentPage />} />
-     
-      <Route path="/dashboard/bookings" element={<BookingsTable />} />
-       <Route path="/dashboard/invoices" element={<InvoicesTable />} />          
+<Route path="/spaces/:id/booking" element={<PrivateRoute><BookingPage /></PrivateRoute>} />
+
+<Route path="/invoices/:id" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
+
+<Route path="/dashboard/bookings" element={<PrivateRoute><BookingsTable /></PrivateRoute>} />
+
+<Route path="/dashboard/invoices" element={<PrivateRoute><InvoicesTable /></PrivateRoute>} />
+         
 
           <Route
             path="/profile"
