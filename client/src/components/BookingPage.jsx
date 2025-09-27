@@ -16,8 +16,8 @@ export function BookingPage() {
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
   const [guests, setGuests] = useState(1);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
@@ -39,7 +39,7 @@ export function BookingPage() {
 
   const handleProceed = async (e) => {
     e.preventDefault();
-    await proceedToBooking({ startDate, endDate, startTime, endTime, termsAccepted });
+    await proceedToBooking({ startDate, endDate, startTime, endTime, termsAccepted, guests });
   };
 
   if (loading) return <div className="text-center py-12">Loading...</div>;
