@@ -92,6 +92,10 @@ def update_review(review_id):
         return jsonify({'error': 'Rating must be between 1 and 5'}), 400
 
     try:
+        if 'comment' in data:
+            if data['comment'] != review.comment and not data['comment'].startswith('(Edited)'):
+                data['comment'] = f"(Edited) {data['comment']}"
+
         for key, value in data.items():
             setattr(review, key, value)
         db.session.commit()
@@ -121,3 +125,27 @@ def delete_review(review_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
+    
+
+
+    # Get the logged-in user's review for a specific space
+@reviews_bp.route('/spaces/<int:space_id>/user', methods=['GET'])
+@jwt_required()
+def get_user_review_for_space(space_id):
+    current_user_id = get_jwt_identity()
+    logged_user = db.session.get(User, current_user_id)
+
+    if not logged_user or "client" not in logged_user.get_roles():
+        return jsonify({'error': 'Only clients can access their review'}), 403
+
+    review = (
+        db.session.query(Review)
+        .join(Booking, Review.booking_id == Booking.id)
+        .filter(Booking.space_id == space_id, Review.user_id == current_user_id)
+        .first()
+    )
+
+    if not review:
+        return jsonify({'error': 'No review found for this user and space'}), 404
+
+    return jsonify(review.to_dict()), 200
