@@ -40,6 +40,7 @@ def booking_to_dict_safe(booking):
         'space_title': booking.space.title if booking.space else None,
         'has_agreement_instance': booking.agreement_instance is not None,
         'has_invoice': booking.invoice is not None,
+        'has_review': booking.review is not None,
         'invoice_id': booking.invoice.id if booking.invoice else None
         
     }
