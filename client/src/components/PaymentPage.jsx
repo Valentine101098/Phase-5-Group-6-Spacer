@@ -76,7 +76,7 @@ export function PaymentPage() {
               <h3 className="font-semibold mb-2">Booking Details</h3>
               <p><strong>Invoice ID:</strong> {invoice?.id}</p>
               <p>
-                <strong>Amount Paid:</strong> Kshs
+                <strong>Amount Paid:</strong> Kshs 
                 {parseFloat(invoice?.amount || 0).toFixed(2)}
               </p>
               <p><strong>Confirmation Code:</strong> {paymentConfirmationCode}</p>
@@ -238,7 +238,7 @@ export function PaymentPage() {
               <p>3. Select "Pay Bill"</p>
               <p><strong>Business Number:</strong> 247247</p>
               <p><strong>Account Number:</strong> booking</p>
-              <p><strong>Amount:</strong> ${parseFloat(invoice?.amount || 0).toFixed(2)}</p>
+              <p><strong>Amount:</strong> Kshs {parseFloat(invoice.amount)}</p>
               <p>4. Enter your M-Pesa PIN and confirm</p>
               <p>5. You will receive an SMS confirmation with a transaction code</p>
               <p>6. Enter the transaction code below to complete your booking</p>
