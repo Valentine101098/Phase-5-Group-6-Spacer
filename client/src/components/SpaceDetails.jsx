@@ -26,7 +26,9 @@ export default function SpaceDetails({ space, onClose }) {
             })
                 .then(res => res.json())
                 .then(data => {
-                    const spaceBookings = data.filter(booking => booking.space_id === space.id);
+                    const spaceBookings = data.data.filter(
+                        ({ space_id, user_id }) => space_id === space.id && user_id === user.id
+                    );
                     setUserBookings(spaceBookings);
                 })
                 .catch(err => console.error("Error fetching user bookings:", err));
@@ -48,7 +50,7 @@ export default function SpaceDetails({ space, onClose }) {
     const handleReviewSubmitted = (newReview) => {
         if (editingReview) {
             // replace edited review
-            setReviews(reviews.map(r => (r.id === newReview.id ? newReview : r)));
+            setReviews(reviews.map(r => (r.id === editingReview.id ? { ...r, ...newReview, id: editingReview.id } : r)));
             setEditingReview(null);
         } else {
             // prepend new review
@@ -161,7 +163,7 @@ export default function SpaceDetails({ space, onClose }) {
                 {hasBooked && !showReviewForm && !userReview && (
                     <button
                         onClick={() => setShowReviewForm(true)}
-                        className="bg-green-500 text-white px-4 py-2 mt-3 w-40 rounded-lg hover:bg-green-600"
+                        className="bg-yellow-400 text-yellow-900 px-4 py-2  mt-3 w-40 mx-auto rounded-lg hover:bg-yellow-600 hover:text-yellow-900 transition"
                     >
                         Add Review
                     </button>
@@ -172,7 +174,7 @@ export default function SpaceDetails({ space, onClose }) {
                     {space.status === "available" && (
                         <Link to={`/spaces/${space.id}/booking`}>
                         <button className="bg-blue-500 text-white px-4 py-2 w-40 rounded-lg hover:bg-blue-600">
-                            Book
+                            Book Now
                         </button>
                         </Link>
                     )}
