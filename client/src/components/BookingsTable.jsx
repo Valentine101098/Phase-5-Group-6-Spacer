@@ -4,6 +4,7 @@ import { Search, ChevronUp, ChevronDown, Calendar, Users, DollarSign, Clock, X }
 import { useAuth } from '../contexts/AuthContext';
 import ReviewFormModal from './ReviewFormModal';
 import { Link } from "react-router-dom";
+import { formatCurrency } from './currency';
 
 export function BookingsTable() {
   const [bookings, setBookings] = useState([]);
@@ -117,12 +118,12 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const formatAmount = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+  // const formatAmount = (amount) => {
+  //   return new Intl.NumberFormat('en-US', {
+  //     style: 'currency',
+  //     currency: 'USD',
+  //   }).format(amount);
+  // };
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -283,7 +284,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
             <div>
               <p className="text-sm font-medium text-yellow-600">Total Revenue</p>
               <p className="text-2xl font-bold text-yellow-900">
-                {formatAmount(confirmedBookings.reduce((sum, booking) => sum + booking.total_amount, 0))}
+                {formatCurrency(confirmedBookings.reduce((sum, booking) => sum + booking.total_amount, 0))}
               </p>
             </div>
           </div>
@@ -411,7 +412,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
                   {booking.estimated_guests}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {formatAmount(booking.total_amount)}
+                  {formatCurrency(booking.total_amount)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(booking.status)}`}>

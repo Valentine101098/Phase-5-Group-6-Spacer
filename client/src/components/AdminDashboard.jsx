@@ -5,6 +5,7 @@ import { BookingsTable } from './BookingsTable';
 import { InvoicesTable } from './InvoicesTable';
 import SpaceCard from './SpaceCard';
 import SpaceDetails from './SpaceDetails';
+import { formatCurrency } from './currency';
 
 const AdminDashboard = () => {
   const { makeAuthenticatedRequest, user, isAuthenticated } = useAuth();
@@ -365,7 +366,7 @@ const AdminDashboard = () => {
               <StatCard icon={Users} title="Total Users" value={stats.totalUsers} />
               <StatCard icon={Building} title="Active Spaces" value={stats.totalSpaces} />
               <StatCard icon={Calendar} title="Total Bookings" value={stats.totalBookings} />
-              <StatCard icon={HandCoins} title="Revenue (Ksh)" value={`${stats.totalRevenue.toLocaleString()}`} />
+              <StatCard icon={HandCoins} title="Total Revenue" value={formatCurrency(stats.totalRevenue)} />
             </div>
             
             {/* Recent Activity Section */}
@@ -422,7 +423,7 @@ const AdminDashboard = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Total Revenue</span>
                       <span className="font-semibold text-green-600">
-                        Ksh {stats.totalRevenue.toLocaleString()}
+                        {formatCurrency(stats.totalRevenue)}
                       </span>
                     </div>
                   </div>

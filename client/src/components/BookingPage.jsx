@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { fetchSpaceById } from './bookingApi';
 import { calculateTotalAmount } from './utils';
 import { BookingForm } from './BookingForm';
+import { formatCurrency } from './currency';
 
 export function BookingPage() {
   const { id } = useParams();
@@ -148,7 +149,7 @@ export function BookingPage() {
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-xl">
                   <div className="text-2xl font-bold text-purple-600">
-                    Kshs {parseFloat(space?.price_per_hour || 0).toFixed(2)}
+                    {formatCurrency(space?.price_per_hour)}
                   </div>
                   <div className="text-sm text-gray-600">Per Hour</div>
                 </div>
@@ -193,7 +194,7 @@ export function BookingPage() {
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">Total Amount:</span>
                       <span className="text-2xl font-bold text-green-600">
-                        Kshs {totalAmount}
+                        {formatCurrency(totalAmount)}
                       </span>
                     </div>
                   </div>

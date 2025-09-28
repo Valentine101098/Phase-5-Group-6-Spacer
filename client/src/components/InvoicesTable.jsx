@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronUp, ChevronDown, DollarSign, Calendar } from 'lucide-react';
 // import { bearerToken } from './tokens';
 import { useAuth } from '../contexts/AuthContext';
+import { formatCurrency } from './currency';
 
 
 export function InvoicesTable() {
@@ -47,12 +48,12 @@ export function InvoicesTable() {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const formatAmount = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+  // const formatAmount = (amount) => {
+  //   return new Intl.NumberFormat('en-US', {
+  //     style: 'currency',
+  //     currency: 'USD',
+  //   }).format(amount);
+  // };
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -182,7 +183,7 @@ export function InvoicesTable() {
             <div>
               <p className="text-sm font-medium text-green-600">Total Paid</p>
               <p className="text-2xl font-bold text-green-900">
-                {formatAmount(
+                {formatCurrency(
                   filteredAndSortedInvoices.reduce((sum, inv) => 
                     sum + (inv.status === 'paid' ? parseFloat(inv.amount) : 0), 0
                   )
@@ -198,7 +199,7 @@ export function InvoicesTable() {
             <div>
               <p className="text-sm font-medium text-yellow-600">Outstanding</p>
               <p className="text-2xl font-bold text-yellow-900">
-                {formatAmount(
+                {formatCurrency(
                   filteredAndSortedInvoices.reduce((sum, inv) => 
                     sum + (inv.status !== 'paid' ? parseFloat(inv.amount) : 0), 0
                   )
@@ -239,7 +240,7 @@ export function InvoicesTable() {
               <tr key={inv.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{inv.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{inv.space_title || '—'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatAmount(inv.amount)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatCurrency(inv.amount)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{inv.payment_method || '—'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(inv.paid_at)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
