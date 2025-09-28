@@ -21,7 +21,7 @@ export default function SpaceReviewForm({ booking_id, onReviewSubmitted, onCance
         const url = editingReview ? `http://127.0.0.1:5000/api/reviews/${editingReview.id}` : 'http://127.0.0.1:5000/api/reviews/';
 
         fetch(url, {
-            method: method,
+            method,
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${accessToken}`,
@@ -32,17 +32,18 @@ export default function SpaceReviewForm({ booking_id, onReviewSubmitted, onCance
                 comment,
             }),
         })
-            .then(() => {
+            .then(res => res.json())  
+            .then(data => {
                 setRating(5);
                 setComment("");
-                onReviewSubmitted();
-                if (editingReview) onCancel()
+                onReviewSubmitted(data); 
+                if (editingReview) onCancel();
             })
             .catch(err => console.error("Error submitting review:", err));
     }
 
     return (
-        <form onSubmit={handleSubmit} className="mt-4 bg-blue-600 flex flex-col gap-2">
+        <form onSubmit={handleSubmit} className="mt-2 bg-primary rounded flex p-4 flex-col m-4 gap-2">
             <label className="font-semibold text-white">Rating</label>
             <input
                 type="number"
@@ -56,25 +57,29 @@ export default function SpaceReviewForm({ booking_id, onReviewSubmitted, onCance
             <label className="font-semibold text-white">Comment</label>
             <textarea
                 value={comment}
+                placeholder="Write your review here..."
                 onChange={(e) => setComment(e.target.value)}
                 className="border p-2 rounded mb-2"
             ></textarea>
 
+            <span>
             <button
                 type="submit"
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-900 transition"
+                className="bg-green-600 text-white px-4 py-2 w-40 mx-auto rounded hover:bg-green-900 transition"
             >
                 {editingReview ? "Update Review" : "Submit Review"}
             </button>
+                
             {editingReview && (
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition mt-2"
+                    className="bg-gray-500 text-white px-4 py-2 ml-4 rounded hover:bg-gray-600 transition mt-2"
                 >
                     Cancel
                 </button>
             )}
+            </span>
         </form>
     )
 }
