@@ -10,13 +10,13 @@ const getDashboardPath = (roles) => {
     return '/profile';
   }
   if (roles.includes('admin')) {
-    return '/admin/dashboard';
+    return '/admin-dashboard';
   }
   if (roles.includes('owner')) {
-    return '/owner/dashboard';
+    return '/owner-dashboard';
   }
 
-  return '/client/dashboard';
+  return '/client-dashboard';
 };
 
 
