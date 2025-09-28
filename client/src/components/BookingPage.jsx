@@ -1,10 +1,9 @@
-import { useBooking } from './useBooking';
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchSpaceById } from './bookingApi';
 import { calculateTotalAmount } from './utils';
 import { BookingForm } from './BookingForm';
+import { useBooking } from './useBooking';
 
 export function BookingPage() {
   const { id } = useParams();
@@ -14,11 +13,17 @@ export function BookingPage() {
   const [error, setError] = useState(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('17:00');
-  const [guests, setGuests] = useState(1);
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowString = tomorrow.toISOString().split('T')[0];
+
+  const [startDate, setStartDate] = useState('tomorrowString');
+  const [endDate, setEndDate] = useState('tomorrowString');
+  const [startTime, setStartTime] = useState('08:00');
+  const [endTime, setEndTime] = useState('18:00');
+
+   const [guests, setGuests] = useState(1);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const { proceedToBooking, submitting, error: bookingError } = useBooking(space, id, navigate);
@@ -39,7 +44,9 @@ export function BookingPage() {
 
   const handleProceed = async (e) => {
     e.preventDefault();
-    await proceedToBooking({ startDate, endDate, startTime, endTime, termsAccepted, guests });
+
+    await proceedToBooking({ startDate, endDate, startTime, endTime, guests, termsAccepted });
+
   };
 
   if (loading) return <div className="text-center py-12">Loading...</div>;

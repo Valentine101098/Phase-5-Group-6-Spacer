@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Star, Clock, CreditCard, FileText, Search, Filter, Heart, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Calendar, MapPin, Star, Clock, CreditCard, FileText, Search, Filter, Heart, CheckCircle, AlertTriangle, Eye, ClockIcon, CalendarOff, Building } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import SpaceCard from './SpaceCard';
+import SpaceDetails from './SpaceDetails';
+import { BookingsTable } from './BookingsTable';
+import { InvoicesTable } from './InvoicesTable';
+
 import { Link } from 'react-router-dom';
 
 const ClientDashboard = () => {
+  const { user, isAuthenticated, makeAuthenticatedRequest } = useAuth();
+  
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [availabilityFilter, setAvailabilityFilter] = useState('all'); // 'all', 'available', 'booked'
 
   // State for different data types
   const [bookings, setBookings] = useState([]);
@@ -14,142 +23,65 @@ const ClientDashboard = () => {
   const [reviews, setReviews] = useState([]);
   const [invoices, setInvoices] = useState([]);
 
-  // Get auth token
-  const getAuthToken = () => {
-    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-    if (!token) {
-      console.warn('No authentication token found');
-      // Don't redirect automatically - let the API handle auth errors
+  // Helper to normalize API responses
+  const normalizeArray = (res, fallback = []) => {
+    if (!res) return fallback;
+    if (typeof res === 'object' && 'success' in res) {
+      if (!res.success) return fallback;
+      res = res.data;
     }
-    return token;
+    if (Array.isArray(res)) return res;
+    if (res && typeof res === 'object') {
+      if (Array.isArray(res.users)) return res.users;
+      if (Array.isArray(res.data)) return res.data;
+      if (Array.isArray(res.bookings)) return res.bookings;
+      if (Array.isArray(res.invoices)) return res.invoices;
+      if (Array.isArray(res.spaces)) return res.spaces;
+    }
+    return fallback;
   };
 
-  // API call helper with better error handling
-  const apiCall = async (endpoint, options = {}) => {
-    const token = getAuthToken();
-    
-    try {
-      const response = await fetch(`http://127.0.0.1:5000/api${endpoint}`, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-          ...options.headers
-        },
-        credentials: 'include' // Include cookies for session-based auth
-      });
-
-      // Check if response is HTML instead of JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error(`Non-JSON response from ${endpoint}:`, text.substring(0, 200));
-        
-        if (response.status === 401) {
-          throw new Error('Authentication required. Please log in again.');
-        } else if (response.status === 404) {
-          throw new Error(`API endpoint not found: ${endpoint}`);
-        } else if (text.includes('<!doctype')) {
-          throw new Error(`Server returned HTML page instead of JSON. Check if endpoint exists: ${endpoint}`);
-        } else {
-          throw new Error(`Unexpected response format. Status: ${response.status}`);
-        }
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || errorData.error || `API call failed: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error(`API call error for ${endpoint}:`, error);
-      throw error;
-    }
-  };
-
-  // Fetch client-specific data with better error handling
+  // Fetch client-specific data
   const fetchData = async () => {
+    if (!isAuthenticated) {
+      setError('Not authenticated. Please log in.');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch data individually to handle partial failures
-      const endpoints = [
-        { key: 'bookings', url: '/bookings/' },
-        { key: 'spaces', url: '/spaces/' },
-        { key: 'reviews', url: '/reviews/' },
-        { key: 'invoices', url: '/invoices/' }
-      ];
+      // Fetch all data - client sees ALL spaces but only their bookings/invoices
+      const [spacesRes, bookingsRes, invoicesRes, reviewsRes] = await Promise.all([
+        makeAuthenticatedRequest('/api/spaces/', 'GET'),
+        makeAuthenticatedRequest('/api/bookings/', 'GET'),
+        makeAuthenticatedRequest('/api/invoices/', 'GET'),
+        makeAuthenticatedRequest('/api/reviews/', 'GET')
+      ]);
 
-      const results = {
-        bookings: [],
-        spaces: [],
-        reviews: [],
-        invoices: []
-      };
+      // Client sees ALL spaces (not just available ones)
+      setSpaces(normalizeArray(spacesRes));
       
-      for (const endpoint of endpoints) {
-        try {
-          const data = await apiCall(endpoint.url);
-          // Handle different response structures
-          if (Array.isArray(data)) {
-            results[endpoint.key] = data;
-          } else if (data && data.data) {
-            results[endpoint.key] = data.data;
-          } else if (data) {
-            results[endpoint.key] = data;
-          } else {
-            results[endpoint.key] = [];
-          }
-          console.log(`Successfully fetched ${endpoint.key}:`, results[endpoint.key].length, 'items');
-        } catch (err) {
-          console.warn(`Failed to fetch ${endpoint.key}:`, err.message);
-          // Continue with other endpoints even if one fails
-        }
-      }
-
-      setBookings(results.bookings);
-      setSpaces(results.spaces);
-      setReviews(results.reviews);
-      setInvoices(results.invoices);
+      // Client sees only their bookings and invoices
+      setBookings(normalizeArray(bookingsRes).filter(booking => booking.user_id === user?.id));
+      setInvoices(normalizeArray(invoicesRes).filter(invoice => invoice.user_id === user?.id));
+      setReviews(normalizeArray(reviewsRes).filter(review => review.user_id === user?.id));
 
     } catch (err) {
-      setError(err.message);
       console.error('Failed to fetch data:', err);
+      setError(err.message || 'Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
   };
 
-  // Test API endpoints (for debugging)
-  const testEndpoints = async () => {
-    const endpoints = ['/bookings/', '/spaces/', '/reviews/', '/invoices/'];
-    
-    console.log('Testing API endpoints:');
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(`http://127.0.0.1:5000/api${endpoint}`);
-        const contentType = response.headers.get('content-type');
-        console.log(`${endpoint}: Status ${response.status}, Content-Type: ${contentType}`);
-        
-        if (contentType && contentType.includes('application/json')) {
-          const data = await response.json();
-          console.log(`${endpoint} data sample:`, data);
-        }
-      } catch (err) {
-        console.error(`${endpoint}: Error -`, err.message);
-      }
-    }
-  };
-
   useEffect(() => {
     fetchData();
-    // Uncomment next line to debug endpoints
-    // testEndpoints();
-  }, []);
+  }, [isAuthenticated]);
 
-  // Calculate stats from real data
+  // Calculate client stats from real data
   const clientStats = {
     totalBookings: bookings.length,
     upcomingBookings: bookings.filter(b => {
@@ -171,26 +103,146 @@ const ClientDashboard = () => {
     }).length
   };
 
+  // Filter spaces based on search and availability
+  const filteredSpaces = spaces.filter(space => {
+    const matchesSearch = 
+      space.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      space.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      space.space_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      space.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesAvailability = 
+      availabilityFilter === 'all' || 
+      (availabilityFilter === 'available' && space.status === 'available') ||
+      (availabilityFilter === 'booked' && space.status !== 'available');
+    
+    return matchesSearch && matchesAvailability;
+  });
+
+  // Upcoming bookings for dashboard
   const upcomingBookings = bookings.filter(b => {
     const startTime = b.start_time || b.date || b.booking_date;
     return startTime && new Date(startTime) > new Date() && 
       ['confirmed', 'pending', 'active', 'upcoming'].includes(b.status);
   }).slice(0, 5);
 
-  const bookingHistory = bookings.filter(b => {
-    const endTime = b.end_time || b.completed_date;
-    return (endTime && new Date(endTime) < new Date()) || 
-      b.status === 'completed' || 
-      b.status === 'cancelled';
-  }).slice(0, 10);
+  // Enhanced SpaceCard component with fixed image handling
+  const EnhancedSpaceCard = ({ space }) => {
+    const [showDetails, setShowDetails] = useState(false);
+    const [imageError, setImageError] = useState(false);
+    const [imageLoaded, setImageLoaded] = useState(false);
+    
+    // Check if space has valid images
+    const hasValidImages = space.images && Array.isArray(space.images) && space.images.length > 0;
+    const imageUrl = hasValidImages ? space.images[0] : null;
+    
+    // Reset image states when space changes
+    useEffect(() => {
+      setImageError(false);
+      setImageLoaded(false);
+    }, [space.id, imageUrl]);
+    
+    return (
+      <div className="border w-full h-full rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
+        <div className="relative w-full h-60 overflow-hidden bg-gray-200">
+          {imageUrl && !imageError ? (
+            <>
+              <img
+                src={imageUrl}
+                alt={space.title || space.name || 'Space image'}
+                className="w-full h-full object-cover"
+                onLoad={() => setImageLoaded(true)}
+                onError={() => {
+                  setImageError(true);
+                  setImageLoaded(false);
+                }}
+                style={{ display: imageLoaded && !imageError ? 'block' : 'none' }}
+              />
+              {!imageLoaded && !imageError && (
+                <div className="absolute inset-0 bg-gray-200 flex items-center justify-center animate-pulse">
+                  <div className="text-gray-400">Loading...</div>
+                </div>
+              )}
+            </>
+          ) : null}
+          
+          {/* Fallback - show when no image URL or image failed to load */}
+          {(!imageUrl || imageError) && (
+            <div className="absolute inset-0 bg-gray-200 flex items-center justify-center text-gray-500">
+              <div className="text-center">
+                <Building className="h-12 w-12 mx-auto mb-2" />
+                <span className="text-sm">No Image</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Availability Badge */}
+          <div className="absolute top-3 left-3">
+            <span className={`px-2 py-1 text-xs font-semibold rounded ${
+              space.status === 'available' 
+                ? 'bg-green-300 text-green-800' 
+                : 'bg-orange-300 text-orange-800'
+            }`}>
+              {space.status === 'available' ? 'Available' : 'Booked'}
+            </span>
+          </div>
 
-  const filteredSpaces = spaces.filter(space =>
-    space.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    space.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    space.space_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    space.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    space.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+          {/* Price Badge */}
+          <div className="absolute top-3 right-3">
+            <span className="bg-black bg-opacity-70 text-white px-2 py-1 text-xs font-semibold rounded">
+              Ksh {space.price_per_hour || 0}/hr
+            </span>
+          </div>
+        </div>
+        
+        <div className="p-4 flex flex-col flex-grow">
+          <h3 className="text-lg font-semibold mb-2 line-clamp-1">{space.title || space.name || 'Untitled Space'}</h3>
+          <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">{space.description || 'No description available'}</p>
+          
+          <div className="mt-auto space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600 capitalize">{space.space_type || 'General'}</span>
+              {space.location && (
+                <span className="text-xs text-gray-500 flex items-center">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  {space.location}
+                </span>
+              )}
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => setShowDetails(true)}
+                className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm transition-colors"
+              >
+                View Details
+              </button>
+              
+              {space.status === "available" ? (
+                <Link to={`/spaces/${space.id}/booking`}>
+                  <button className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm transition-colors">
+                    Book Now
+                  </button>
+                </Link>
+              ) : (
+                <button 
+                  disabled
+                  className="w-full bg-gray-400 text-gray-200 px-4 py-2 rounded-lg cursor-not-allowed text-sm flex items-center justify-center"
+                >
+                  <CalendarOff className="h-4 w-4 mr-1" />
+                  Currently Booked
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {showDetails && (
+          <SpaceDetails space={space} onClose={() => setShowDetails(false)} />
+        )}
+      </div>
+    );
+  };
 
   const StatCard = ({ icon: Icon, title, value, subtitle, color = 'blue' }) => (
     <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 border-${color}-500`}>
@@ -218,6 +270,7 @@ const ClientDashboard = () => {
     </button>
   );
 
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -229,27 +282,20 @@ const ClientDashboard = () => {
     );
   }
 
-  if (error) {
+  // Authentication error
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-red-600 mb-2">Error loading dashboard</h3>
-          <p className="text-red-600 mb-4 max-w-md">{error}</p>
-          <div className="space-x-4">
-            <button 
-              onClick={fetchData}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Retry
-            </button>
-            <button 
-              onClick={testEndpoints}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
-            >
-              Debug Endpoints
-            </button>
-          </div>
+          <h3 className="text-lg font-semibold text-red-600 mb-2">Authentication Required</h3>
+          <p className="text-red-600 mb-4">Please log in to access your dashboard.</p>
+          <button 
+            onClick={() => window.location.href = '/login'}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );
@@ -263,7 +309,7 @@ const ClientDashboard = () => {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
-              <p className="text-gray-600">Welcome back! Here's what's happening with your bookings.</p>
+              <p className="text-gray-600">Welcome back! Browse all spaces and manage your bookings.</p>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">Last updated: {new Date().toLocaleString()}</span>
@@ -335,7 +381,7 @@ const ClientDashboard = () => {
                       <div key={booking.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div className="flex justify-between items-start mb-3">
                           <div>
-                            <h4 className="font-semibold text-gray-900">{booking.space_title || booking.space_name || `Space #${booking.space_id}`}</h4>
+                            <h4 className="font-semibold text-gray-900">{booking.space_title || `Space #${booking.space_id}`}</h4>
                             <p className="text-sm text-gray-600">Booking #{booking.id}</p>
                           </div>
                           <span className={`px-3 py-1 text-xs font-medium rounded-full ${
@@ -351,25 +397,28 @@ const ClientDashboard = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                           <div>
                             <p className="font-medium">Start Date</p>
-                            <p>{(booking.start_time || booking.date || booking.booking_date) ? new Date(booking.start_time || booking.date || booking.booking_date).toLocaleDateString() : 'N/A'}</p>
+                            <p>{booking.start_time ? new Date(booking.start_time).toLocaleDateString() : 'N/A'}</p>
                           </div>
                           <div>
                             <p className="font-medium">Time</p>
-                            <p>{(booking.start_time || booking.date) ? new Date(booking.start_time || booking.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A'}</p>
+                            <p>{booking.start_time ? new Date(booking.start_time).toLocaleTimeString() : 'N/A'}</p>
                           </div>
                           <div>
                             <p className="font-medium">Guests</p>
-                            <p>{booking.estimated_guests || booking.guests || 'N/A'}</p>
+                            <p>{booking.estimated_guests || 'N/A'}</p>
                           </div>
                           <div>
                             <p className="font-medium">Amount</p>
-                            <p className="font-semibold text-gray-900">${parseFloat(booking.total_amount || booking.amount || 0).toFixed(2)}</p>
+                            <p className="font-semibold text-gray-900">Ksh {parseFloat(booking.total_amount || 0).toFixed(2)}</p>
                           </div>
                         </div>
                         <div className="flex justify-end mt-4 space-x-2">
-                          <button className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                          <Link 
+                            to={`/bookings/${booking.id}`}
+                            className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                          >
                             View Details
-                          </button>
+                          </Link>
                           {(booking.status === 'pending' || booking.status === 'upcoming') && (
                             <button className="px-4 py-2 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200">
                               Cancel
@@ -431,100 +480,17 @@ const ClientDashboard = () => {
           </div>
         )}
 
-        {/* My Bookings Tab */}
+        {/* My Bookings Tab - Use existing BookingsTable */}
         {activeTab === 'bookings' && (
           <div className="space-y-6">
-            {/* Booking History */}
-            <div className="bg-white rounded-lg shadow-md">
-              <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">My Bookings</h3>
-                <p className="text-gray-600 text-sm mt-1">View all your past and upcoming bookings</p>
-              </div>
-              <div className="p-6">
-                {bookings.length > 0 ? (
-                  <div className="space-y-4">
-                    {bookings.map(booking => (
-                      <div key={booking.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{booking.space_title || booking.space_name || `Space #${booking.space_id}`}</h4>
-                            <p className="text-sm text-gray-600">Booking #{booking.id}</p>
-                          </div>
-                          <div className="text-right">
-                            <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                              booking.status === 'confirmed' || booking.status === 'active'
-                                ? 'bg-green-100 text-green-800'
-                                : booking.status === 'pending' || booking.status === 'upcoming'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : booking.status === 'completed'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {booking.status}
-                            </span>
-                            <p className="text-sm font-semibold text-gray-900 mt-1">${parseFloat(booking.total_amount || booking.amount || 0).toFixed(2)}</p>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
-                          <div>
-                            <p className="font-medium">Start Time</p>
-                            <p>{(booking.start_time || booking.date || booking.booking_date) ? new Date(booking.start_time || booking.date || booking.booking_date).toLocaleString() : 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium">End Time</p>
-                            <p>{(booking.end_time || booking.end_date) ? new Date(booking.end_time || booking.end_date).toLocaleString() : 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium">Guests</p>
-                            <p>{booking.estimated_guests || booking.guests || 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium">Created</p>
-                            <p>{booking.created_at ? new Date(booking.created_at).toLocaleDateString() : 'N/A'}</p>
-                          </div>
-                        </div>
-                        <div className="flex justify-end space-x-2">
-                          <button className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
-                            View Details
-                          </button>
-                          {((booking.end_time && new Date(booking.end_time) < new Date()) || booking.status === 'completed') && !booking.has_review && (
-                            <button 
-                              onClick={() => setActiveTab('reviews')}
-                              className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-                            >
-                              Write Review
-                            </button>
-                          )}
-                          {(booking.status === 'pending' || booking.status === 'upcoming') && (
-                            <button className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">
-                              Cancel
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No bookings found</p>
-                    <button 
-                      onClick={() => setActiveTab('browse')}
-                      className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                    >
-                      Make Your First Booking
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+            <BookingsTable />
           </div>
         )}
 
         {/* Browse Spaces Tab */}
         {activeTab === 'browse' && (
           <div className="space-y-6">
-            {/* Search and Filter */}
+            {/* Enhanced Search and Filter */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
@@ -532,236 +498,157 @@ const ClientDashboard = () => {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search spaces by name or type..."
+                      placeholder="Search spaces by name, type, or description..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
-                <button className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
-                </button>
+                <div className="flex gap-2">
+                  <select
+                    value={availabilityFilter}
+                    onChange={(e) => setAvailabilityFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Spaces</option>
+                    <option value="available">Available Only</option>
+                    <option value="booked">Booked Spaces</option>
+                  </select>
+                  <button className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                    <Filter className="h-4 w-4 mr-2" />
+                    More Filters
+                  </button>
+                </div>
+              </div>
+              
+              {/* Results summary */}
+              <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
+                <span>
+                  Showing {filteredSpaces.length} of {spaces.length} spaces
+                </span>
+                <span>
+                  {spaces.filter(s => s.status === 'available').length} available now
+                </span>
               </div>
             </div>
 
-            {/* Available Spaces */}
+            {/* Available Spaces using enhanced SpaceCard */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredSpaces.map(space => (
-                <div key={space.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="relative">
-                    <div className="h-48 bg-gray-200 flex items-center justify-center">
-                      {space.images && space.images.length > 0 ? (
-                        <img 
-                          src={space.images[0]} 
-                          alt={space.title || space.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div className="w-full h-full flex items-center justify-center text-gray-500">
-                        <span>Space Image</span>
-                      </div>
-                    </div>
-                    <span className={`absolute top-3 left-3 px-2 py-1 text-xs font-medium rounded ${
-                      space.status === 'available' 
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {space.status}
-                    </span>
-                    <button className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-50">
-                      <Heart className="h-4 w-4 text-gray-600" />
-                    </button>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-1">{space.title || space.name}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{space.space_type || space.type}</p>
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{space.description}</p>
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm text-gray-600">Max {space.max_guests || space.capacity} guests</span>
-                      <span className="font-semibold text-gray-900">${parseFloat(space.price_per_hour || space.price || 0).toFixed(2)}/hr</span>
-                    </div>
-{space.status === 'available' ? (
-  <Link to={`/spaces/${space.id}/booking`}>
-    <button
-      className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-    >
-      Book Now
-    </button>
-  </Link>
-) : (
-  <button
-    className="w-full bg-gray-400 text-white py-2 rounded-lg cursor-not-allowed"
-    disabled
-  >
-    Unavailable
-  </button>
-)}
-
-                  </div>
-                </div>
+                <EnhancedSpaceCard key={space.id} space={space} />
               ))}
             </div>
 
             {filteredSpaces.length === 0 && (
-              <div className="text-center py-8">
+              <div className="text-center py-12 bg-white rounded-lg shadow-md">
                 <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No spaces found matching your search</p>
+                <p className="text-gray-500">
+                  {searchTerm || availabilityFilter !== 'all' 
+                    ? 'No spaces found matching your criteria' 
+                    : 'No spaces available yet'
+                  }
+                </p>
+                {(searchTerm || availabilityFilter !== 'all') && (
+                  <button 
+                    onClick={() => {
+                      setSearchTerm('');
+                      setAvailabilityFilter('all');
+                    }}
+                    className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                  >
+                    Show All Spaces
+                  </button>
+                )}
               </div>
             )}
           </div>
         )}
 
-        {/* Payments Tab */}
+        {/* Payments Tab - Use existing InvoicesTable */}
         {activeTab === 'invoices' && (
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">Payment History</h3>
-              <p className="text-gray-600 text-sm mt-1">Track all your payments and pending invoices</p>
-            </div>
-            <div className="p-6">
-              {invoices.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {invoices.map(invoice => (
-                        <tr key={invoice.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            #{invoice.id}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            Booking #{invoice.booking_id}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${parseFloat(invoice.amount || invoice.total_amount || 0).toFixed(2)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              invoice.status === 'paid' || invoice.payment_status === 'paid'
-                                ? 'bg-green-100 text-green-800' 
-                                : invoice.status === 'unpaid' || invoice.payment_status === 'pending'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {invoice.status || invoice.payment_status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {invoice.payment_method || 'N/A'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            {(invoice.status === 'unpaid' || invoice.payment_status === 'pending') ? (
-                              <button className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
-                                Pay Now
-                              </button>
-                            ) : (
-                              <button className="text-blue-600 hover:text-blue-900">
-                                View Receipt
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No payment history available</p>
-                </div>
-              )}
-            </div>
+          <div className="space-y-6">
+            <InvoicesTable />
           </div>
         )}
 
         {/* Reviews Tab */}
         {activeTab === 'reviews' && (
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">Review Management</h3>
-              <p className="text-gray-600 text-sm mt-1">Write reviews for completed bookings</p>
-            </div>
-            <div className="p-6">
-              {clientStats.pendingReviews > 0 ? (
-                <div className="space-y-4 mb-8">
-                  <h4 className="font-medium text-gray-900">Pending Reviews</h4>
-                  {bookings.filter(b => {
-                    const endTime = b.end_time || b.completed_date;
-                    return endTime && new Date(endTime) < new Date() && 
-                      (b.status === 'completed' || b.status === 'confirmed') && 
-                      !b.has_review;
-                  }).map(booking => (
-                    <div key={booking.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">{booking.space_title || booking.space_name || `Space #${booking.space_id}`}</h4>
-                          <p className="text-sm text-gray-600">
-                            Booked on {(booking.start_time || booking.date) ? new Date(booking.start_time || booking.date).toLocaleDateString() : 'N/A'}
-                          </p>
-                        </div>
-                        <span className="text-sm text-orange-600 font-medium">Review Pending</span>
-                      </div>
-                      <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                        Write Review
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-
-              {reviews.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-4">My Reviews</h4>
-                  <div className="space-y-4">
-                    {reviews.map(review => (
-                      <div key={review.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-md">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-gray-900">Review Management</h3>
+                <p className="text-gray-600 text-sm mt-1">Write reviews for completed bookings</p>
+              </div>
+              <div className="p-6">
+                {clientStats.pendingReviews > 0 ? (
+                  <div className="space-y-4 mb-8">
+                    <h4 className="font-medium text-gray-900">Pending Reviews</h4>
+                    {bookings.filter(b => {
+                      const endTime = b.end_time || b.completed_date;
+                      return endTime && new Date(endTime) < new Date() && 
+                        (b.status === 'completed' || b.status === 'confirmed') && 
+                        !b.has_review;
+                    }).map(booking => (
+                      <div key={booking.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-3">
                           <div>
-                            <h5 className="font-medium text-gray-900">Booking #{review.booking_id}</h5>
-                            <div className="flex items-center mt-1">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-4 w-4 ${i < (review.rating || 5) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                />
-                              ))}
-                              <span className="ml-2 text-sm text-gray-600">{review.rating || 5}/5</span>
-                            </div>
+                            <h4 className="font-semibold text-gray-900">{booking.space_title || `Space #${booking.space_id}`}</h4>
+                            <p className="text-sm text-gray-600">
+                              Booked on {booking.start_time ? new Date(booking.start_time).toLocaleDateString() : 'N/A'}
+                            </p>
                           </div>
-                          <span className="text-sm text-gray-500">
-                            {review.created_at ? new Date(review.created_at).toLocaleDateString() : 'N/A'}
-                          </span>
+                          <span className="text-sm text-orange-600 font-medium">Review Pending</span>
                         </div>
-                        <p className="text-gray-700">{review.comment || review.review_text}</p>
+                        <Link 
+                          to={`/spaces/${booking.space_id}`}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-block"
+                        >
+                          Write Review
+                        </Link>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : null}
 
-              {clientStats.pendingReviews === 0 && reviews.length === 0 && (
-                <div className="text-center py-8">
-                  <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No reviews to show yet</p>
-                  <p className="text-sm text-gray-400 mt-2">Complete a booking to leave a review</p>
-                </div>
-              )}
+                {reviews.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-4">My Reviews</h4>
+                    <div className="space-y-4">
+                      {reviews.map(review => (
+                        <div key={review.id} className="border rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h5 className="font-medium text-gray-900">Booking #{review.booking_id}</h5>
+                              <div className="flex items-center mt-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                  />
+                                ))}
+                                <span className="ml-2 text-sm text-gray-600">{review.rating}/5</span>
+                              </div>
+                            </div>
+                            <span className="text-sm text-gray-500">
+                              {review.created_at ? new Date(review.created_at).toLocaleDateString() : 'N/A'}
+                            </span>
+                          </div>
+                          <p className="text-gray-700">{review.comment}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {clientStats.pendingReviews === 0 && reviews.length === 0 && (
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No reviews to show yet</p>
+                    <p className="text-sm text-gray-400 mt-2">Complete a booking to leave a review</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -769,12 +656,5 @@ const ClientDashboard = () => {
     </div>
   );
 };
-
-// Add missing Refresh icon component
-const Refresh = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-  </svg>
-);
 
 export default ClientDashboard;
