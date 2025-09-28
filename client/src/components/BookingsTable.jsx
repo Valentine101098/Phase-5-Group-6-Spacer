@@ -3,6 +3,7 @@ import { Search, ChevronUp, ChevronDown, Calendar, Users, DollarSign, Clock, X }
 // import { bearerToken } from '../features/bookings/components/tokens';
 import { useAuth } from '../contexts/AuthContext';
 import ReviewFormModal from './ReviewFormModal';
+import { Link } from "react-router-dom";
 
 export function BookingsTable() {
   const [bookings, setBookings] = useState([]);
@@ -16,9 +17,9 @@ export function BookingsTable() {
   
 const [reviewModalBooking, setReviewModalBooking] = useState(null);
 
-const handleLeaveReview = (booking) => {
-  setReviewModalBooking(booking);
-};
+// const handleLeaveReview = (booking) => {
+//   setReviewModalBooking(booking);
+// };
 
   // Fetch bookings from API
   useEffect(() => {
@@ -26,6 +27,7 @@ const handleLeaveReview = (booking) => {
       return
     }
     const fetchBookings = async () => {
+      // console.log("fetchBookings: ",accessToken)
       try {
         setLoading(true);
         const response = await fetch('http://127.0.0.1:5000/api/bookings/', {
@@ -41,7 +43,7 @@ const handleLeaveReview = (booking) => {
 
         const data = await response.json();
         setBookings(data.data);
-        console.log(data.data);
+        console.table(data.data);
       } catch (err) {
         setError(err.message);
         console.log("failed_accesstoken: ", accessToken)
@@ -60,7 +62,7 @@ const handleLeaveReview = (booking) => {
     const end = new Date(endTime);
     const diffInMs = end - start;
     const diffInHours = diffInMs / (1000 * 60 * 60);
-    return Math.round(diffInHours * 10) / 10; // Round to 1 decimal place
+    return Math.round(diffInHours * 10) / 10; 
   };
 
 // plaec holder handlers — 
@@ -69,19 +71,20 @@ const handleLeaveReview = (booking) => {
 //   alert(`Leave a review for booking ${bookingId}`);
 // };
 
-const handlePayNow = (bookingId) => {
-  console.log(`Proceed to payment for booking ${bookingId}`);
-  alert(`Proceed to payment for booking ${bookingId}`);
-};
+// const handlePayNow = (bookingId) => {
+//   console.log(`Proceed to payment for booking ${bookingId}`);
+//   alert(`Proceed to payment for booking ${bookingId}`);
+// };
 
 
 
 
   // Cancel booking function
-  const handleCancel = async (bookingId, accessToken) => {
+  const handleCancel = async (bookingId) => {
+    // console.log("handleCancel: ", accessToken)
     try {
       const response = await fetch(`http://127.0.0.1:5000/api/bookings/${bookingId}/cancel`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
@@ -135,60 +138,65 @@ const handlePayNow = (bookingId) => {
     return statuses;
   }, [bookings]);
 
-  const filteredAndSortedBookings = useMemo(() => {
-    let filtered = bookings.filter(booking => {
-      const matchesSearch = 
-        booking.id.toString().includes(searchTerm.toLowerCase()) ||
-        booking.space_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.status.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
-      
-      return matchesSearch && matchesStatus;
+const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
+  let filtered = bookings.filter(booking => {
+    const matchesSearch =
+      booking.id.toString().includes(searchTerm.toLowerCase()) ||
+      booking.space_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.status.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === 'all' || booking.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  if (sortConfig.key) {
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortConfig.key) {
+        case 'space_title':
+          aValue = a.space_title;
+          bValue = b.space_title;
+          break;
+        case 'checkin':
+          aValue = new Date(a.start_time);
+          bValue = new Date(b.start_time);
+          break;
+        case 'checkout':
+          aValue = new Date(a.end_time);
+          bValue = new Date(b.end_time);
+          break;
+        case 'duration':
+          aValue = calculateDuration(a.start_time, a.end_time);
+          bValue = calculateDuration(b.start_time, b.end_time);
+          break;
+        case 'guests':
+          aValue = a.estimated_guests;
+          bValue = b.estimated_guests;
+          break;
+        case 'amount':
+          aValue = a.total_amount;
+          bValue = b.total_amount;
+          break;
+        default:
+          aValue = a[sortConfig.key];
+          bValue = b[sortConfig.key];
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
     });
+  }
 
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        let aValue, bValue;
-        
-        switch (sortConfig.key) {
-          case 'space_title':
-            aValue = a.space_title;
-            bValue = b.space_title;
-            break;
-          case 'checkin':
-            aValue = new Date(a.start_time);
-            bValue = new Date(b.start_time);
-            break;
-          case 'checkout':
-            aValue = new Date(a.end_time);
-            bValue = new Date(b.end_time);
-            break;
-          case 'duration':
-            aValue = calculateDuration(a.start_time, a.end_time);
-            bValue = calculateDuration(b.start_time, b.end_time);
-            break;
-          case 'guests':
-            aValue = a.estimated_guests;
-            bValue = b.estimated_guests;
-            break;
-          case 'amount':
-            aValue = a.total_amount;
-            bValue = b.total_amount;
-            break;
-          default:
-            aValue = a[sortConfig.key];
-            bValue = b[sortConfig.key];
-        }
+  return {
+    filteredAndSortedBookings: filtered,
+    confirmedBookings: filtered.filter(b => b.status === "confirmed"),
+  };
+}, [bookings, searchTerm, statusFilter, sortConfig]);
 
-        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-
-    return filtered;
-  }, [bookings, searchTerm, statusFilter, sortConfig]);
 
   const SortIcon = ({ column }) => {
     if (sortConfig.key !== column) {
@@ -251,8 +259,8 @@ const handlePayNow = (bookingId) => {
           <div className="flex items-center">
             <Calendar className="w-8 h-8 text-blue-600 mr-3" />
             <div>
-              <p className="text-sm font-medium text-blue-600">Total Bookings</p>
-              <p className="text-2xl font-bold text-blue-900">{filteredAndSortedBookings.length}</p>
+              <p className="text-sm font-medium text-blue-600">Confirmed Bookings</p>
+              <p className="text-2xl font-bold text-blue-900">{confirmedBookings.length}</p>
             </div>
           </div>
         </div>
@@ -263,7 +271,7 @@ const handlePayNow = (bookingId) => {
             <div>
               <p className="text-sm font-medium text-green-600">Total Guests</p>
               <p className="text-2xl font-bold text-green-900">
-                {filteredAndSortedBookings.reduce((sum, booking) => sum + booking.estimated_guests, 0)}
+                {confirmedBookings.reduce((sum, booking) => sum + booking.estimated_guests, 0)}
               </p>
             </div>
           </div>
@@ -275,7 +283,7 @@ const handlePayNow = (bookingId) => {
             <div>
               <p className="text-sm font-medium text-yellow-600">Total Revenue</p>
               <p className="text-2xl font-bold text-yellow-900">
-                {formatAmount(filteredAndSortedBookings.reduce((sum, booking) => sum + booking.total_amount, 0))}
+                {formatAmount(confirmedBookings.reduce((sum, booking) => sum + booking.total_amount, 0))}
               </p>
             </div>
           </div>
@@ -287,10 +295,10 @@ const handlePayNow = (bookingId) => {
             <div>
               <p className="text-sm font-medium text-purple-600">Avg Duration</p>
               <p className="text-2xl font-bold text-purple-900">
-                {filteredAndSortedBookings.length > 0 
-                  ? (filteredAndSortedBookings.reduce((sum, booking) => 
+                {confirmedBookings.length > 0 
+                  ? (confirmedBookings.reduce((sum, booking) => 
                       sum + calculateDuration(booking.start_time, booking.end_time), 0
-                    ) / filteredAndSortedBookings.length).toFixed(1) + 'h'
+                    ) / confirmedBookings.length).toFixed(1) + 'h'
                   : '0h'
                 }
               </p>
@@ -412,20 +420,22 @@ const handlePayNow = (bookingId) => {
                 </td>
 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
   {user.roles.includes("client") && booking.status === "confirmed" ? (
-    <button
-      onClick={() => handleLeaveReview(booking)}
+    <Link
+      to={`/spaces/${booking.space_id}/booking`}
       className="text-blue-600 hover:text-blue-900 flex items-center space-x-1"
     >
-      <span>Leave a Review</span>
-    </button>
+      <span>Book Again</span>
+    </Link>
   ) : user.roles.includes("client") && booking.status === "pending" ? (
-    <button
-      onClick={() => handlePayNow(booking.id)}
+    <Link
+      to={`/invoices/${booking.invoice_id}`}
       className="text-green-600 hover:text-green-900 flex items-center space-x-1"
     >
       <span>Pay Now</span>
-    </button>
-  ) : (
+    </Link>
+  ) : (user.roles.includes("admin") || user.roles.includes("owner")) &&
+    new Date(booking.end_time) > new Date() &&
+    booking.status !== "cancelled" ? (
     <button
       onClick={() => handleCancel(booking.id)}
       className="text-red-600 hover:text-red-900 flex items-center space-x-1"
@@ -433,8 +443,12 @@ const handlePayNow = (bookingId) => {
       <X className="w-4 h-4" />
       <span>Cancel</span>
     </button>
+  ) : (
+    <span>—</span>
   )}
 </td>
+
+
 
               </tr>
             ))}

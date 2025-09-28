@@ -10,6 +10,7 @@ export function useBooking(space, id, navigate) {
   const { accessToken } = useAuth();
 
   const proceedToBooking = async ({ startDate, endDate, startTime, endTime, termsAccepted, guests = 1 }) => {
+
     if (!termsAccepted) {
       throw new Error('Please accept the terms and conditions');
     }
@@ -45,6 +46,7 @@ export function useBooking(space, id, navigate) {
         endDate,
         startTime,
         endTime,
+        guests,
         pricePerHour: space.price_per_hour
       });
 

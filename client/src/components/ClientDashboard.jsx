@@ -5,6 +5,7 @@ import SpaceCard from './SpaceCard';
 import SpaceDetails from './SpaceDetails';
 import { BookingsTable } from './BookingsTable';
 import { InvoicesTable } from './InvoicesTable';
+
 import { Link } from 'react-router-dom';
 
 const ClientDashboard = () => {
