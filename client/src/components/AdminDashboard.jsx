@@ -519,7 +519,7 @@ const AdminDashboard = () => {
       setActionMessage({ type: 'error', text: 'First name and last name are required.' });
       return;
     }
-S
+
     try {
       setActionLoading(true);
 
