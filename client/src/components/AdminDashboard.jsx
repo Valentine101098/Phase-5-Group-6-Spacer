@@ -14,6 +14,353 @@ import {
 
 import { useAuth } from "../contexts/AuthContext";
 
+const BASE_URL = 'http://127.0.0.1:5000'; 
+
+// Modal components moved outside to prevent re-rendering issues
+const AddUserModal = ({ 
+  showModal, 
+  setShowModal, 
+  addUserData, 
+  setAddUserData, 
+  submitAddUser, 
+  actionLoading, 
+  actionMessage 
+}) => {
+  if (!showModal) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-10 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Add New User</h3>
+          <button
+            onClick={() => setShowModal(false)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+ 
+        {actionMessage.text && (
+          <div className={`mb-4 p-3 rounded ${
+            actionMessage.type === 'success' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            <div className="flex items-center">
+              {actionMessage.type === 'success' ? (
+                <CheckCircle className="h-4 w-4 mr-2" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 mr-2" />
+              )}
+              {actionMessage.text}
+            </div>
+          </div>
+        )}
+ 
+        <form onSubmit={submitAddUser} className="space-y-4">
+          <div>
+            <label htmlFor="add-first-name" className="block text-left text-gray-700 text-sm font-bold mb-2">First Name:</label>
+            <input
+              type="text"
+              id="add-first-name"
+              name="first_name"
+              value={addUserData.first_name}
+              onChange={(e) => setAddUserData({...addUserData, first_name: e.target.value})}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+ 
+          <div>
+            <label htmlFor="add-last-name" className="block text-left text-gray-700 text-sm font-bold mb-2">Last Name:</label>
+            <input
+              type="text"
+              id="add-last-name"
+              name="last_name"
+              value={addUserData.last_name}
+              onChange={(e) => setAddUserData({...addUserData, last_name: e.target.value})}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+ 
+          <div>
+            <label htmlFor="add-email" className="block text-left text-gray-700 text-sm font-bold mb-2">Email:</label>
+            <input
+              type="email"
+              id="add-email"
+              name="email"
+              value={addUserData.email}
+              onChange={(e) => setAddUserData({...addUserData, email: e.target.value})}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+ 
+          <div>
+            <label htmlFor="add-phone-number" className="block text-left text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
+            <input
+              type="tel"
+              id="add-phone-number"
+              name="phone_number"
+              value={addUserData.phone_number}
+              onChange={(e) => setAddUserData({...addUserData, phone_number: e.target.value})}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+ 
+          <div>
+            <label htmlFor="add-password" className="block text-left text-gray-700 text-sm font-bold mb-2">Password:</label>
+            <input
+              type="password"
+              id="add-password"
+              name="password"
+              value={addUserData.password}
+              onChange={(e) => setAddUserData({...addUserData, password: e.target.value})}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="add-confirm-password" className="block text-left text-gray-700 text-sm font-bold mb-2">Confirm Password:</label>
+            <input
+              type="password"
+              id="add-confirm-password"
+              name="confirmPassword"
+              value={addUserData.confirmPassword}
+              onChange={(e) => setAddUserData({...addUserData, confirmPassword: e.target.value})}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+ 
+          <div>
+            <label htmlFor="add-role" className="block text-left text-gray-700 text-sm font-bold mb-2">Role:</label>
+            <select
+              id="add-role"
+              name="role"
+              value={addUserData.role}
+              onChange={(e) => setAddUserData({...addUserData, role: e.target.value})}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="client">Client</option>
+              <option value="owner">Owner</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+ 
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowModal(false)}
+              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
+              disabled={actionLoading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={actionLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {actionLoading ? 'Creating...' : 'Add User'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const EditUserModal = ({ 
+  showModal, 
+  setShowModal, 
+  editFormData, 
+  setEditFormData, 
+  submitEditUser, 
+  actionLoading, 
+  actionMessage,
+  selectedUser,
+  setSelectedUser,
+  setActionMessage
+}) => {
+  if (!showModal) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Edit User</h3>
+          <button
+            onClick={() => setShowModal(false)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        {actionMessage.text && (
+          <div className={`mb-4 p-3 rounded ${
+            actionMessage.type === 'success' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            <div className="flex items-center">
+              {actionMessage.type === 'success' ? (
+                <CheckCircle className="h-4 w-4 mr-2" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 mr-2" />
+              )}
+              {actionMessage.text}
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={submitEditUser} className="space-y-4">
+          <div>
+            <label htmlFor="edit-first-name" className="block text-left text-gray-700 text-sm font-bold mb-2">First Name:</label>
+            <input
+              type="text"
+              id="edit-first-name"
+              name="first_name"
+              value={editFormData.first_name || ''}
+              onChange={(e) => setEditFormData({...editFormData, first_name: e.target.value})}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="edit-last-name" className="block text-left text-gray-700 text-sm font-bold mb-2">Last Name:</label>
+            <input
+              type="text"
+              id="edit-last-name"
+              name="last_name"
+              value={editFormData.last_name || ''}
+              onChange={(e) => setEditFormData({...editFormData, last_name: e.target.value})}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="edit-phone-number" className="block text-left text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
+            <input
+              type="tel"
+              id="edit-phone-number"
+              name="phone_number"
+              value={editFormData.phone_number || ''}
+              onChange={(e) => setEditFormData({...editFormData, phone_number: e.target.value})}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div className="flex justify-center space-x-4 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setShowModal(false);
+                setEditFormData({});
+                setActionMessage({ type: '', text: '' });
+              }}
+              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
+              disabled={actionLoading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={actionLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {actionLoading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const DeleteUserModal = ({ 
+  showModal, 
+  setShowModal, 
+  confirmDeleteUser, 
+  actionLoading, 
+  actionMessage, 
+  selectedUser 
+}) => {
+  if (!showModal) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Delete User</h3>
+          <button
+            onClick={() => setShowModal(false)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        {actionMessage.text && (
+          <div className={`mb-4 p-3 rounded ${
+            actionMessage.type === 'success' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            <div className="flex items-center">
+              {actionMessage.type === 'success' ? (
+                <CheckCircle className="h-4 w-4 mr-2" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 mr-2" />
+              )}
+              {actionMessage.text}
+            </div>
+          </div>
+        )}
+
+        <div className="mb-6">
+          <div className="flex items-center mb-4">
+            <AlertTriangle className="h-8 w-8 text-red-500 mr-3" />
+            <div>
+              <h4 className="font-medium text-gray-900">Confirm Deletion</h4>
+              <p className="text-sm text-gray-600">This action cannot be undone.</p>
+            </div>
+          </div>
+          <p className="text-gray-700">
+            Are you sure you want to delete <strong>{selectedUser?.name}</strong>?
+            This will remove the user from the system.
+          </p>
+        </div>
+
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={() => setShowModal(false)}
+            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
+            disabled={actionLoading}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={confirmDeleteUser}
+            disabled={actionLoading}
+            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {actionLoading ? 'Deleting...' : 'Delete User'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const { makeAuthenticatedRequest } = useAuth();
 
@@ -36,6 +383,7 @@ const AdminDashboard = () => {
     email: '',
     phone_number: '',
     password: '',
+    confirmPassword: '',
     role: 'client'
   });
   const [editFormData, setEditFormData] = useState({});
@@ -114,7 +462,6 @@ const AdminDashboard = () => {
   }, [makeAuthenticatedRequest]);
 
   // User Actions
-
   const handleAddUser = () => {
     setAddUserData({
       first_name: '',
@@ -122,6 +469,7 @@ const AdminDashboard = () => {
       email: '',
       phone_number: '',
       password: '',
+      confirmPassword: '',
       role: 'client'
     });
     setShowAddUserModal(true);
@@ -131,9 +479,10 @@ const AdminDashboard = () => {
   const handleEditUser = (user) => {
     setSelectedUser(user);
     setEditFormData({
-      first_name: user.name.split(' ')[0] || '',
-      last_name: user.name.split(' ').slice(1).join(' ') || '',
-      phone_number: user.phone_number || ''
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
+      phone_number: user.phone_number || '',
+      password: ''
     });
     setShowEditModal(true);
     setActionMessage({ type: '', text: '' });
@@ -147,76 +496,82 @@ const AdminDashboard = () => {
 
   const submitAddUser = async (e) => {
     e.preventDefault();
- 
-    // Validate required fields
+    setActionMessage({ type: '', text: '' });
+
+    // Validate required fields (same as Signup.js)
     if (!addUserData.first_name || !addUserData.last_name || !addUserData.email || !addUserData.password) {
-      setActionMessage({ type: 'error', text: 'All fields except phone number are required' });
+      setActionMessage({ type: 'error', text: 'First name, last name, email, and password are required.' });
       return;
     }
- 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(addUserData.email)) {
-      setActionMessage({ type: 'error', text: 'Please enter a valid email address' });
+
+    // Validate password confirmation (same as Signup.js)
+    if (addUserData.password !== addUserData.confirmPassword) {
+      setActionMessage({ type: 'error', text: 'Passwords do not match.' });
       return;
     }
- 
-    // Validate password length
-    if (addUserData.password.length < 6) {
-      setActionMessage({ type: 'error', text: 'Password must be at least 6 characters long' });
-      return;
-    }
- 
+
     try {
       setActionLoading(true);
- 
-      // First, create the user
-      const signupData = {
-        first_name: addUserData.first_name,
-        last_name: addUserData.last_name,
-        email: addUserData.email,
-        phone_number: addUserData.phone_number,
-        password: addUserData.password
-      };
- 
-      const userResponse = await makeAuthenticatedRequest('/api/auth/signup', 'POST', signupData);
- 
-      if (!userResponse.success) {
-        setActionMessage({ type: 'error', text: userResponse.error || 'Failed to add user' });
-        return;
-      }
- 
-      // If role is not client, assign the selected role
-      if (addUserData.role !== 'client') {
-        // First get the role ID
-        const rolesResponse = await makeAuthenticatedRequest('/api/roles/', 'GET');
-        if (rolesResponse.success) {
-          const roles = normalizeArray(rolesResponse);
-          const selectedRole = roles.find(r => r.role === addUserData.role);
- 
-          if (selectedRole) {
-            // Assign the role
-            const roleAssignData = {
-              user_id: userResponse.data.user.id,
-              role_id: selectedRole.id
-            };
- 
-            await makeAuthenticatedRequest('/api/user_roles/', 'POST', roleAssignData);
+
+      // Use direct fetch like Signup.js for user creation
+      const response = await fetch(`${BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          first_name: addUserData.first_name,
+          last_name: addUserData.last_name,
+          email: addUserData.email,
+          phone_number: addUserData.phone_number,
+          password: addUserData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setActionMessage({ type: 'success', text: 'User created successfully!' });
+        
+        // If role is not client, assign the selected role
+        if (addUserData.role !== 'client' && data.user) {
+          try {
+            // Get roles
+            const rolesResponse = await makeAuthenticatedRequest('/api/roles/', 'GET');
+            if (rolesResponse.success) {
+              const roles = normalizeArray(rolesResponse);
+              const selectedRole = roles.find(r => r.role === addUserData.role);
+
+              if (selectedRole) {
+                // Assign the role
+                const roleAssignData = {
+                  user_id: data.user.id,
+                  role_id: selectedRole.id
+                };
+                await makeAuthenticatedRequest('/api/user_roles/', 'POST', roleAssignData);
+              }
+            }
+          } catch (roleError) {
+            console.warn('Failed to assign role, but user was created:', roleError);
           }
         }
+
+        // Refresh the users data
+        await fetchData();
+
+        setTimeout(() => {
+          setShowAddUserModal(false);
+          setActionMessage({ type: '', text: '' });
+        }, 2000);
+
+      } else {
+        setActionMessage({ 
+          type: 'error', 
+          text: data.message || (data.errors ? data.errors.join(', ') : 'Registration failed.') 
+        });
       }
- 
-      setActionMessage({ type: 'success', text: 'User created successfully!' });
-      // Refresh the users data
-      await fetchData();
- 
-      setTimeout(() => {
-        setShowAddUserModal(false);
-        setActionMessage({ type: '', text: '' });
-      }, 2000);
- 
     } catch (error) {
-      setActionMessage({ type: 'error', text: 'Failed to add user: ' + error.message });
+      setActionMessage({ type: 'error', text: 'Network error or server unavailable.' });
     } finally {
       setActionLoading(false);
     }
@@ -224,20 +579,43 @@ const AdminDashboard = () => {
 
   const submitEditUser = async (e) => {
     e.preventDefault();
-    if (!selectedUser || !editFormData.first_name || !editFormData.last_name) {
-      setActionMessage({ type: 'error', text: 'First name and last name are required' });
+    setActionMessage({ type: '', text: '' });
+
+    // Validate required fields (same as Profile.js)
+    if (!editFormData.first_name || !editFormData.last_name) {
+      setActionMessage({ type: 'error', text: 'First name and last name are required.' });
       return;
     }
 
     try {
       setActionLoading(true);
-      const response = await makeAuthenticatedRequest(
-        `/api/users/${selectedUser.id}`,
-        'PATCH',
-        editFormData
-      );
 
-      if (response.success) {
+      // Prepare payload like Profile.js
+      const payload = {};
+      if (editFormData.first_name !== selectedUser.first_name) payload.first_name = editFormData.first_name;
+      if (editFormData.last_name !== selectedUser.last_name) payload.last_name = editFormData.last_name;
+      if (editFormData.phone_number !== selectedUser.phone_number) payload.phone_number = editFormData.phone_number;
+      
+      if (editFormData.password) {
+        if (editFormData.password.length < 8) {
+          setActionMessage({ type: 'error', text: 'Password must be at least 8 characters long.' });
+          setActionLoading(false);
+          return;
+        }
+        payload.password = editFormData.password;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        setActionMessage({ type: 'error', text: 'No changes to save.' });
+        setActionLoading(false);
+        setShowEditModal(false);
+        return;
+      }
+
+      // FIX: Use consistent API endpoint with /api/ prefix
+      const result = await makeAuthenticatedRequest(`/api/users/${selectedUser.id}`, 'PATCH', payload);
+
+      if (result.success) {
         setActionMessage({ type: 'success', text: 'User updated successfully!' });
         // Refresh the users data
         await fetchData();
@@ -247,7 +625,7 @@ const AdminDashboard = () => {
           setActionMessage({ type: '', text: '' });
         }, 2000);
       } else {
-        setActionMessage({ type: 'error', text: response.error || 'Failed to update user' });
+        setActionMessage({ type: 'error', text: result.error || 'Failed to update user.' });
       }
     } catch (error) {
       setActionMessage({ type: 'error', text: 'Failed to update user: ' + error.message });
@@ -261,8 +639,7 @@ const AdminDashboard = () => {
 
     try {
       setActionLoading(true);
-      // Since there's no delete endpoint in your current backend, we'll use delete
-      // You might want to add a delete/activate endpoint to your users API
+      // FIX: Use consistent API endpoint with /api/ prefix
       const response = await makeAuthenticatedRequest(
         `/api/users/${selectedUser.id}`,
         'DELETE'
@@ -307,28 +684,14 @@ const AdminDashboard = () => {
       name: `${user.first_name} ${user.last_name}`,
       email: user.email,
       phone_number: user.phone_number,
+      first_name: user.first_name,
+      last_name: user.last_name,
       role,
       joinDate: user.created_at
         ? new Date(user.created_at).toLocaleDateString()
         : "",
     };
   });
-
-  // Get recent bookings with space and user info
-  const recentBookings = (Array.isArray(bookings) ? bookings : [])
-    .slice(-5)
-    .map(booking => {
-      const space = (Array.isArray(spaces) ? spaces : []).find(s => s.id === booking.space_id);
-      const user = (Array.isArray(users) ? users : []).find(u => u.id === booking.user_id);
-      return {
-        id: booking.id,
-        space: space?.title || booking.space_title || 'Unknown Space',
-        client: user ? `${user.first_name} ${user.last_name}` : 'Unknown Client',
-        amount: parseFloat(booking.total_amount || 0),
-        status: booking.status,
-        date: booking.start_time ? new Date(booking.start_time).toLocaleDateString() : ''
-      };
-    });
 
   const StatCard = ({ icon: Icon, title, value, change, color = 'blue' }) => (
     <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
@@ -361,300 +724,6 @@ const AdminDashboard = () => {
     </button>
   );
 
-  // Add User Modal
-  const AddUserModal = () => (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-10 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Add New User</h3>
-          <button
-            onClick={() => setShowAddUserModal(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
- 
-        {actionMessage.text && (
-          <div className={`mb-4 p-3 rounded ${
-            actionMessage.type === 'success' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
-          }`}>
-            <div className="flex items-center">
-              {actionMessage.type === 'success' ? (
-                <CheckCircle className="h-4 w-4 mr-2" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 mr-2" />
-              )}
-              {actionMessage.text}
-            </div>
-          </div>
-        )}
- 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              First Name *
-            </label>
-            <input
-              type="text"
-              value={addUserData.first_name}
-              onChange={(e) => setAddUserData({...addUserData, first_name: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
- 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Last Name *
-            </label>
-            <input
-              type="text"
-              value={addUserData.last_name}
-              onChange={(e) => setAddUserData({...addUserData, last_name: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
- 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email *
-            </label>
-            <input
-              type="email"
-              value={addUserData.email}
-              onChange={(e) => setAddUserData({...addUserData, email: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
- 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number
-            </label>
-            <input
-              type="text"
-              value={addUserData.phone_number}
-              onChange={(e) => setAddUserData({...addUserData, phone_number: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Optional"
-            />
-          </div>
- 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password *
-            </label>
-            <input
-              type="password"
-              value={addUserData.password}
-              onChange={(e) => setAddUserData({...addUserData, password: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              minLength="6"
-            />
-            <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
-          </div>
- 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Role
-            </label>
-            <select
-              value={addUserData.role}
-              onChange={(e) => setAddUserData({...addUserData, role: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="client">Client</option>
-              <option value="owner">Owner</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
- 
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={() => setShowAddUserModal(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-              disabled={actionLoading}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={(e) => submitAddUser(e)}
-              disabled={actionLoading}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {actionLoading ? 'Creating...' : 'Add User'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Edit User Modal
-  const EditUserModal = () => (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Edit User</h3>
-          <button
-            onClick={() => setShowEditModal(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        {actionMessage.text && (
-          <div className={`mb-4 p-3 rounded ${
-            actionMessage.type === 'success' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
-          }`}>
-            <div className="flex items-center">
-              {actionMessage.type === 'success' ? (
-                <CheckCircle className="h-4 w-4 mr-2" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 mr-2" />
-              )}
-              {actionMessage.text}
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={submitEditUser}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              First Name
-            </label>
-            <input
-              type="text"
-              value={editFormData.first_name}
-              onChange={(e) => setEditFormData({...editFormData, first_name: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Last Name
-            </label>
-            <input
-              type="text"
-              value={editFormData.last_name}
-              onChange={(e) => setEditFormData({...editFormData, last_name: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number
-            </label>
-            <input
-              type="text"
-              value={editFormData.phone_number}
-              onChange={(e) => setEditFormData({...editFormData, phone_number: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={() => setShowEditModal(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-              disabled={actionLoading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={actionLoading}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {actionLoading ? 'Updating...' : 'Update User'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-
-  // Delete User Modal
-  const DeleteUserModal = () => (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Delete User</h3>
-          <button
-            onClick={() => setShowDeleteModal(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        {actionMessage.text && (
-          <div className={`mb-4 p-3 rounded ${
-            actionMessage.type === 'success' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
-          }`}>
-            <div className="flex items-center">
-              {actionMessage.type === 'success' ? (
-                <CheckCircle className="h-4 w-4 mr-2" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 mr-2" />
-              )}
-              {actionMessage.text}
-            </div>
-          </div>
-        )}
-
-        <div className="mb-6">
-          <div className="flex items-center mb-4">
-            <AlertTriangle className="h-8 w-8 text-red-500 mr-3" />
-            <div>
-              <h4 className="font-medium text-gray-900">Confirm Deletion</h4>
-              <p className="text-sm text-gray-600">This action cannot be undone.</p>
-            </div>
-          </div>
-          <p className="text-gray-700">
-            Are you sure you want to delete <strong>{selectedUser?.name}</strong>?
-            This will remove the user from the system.
-          </p>
-        </div>
-
-        <div className="flex justify-end space-x-3">
-          <button
-            onClick={() => setShowDeleteModal(false)}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-            disabled={actionLoading}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={confirmDeleteUser}
-            disabled={actionLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
-          >
-            {actionLoading ? 'Deleting...' : 'Delete User'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -678,20 +747,16 @@ const AdminDashboard = () => {
           <TabButton id="overview" label="Overview" isActive={activeTab === 'overview'} onClick={setActiveTab} />
           <TabButton id="users" label="Users" isActive={activeTab === 'users'} onClick={setActiveTab} />
           <TabButton id="spaces" label="Spaces" isActive={activeTab === 'spaces'} onClick={setActiveTab} />
-          <TabButton id="bookings" label="Bookings" isActive={activeTab === 'bookings'} onClick={setActiveTab} />
-          <TabButton id="reviews" label="Reviews" isActive={activeTab === 'financials'} onClick={setActiveTab} />
         </div>
 
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard icon={() => <Users className="h-10 w-10 text-blue-600" />} title="Total Users" value={stats.totalUsers.toLocaleString()} />
               <StatCard icon={() => <Building className="h-10 w-10 text-green-600" />} title="Active Spaces" value={stats.totalSpaces} />
               <StatCard icon={() => <Calendar className="h-10 w-10 text-purple-600" />} title="Total Bookings" value={stats.totalBookings} />
-              <StatCard icon={() => <HandCoins className="h-10 w-10 text-yellow-600" />} title="Revenue (KSH)" value={`Kshs. ${stats.totalRevenue.toLocaleString()}`} />
-              <StatCard icon={() => <FileText className="h-10 w-10 text-red-600" />} title="Pending Reviews" value={stats.pendingReviews} />
-              <StatCard icon={() => <UserCheck className="h-10 w-10 text-teal-600" />} title="Active Agreements" value={stats.activeAgreements} />
+              <StatCard icon={() => <HandCoins className="h-10 w-10 text-yellow-600" />} title="Revenue (Ksh)" value={`${stats.totalRevenue.toLocaleString()}`} />
             </div>
           </div>
         )}
@@ -776,69 +841,40 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Bookings Tab */}
-        {activeTab === 'bookings' && (
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">Booking Management</h3>
-            </div>
-            <div className="p-6">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Space</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {recentBookings.map(booking => (
-                      <tr key={booking.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {booking.space}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {booking.client}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {booking.date}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${booking.amount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            booking.status === 'confirmed' 
-                              ? 'bg-green-100 text-green-800' 
-                              : booking.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {booking.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                          <button className="text-green-600 hover:text-green-900">Approve</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Modals */}
-      {showAddUserModal && <AddUserModal />}
-      {showEditModal && <EditUserModal />}
-      {showDeleteModal && <DeleteUserModal />}
+      {/* Modals - Now using the external components */}
+      <AddUserModal 
+        showModal={showAddUserModal}
+        setShowModal={setShowAddUserModal}
+        addUserData={addUserData}
+        setAddUserData={setAddUserData}
+        submitAddUser={submitAddUser}
+        actionLoading={actionLoading}
+        actionMessage={actionMessage}
+      />
+      
+      <EditUserModal 
+        showModal={showEditModal}
+        setShowModal={setShowEditModal}
+        editFormData={editFormData}
+        setEditFormData={setEditFormData}
+        submitEditUser={submitEditUser}
+        actionLoading={actionLoading}
+        actionMessage={actionMessage}
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
+        setActionMessage={setActionMessage}
+      />
+      
+      <DeleteUserModal 
+        showModal={showDeleteModal}
+        setShowModal={setShowDeleteModal}
+        confirmDeleteUser={confirmDeleteUser}
+        actionLoading={actionLoading}
+        actionMessage={actionMessage}
+        selectedUser={selectedUser}
+      />
     </div>
   );
 };

@@ -17,6 +17,8 @@ import { BookingsTable } from './components/BookingsTable';
 import { PaymentForm } from './components/PaymentForm';
 import { PaymentPage } from './components/PaymentPage';
 import { InvoicesTable } from './components/InvoicesTable';
+import ClientDashboard from './components/ClientDashboard';
+import OwnerDashboard from './components/OwnerDashboard';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -72,12 +74,14 @@ function AppContent() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
        
-        <Route path="/spaces/:id/booking" element={<BookingPage />} />
-       
-       <Route path="/invoices/:id" element={<PaymentPage />} />
-     
-      <Route path="/dashboard/bookings" element={<BookingsTable />} />
-       <Route path="/dashboard/invoices" element={<InvoicesTable />} />          
+<Route path="/spaces/:id/booking" element={<PrivateRoute><BookingPage /></PrivateRoute>} />
+
+<Route path="/invoices/:id" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
+
+<Route path="/dashboard/bookings" element={<PrivateRoute><BookingsTable /></PrivateRoute>} />
+
+<Route path="/dashboard/invoices" element={<PrivateRoute><InvoicesTable /></PrivateRoute>} />
+         
 
           <Route
             path="/profile"
@@ -93,6 +97,24 @@ function AppContent() {
             element={
               <PrivateRoute>
                 <AdminDashboard />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/client-dashboard"
+            element={
+              <PrivateRoute>
+                <ClientDashboard />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/owner-dashboard"
+            element={
+              <PrivateRoute>
+                <OwnerDashboard />
               </PrivateRoute>
             }
           />

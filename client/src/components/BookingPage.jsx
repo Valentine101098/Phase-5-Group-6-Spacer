@@ -16,8 +16,8 @@ export function BookingPage() {
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
   const [guests, setGuests] = useState(1);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
@@ -28,6 +28,7 @@ export function BookingPage() {
       .then(setSpace)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
+      
   }, [id]);
 
   useEffect(() => {
@@ -38,12 +39,11 @@ export function BookingPage() {
 
   const handleProceed = async (e) => {
     e.preventDefault();
-    await proceedToBooking({ startDate, endDate, startTime, endTime, termsAccepted });
+    await proceedToBooking({ startDate, endDate, startTime, endTime, termsAccepted, guests });
   };
 
   if (loading) return <div className="text-center py-12">Loading...</div>;
   if (error) return <div className="text-center text-red-600 py-12">Error: {error}</div>;
-  if (bookingError) return <div className="text-center text-red-600 py-12">Error: {bookingError}</div>;
 
   const totalAmount = calculateTotalAmount({
     startDate,
@@ -65,9 +65,9 @@ export function BookingPage() {
           <p className="text-lg text-gray-600">{space?.location}</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column - Images and Description */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-1 space-y-8">
             {/* Images Section */}
             {hasImages && (
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -135,49 +135,7 @@ export function BookingPage() {
 
             {/* Space Details */}
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              {/* Rating Section */}
-              <div className="mb-8 pb-8 border-b border-gray-200">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center">
-                    <div className="flex text-yellow-400 mr-2">
-                      {'★'.repeat(5).split('').map((star, i) => (
-                        <span key={i} className={i < Math.floor(4.7) ? 'text-yellow-400' : 'text-gray-300'}>
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                    <span className="text-2xl font-bold text-gray-900">4.7</span>
-                    <span className="text-gray-600 ml-2">(127 reviews)</span>
-                  </div>
-                </div>
 
-                {/* Featured Review */}
-                <div className="bg-gray-50 p-6 rounded-xl">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold">
-                      SM
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-semibold text-gray-900">Sarah Martinez</span>
-                        <span className="text-sm text-gray-500">• 2 weeks ago</span>
-                        <div className="flex text-yellow-400 text-sm">
-                          {'★'.repeat(5)}
-                        </div>
-                      </div>
-                      <p className="text-gray-700 leading-relaxed">
-                        "Absolutely perfect space for our team retreat! The natural lighting was amazing and the location was super convenient. The host was incredibly responsive and made sure everything was set up exactly as we needed. Would definitely book again!"
-                      </p>
-                      <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
-                        <button className="flex items-center gap-1 hover:text-gray-800">
-                          👍 12
-                        </button>
-                        <span>Helpful</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="text-center p-4 bg-green-50 rounded-xl">
@@ -190,39 +148,16 @@ export function BookingPage() {
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-xl">
                   <div className="text-2xl font-bold text-purple-600">
-                    ${parseFloat(space?.price_per_hour || 0).toFixed(2)}
+                    Kshs {parseFloat(space?.price_per_hour || 0).toFixed(2)}
                   </div>
                   <div className="text-sm text-gray-600">Per Hour</div>
                 </div>
               </div>
 
-              {/* Description */}
-              {space?.description && (
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">About This Space</h3>
-                  <div className="prose prose-gray max-w-none">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {space.description}
-                    </p>
-                  </div>
-                </div>
-              )}
+
               
 
-              {/* Amenities */}
-              {space?.amenities && space.amenities.length > 0 && (
-                <div className="mt-8">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Amenities</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {space.amenities.map((amenity, index) => (
-                      <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                        <span className="text-sm text-gray-700">{amenity}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+
             </div>
           </div>
 
@@ -232,12 +167,33 @@ export function BookingPage() {
               <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Reserve Your Space</h2>
                 
+                {/* Inline Booking Error Display */}
+                {bookingError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-red-800">
+                          Booking Error
+                        </h3>
+                        <div className="mt-2 text-sm text-red-700">
+                          {bookingError}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {totalAmount > 0 && (
                   <div className="bg-green-50 p-4 rounded-xl mb-6">
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">Total Amount:</span>
                       <span className="text-2xl font-bold text-green-600">
-                        ${totalAmount.toFixed(2)}
+                        Kshs {totalAmount}
                       </span>
                     </div>
                   </div>
@@ -270,4 +226,3 @@ export function BookingPage() {
     </div>
   );
 }
-
