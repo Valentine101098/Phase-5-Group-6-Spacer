@@ -4,6 +4,7 @@ import { Search, ChevronUp, ChevronDown, Calendar, Users, DollarSign, Clock, X }
 import { useAuth } from '../contexts/AuthContext';
 import ReviewFormModal from './ReviewFormModal';
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from '../config/api';
 
 export function BookingsTable() {
   const [bookings, setBookings] = useState([]);
@@ -14,7 +15,7 @@ export function BookingsTable() {
   const [statusFilter, setStatusFilter] = useState('all');
   const { accessToken, user  } = useAuth()
 
-  
+
 const [reviewModalBooking, setReviewModalBooking] = useState(null);
 
 // const handleLeaveReview = (booking) => {
@@ -47,7 +48,7 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
       } catch (err) {
         setError(err.message);
         console.log("failed_accesstoken: ", accessToken)
-        
+
       } finally {
         setLoading(false);
       }
@@ -62,10 +63,10 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
     const end = new Date(endTime);
     const diffInMs = end - start;
     const diffInHours = diffInMs / (1000 * 60 * 60);
-    return Math.round(diffInHours * 10) / 10; 
+    return Math.round(diffInHours * 10) / 10;
   };
 
-// plaec holder handlers — 
+// plaec holder handlers —
 // const handleLeaveReview = (bookingId) => {
 //   console.log(`Leave a review for booking ${bookingId}`);
 //   alert(`Leave a review for booking ${bookingId}`);
@@ -92,7 +93,7 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
       });
 
       if (response.ok) {
-        
+
         setBookings(prevBookings =>
           prevBookings.map(booking =>
             booking.id === bookingId ? { ...booking, status: 'cancelled' } : booking
@@ -202,8 +203,8 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
     if (sortConfig.key !== column) {
       return <ChevronUp className="w-4 h-4 text-gray-400" />;
     }
-    return sortConfig.direction === 'asc' ? 
-      <ChevronUp className="w-4 h-4 text-blue-600" /> : 
+    return sortConfig.direction === 'asc' ?
+      <ChevronUp className="w-4 h-4 text-blue-600" /> :
       <ChevronDown className="w-4 h-4 text-blue-600" />;
   };
 
@@ -219,7 +220,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
     <div className="w-full max-w-7xl mx-auto p-6 bg-white">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Bookings Management</h1>
-        
+
         <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -231,7 +232,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -264,7 +265,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="flex items-center">
             <Users className="w-8 h-8 text-green-600 mr-3" />
@@ -276,7 +277,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-yellow-50 p-4 rounded-lg">
           <div className="flex items-center">
             <DollarSign className="w-8 h-8 text-yellow-600 mr-3" />
@@ -288,15 +289,15 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-purple-50 p-4 rounded-lg">
           <div className="flex items-center">
             <Clock className="w-8 h-8 text-purple-600 mr-3" />
             <div>
               <p className="text-sm font-medium text-purple-600">Avg Duration</p>
               <p className="text-2xl font-bold text-purple-900">
-                {confirmedBookings.length > 0 
-                  ? (confirmedBookings.reduce((sum, booking) => 
+                {confirmedBookings.length > 0
+                  ? (confirmedBookings.reduce((sum, booking) =>
                       sum + calculateDuration(booking.start_time, booking.end_time), 0
                     ) / confirmedBookings.length).toFixed(1) + 'h'
                   : '0h'
@@ -312,7 +313,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
         <table className="min-w-full bg-white">
           <thead className="bg-gray-50">
             <tr>
-              <th 
+              <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('id')}
               >
@@ -321,7 +322,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
                   <SortIcon column="id" />
                 </div>
               </th>
-              <th 
+              <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('space_title')}
               >
@@ -330,7 +331,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
                   <SortIcon column="space_title" />
                 </div>
               </th>
-              <th 
+              <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('checkin')}
               >
@@ -339,7 +340,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
                   <SortIcon column="checkin" />
                 </div>
               </th>
-              <th 
+              <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('checkout')}
               >
@@ -348,7 +349,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
                   <SortIcon column="checkout" />
                 </div>
               </th>
-              <th 
+              <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('duration')}
               >
@@ -357,7 +358,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
                   <SortIcon column="duration" />
                 </div>
               </th>
-              <th 
+              <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('guests')}
               >
@@ -366,7 +367,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
                   <SortIcon column="guests" />
                 </div>
               </th>
-              <th 
+              <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('amount')}
               >
@@ -375,7 +376,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
                   <SortIcon column="amount" />
                 </div>
               </th>
-              <th 
+              <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('status')}
               >
@@ -454,7 +455,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
             ))}
           </tbody>
         </table>
-        
+
         {filteredAndSortedBookings.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">No bookings found matching your criteria.</p>

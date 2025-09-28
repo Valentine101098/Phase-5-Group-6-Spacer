@@ -1,6 +1,7 @@
 // features/temp/api.js
 // import { bearerToken } from '../components/tokens';
 // import { useAuth } from '../../../contexts/AuthContext';
+import { API_BASE_URL } from '../config/api';
 
 const BASE_URL = 'http://127.0.0.1:5000/api';
 
@@ -25,7 +26,7 @@ export async function createBooking(bookingData, bearerToken) {
 
   if (!response.ok) {
     const errorData = await response.json();
-    
+
     throw new Error(errorData.error || 'Failed to create booking');
   }
   return response.json();

@@ -1,8 +1,9 @@
 // src/components/ForgotPassword.js
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom'; // Import Link
+import { API_BASE_URL } from '../config/api';
 
-const BASE_URL = 'http://localhost:5000';
+// const BASE_URL = 'http://localhost:5000';
 
 function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -25,7 +26,7 @@ function ForgotPassword() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/auth/forgot-password`, {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

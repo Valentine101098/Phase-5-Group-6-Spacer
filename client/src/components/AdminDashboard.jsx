@@ -5,6 +5,7 @@ import { BookingsTable } from './BookingsTable';
 import { InvoicesTable } from './InvoicesTable';
 import SpaceCard from './SpaceCard';
 import SpaceDetails from './SpaceDetails';
+import { API_BASE_URL } from '../config/api';
 
 const AdminDashboard = () => {
   const { makeAuthenticatedRequest, user, isAuthenticated } = useAuth();

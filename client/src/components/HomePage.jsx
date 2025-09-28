@@ -1,36 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { Home, MapPin, Star, Users, Shield, Search, AlertTriangle } from "lucide-react";
-
-// Error Boundary Component
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-    this.setState({ error: error });
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 m-2">
-          <div className="flex items-center text-red-600">
-            <AlertTriangle className="h-5 w-5 mr-2" />
-            <span className="text-sm">{this.props.fallbackMessage || "Component failed to load"}</span>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { Home, MapPin, Users, Shield, Search } from "lucide-react";
+import Spaces from "./Spaces";
+import { API_BASE_URL } from '../config/api';
 
 // Search Component
 const SpaceSearch = ({ onSearch, onClear }) => {
@@ -84,7 +56,7 @@ const SpaceSearch = ({ onSearch, onClear }) => {
     }
 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/spaces?${queryParams.toString()}`);
+      const response = await fetch(`${API_BASE_URL}{queryParams.toString()}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -217,10 +189,7 @@ const SpaceSearch = ({ onSearch, onClear }) => {
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 opacity-0">
-                  Actions
-                </label>
+              <div className="flex items-end">
                 {hasActiveFilters() && (
                   <button
                     onClick={handleClear}
@@ -264,63 +233,10 @@ const SpaceSearch = ({ onSearch, onClear }) => {
   );
 };
 
-const HomePage = ({ Spaces, SpaceCreation }) => {
-  const [spaces, setSpaces] = useState([]);
-  const [allSpaces, setAllSpaces] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const HomePage = () => {
+  const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResultsCount, setSearchResultsCount] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    // Check if user is logged in by looking for JWT token (matching ClientDashboard pattern)
-    const checkAuthStatus = () => {
-      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-      setIsLoggedIn(!!token);
-    };
-
-    const fetchSpaces = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await fetch("http://127.0.0.1:5000/api/spaces");
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`HTTP error! status: ${response.status}, Body: ${errorText}`);
-        }
-        const data = await response.json();
-        const spacesData = data.spaces || data;
-        setSpaces(spacesData);
-        setAllSpaces(spacesData);
-      } catch (err) {
-        console.error("Error fetching spaces for Home page:", err);
-        setError("Failed to load spaces. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuthStatus();
-    fetchSpaces();
-  }, []);
-
-  const handleSearch = (searchResults, searchParams) => {
-    setSpaces(searchResults);
-    setSearchResultsCount(searchResults.length);
-    setIsSearching(true);
-  };
-
-  const handleClearSearch = () => {
-    setSpaces(allSpaces);
-    setIsSearching(false);
-    setSearchResultsCount(null);
-  };
-
-  const handleSpaceCreated = (newSpace) => {
-    setSpaces((prev) => [newSpace, ...prev]);
-    setAllSpaces((prev) => [newSpace, ...prev]);
-  };
 
   const features = [
     {
@@ -340,29 +256,23 @@ const HomePage = ({ Spaces, SpaceCreation }) => {
     }
   ];
 
-  const handleImageError = (e) => {
-    e.target.src = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop';
+  const handleSearch = (results, searchParams) => {
+    setSearchResults(results);
+    setSearchResultsCount(results.length);
+    setIsSearching(true);
   };
 
-  const getImageUrl = (pictures) => {
-    let imageUrl = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop';
-
-    if (pictures && pictures.length > 0) {
-      const firstPicture = pictures[0];
-      if (firstPicture.startsWith('http')) {
-        imageUrl = firstPicture;
-      } else {
-        imageUrl = `http://localhost:5000${firstPicture}`;
-      }
-    }
-    return imageUrl;
+  const handleClearSearch = () => {
+    setSearchResults(null);
+    setIsSearching(false);
+    setSearchResultsCount(null);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-blue-600 to-purple-700 text-white">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/60 to-purple-700/60 backdrop-blur-sm"></div>
         <div className="relative max-w-7xl mx-auto px-4 py-20 text-center">
           <h1 className="text-5xl font-bold mb-6">
             Find Your Perfect Working Environment/Space in Nairobi
@@ -403,7 +313,7 @@ const HomePage = ({ Spaces, SpaceCreation }) => {
         </div>
       </div>
 
-      {/* Spaces Section */}
+      {/* Properties Section */}
       <div className="max-w-7xl mx-auto px-4 pb-16">
         <div className="flex items-center justify-between mb-8">
           <div className="flex-1">
@@ -415,157 +325,43 @@ const HomePage = ({ Spaces, SpaceCreation }) => {
                 </span>
               )}
             </h2>
-
-            {/* Safely render Spaces and SpaceCreation components with error boundaries */}
-            {Spaces && (
-              <ErrorBoundary fallbackMessage="Spaces component failed to load">
-                <Spaces spaces={spaces} />
-              </ErrorBoundary>
-            )}
-
-            {SpaceCreation && (
-              <ErrorBoundary fallbackMessage="Space creation component failed to load">
-                <SpaceCreation onSpaceCreated={handleSpaceCreated} />
-              </ErrorBoundary>
-            )}
+            <Spaces
+              searchResults={searchResults}
+              isSearching={isSearching}
+              onClearSearch={handleClearSearch}
+            />
           </div>
-
           <div className="flex items-center text-blue-600">
             <MapPin className="h-5 w-5 mr-2" />
             <span className="font-medium">Nairobi, Kenya</span>
           </div>
         </div>
-
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="ml-4 text-gray-600">Loading amazing spaces...</p>
-          </div>
-        ) : error ? (
-          <div className="text-center bg-red-50 border border-red-200 rounded-lg p-8">
-            <div className="text-red-600 mb-4">
-              <Home className="h-12 w-12 mx-auto opacity-50" />
-            </div>
-            <p className="text-red-700 font-medium">{error}</p>
-          </div>
-        ) : spaces.length === 0 ? (
-          <div className="text-center bg-gray-50 border border-gray-200 rounded-lg p-8">
-            <div className="text-gray-400 mb-4">
-              <Search className="h-12 w-12 mx-auto" />
-            </div>
-            <p className="text-gray-600 font-medium">
-              {isSearching ? 'No spaces match your search criteria' : 'No spaces currently available'}
-            </p>
-            {isSearching && (
-              <button
-                onClick={handleClearSearch}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                View All Spaces
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {spaces.map((space) => {
-              let images = [];
-              if (typeof space.images === "string") {
-                try {
-                  images = JSON.parse(space.images);
-                } catch (e) {
-                  console.error("Invalid images JSON:", space.images);
-                  images = [];
-                }
-              } else if (Array.isArray(space.images)) {
-                images = space.images;
-              }
-
-              const imageUrl = getImageUrl(images);
-
-              return (
-                <a
-                  href={`/api/spaces/${space.id}`}
-                  key={space.id}
-                  className="block group hover:scale-105 transition-transform duration-200"
-                >
-                  <div className="bg-white rounded-xl shadow-md overflow-hidden group-hover:shadow-xl transition-shadow duration-200">
-                    <div className="relative">
-                      <img
-                        src={imageUrl}
-                        alt={space.title || 'Space image'}
-                        className="w-full h-48 object-cover"
-                        onError={handleImageError}
-                      />
-                      <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">
-                        {space.status === 'available' ? 'Available' : space.status || 'Available'}
-                      </div>
-                      <div className="absolute top-3 left-3 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                        <Star className="inline h-3 w-3 mr-1" />
-                        Featured
-                      </div>
-                    </div>
-
-                    <div className="p-5">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                        {space.title || 'Untitled Space'}
-                      </h3>
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                        {space.description || 'No description available'}
-                      </p>
-                      <div className="flex items-center text-gray-600 text-sm mb-3">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        <span>{space.space_type || 'Workspace'}</span>
-                        <span className="mx-2">•</span>
-                        <Users className="h-4 w-4 mr-1" />
-                        <span>Up to {space.max_guests || 0} guests</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-2xl font-bold text-green-600">
-                            Ksh {space.price_per_hour?.toLocaleString() || '0'}
-                          </span>
-                          <span className="text-gray-500 text-sm">/hour</span>
-                        </div>
-                        <div className="text-blue-600 font-medium text-sm group-hover:text-blue-800">
-                          View Details →
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-        )}
       </div>
 
-      {/* Call to Action - Only show if user is not logged in */}
-      {!isLoggedIn && (
-        <div className="bg-gray-900 text-white">
-          <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-            <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-              Join thousands of satisfied tenants and landlords who trust SpaceHub
-              for their space needs.
-            </p>
-            <div className="space-x-4">
-              <a
-                href="/auth/register"
-                className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              >
-                Sign Up Today
-              </a>
-              <a
-                href="/auth/login"
-                className="inline-block border border-gray-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
-              >
-                Already a Member?
-              </a>
-            </div>
+      {/* Call to Action */}
+      <div className="bg-gray-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
+          <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
+          <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+            Join thousands of satisfied tenants and landlords who trust SpaceHub
+            for their space needs.
+          </p>
+          <div className="space-x-4">
+            <Link
+              to="/auth/register"
+              className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              Sign Up Today
+            </Link>
+            <Link
+              to="/auth/login"
+              className="inline-block border border-gray-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+            >
+              Already a Member?
+            </Link>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
