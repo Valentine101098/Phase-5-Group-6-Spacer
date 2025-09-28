@@ -1,353 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Users, Building, Calendar, HandCoins, FileText, UserCheck, TrendingUp, X, AlertTriangle, CheckCircle, Eye, Plus } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-
-const BASE_URL = 'http://127.0.0.1:5000';
-
-// Modal components moved outside to prevent re-rendering issues
-const AddUserModal = ({
-  showModal,
-  setShowModal,
-  addUserData,
-  setAddUserData,
-  submitAddUser,
-  actionLoading,
-  actionMessage
-}) => {
-  if (!showModal) return null;
-
-  return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-10 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Add New User</h3>
-          <button
-            onClick={() => setShowModal(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        {actionMessage.text && (
-          <div className={`mb-4 p-3 rounded ${
-            actionMessage.type === 'success'
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-          }`}>
-            <div className="flex items-center">
-              {actionMessage.type === 'success' ? (
-                <CheckCircle className="h-4 w-4 mr-2" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 mr-2" />
-              )}
-              {actionMessage.text}
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={submitAddUser} className="space-y-4">
-          <div>
-            <label htmlFor="add-first-name" className="block text-left text-gray-700 text-sm font-bold mb-2">First Name:</label>
-            <input
-              type="text"
-              id="add-first-name"
-              name="first_name"
-              value={addUserData.first_name}
-              onChange={(e) => setAddUserData({...addUserData, first_name: e.target.value})}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="add-last-name" className="block text-left text-gray-700 text-sm font-bold mb-2">Last Name:</label>
-            <input
-              type="text"
-              id="add-last-name"
-              name="last_name"
-              value={addUserData.last_name}
-              onChange={(e) => setAddUserData({...addUserData, last_name: e.target.value})}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="add-email" className="block text-left text-gray-700 text-sm font-bold mb-2">Email:</label>
-            <input
-              type="email"
-              id="add-email"
-              name="email"
-              value={addUserData.email}
-              onChange={(e) => setAddUserData({...addUserData, email: e.target.value})}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="add-phone-number" className="block text-left text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
-            <input
-              type="tel"
-              id="add-phone-number"
-              name="phone_number"
-              value={addUserData.phone_number}
-              onChange={(e) => setAddUserData({...addUserData, phone_number: e.target.value})}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="add-password" className="block text-left text-gray-700 text-sm font-bold mb-2">Password:</label>
-            <input
-              type="password"
-              id="add-password"
-              name="password"
-              value={addUserData.password}
-              onChange={(e) => setAddUserData({...addUserData, password: e.target.value})}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="add-confirm-password" className="block text-left text-gray-700 text-sm font-bold mb-2">Confirm Password:</label>
-            <input
-              type="password"
-              id="add-confirm-password"
-              name="confirmPassword"
-              value={addUserData.confirmPassword}
-              onChange={(e) => setAddUserData({...addUserData, confirmPassword: e.target.value})}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="add-role" className="block text-left text-gray-700 text-sm font-bold mb-2">Role:</label>
-            <select
-              id="add-role"
-              name="role"
-              value={addUserData.role}
-              onChange={(e) => setAddUserData({...addUserData, role: e.target.value})}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="client">Client</option>
-              <option value="owner">Owner</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
-              disabled={actionLoading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={actionLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {actionLoading ? 'Creating...' : 'Add User'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-const EditUserModal = ({
-  showModal,
-  setShowModal,
-  editFormData,
-  setEditFormData,
-  submitEditUser,
-  actionLoading,
-  actionMessage,
-  selectedUser,
-  setSelectedUser,
-  setActionMessage
-}) => {
-  if (!showModal) return null;
-
-  return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Edit User</h3>
-          <button
-            onClick={() => setShowModal(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        {actionMessage.text && (
-          <div className={`mb-4 p-3 rounded ${
-            actionMessage.type === 'success'
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-          }`}>
-            <div className="flex items-center">
-              {actionMessage.type === 'success' ? (
-                <CheckCircle className="h-4 w-4 mr-2" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 mr-2" />
-              )}
-              {actionMessage.text}
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={submitEditUser} className="space-y-4">
-          <div>
-            <label htmlFor="edit-first-name" className="block text-left text-gray-700 text-sm font-bold mb-2">First Name:</label>
-            <input
-              type="text"
-              id="edit-first-name"
-              name="first_name"
-              value={editFormData.first_name || ''}
-              onChange={(e) => setEditFormData({...editFormData, first_name: e.target.value})}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="edit-last-name" className="block text-left text-gray-700 text-sm font-bold mb-2">Last Name:</label>
-            <input
-              type="text"
-              id="edit-last-name"
-              name="last_name"
-              value={editFormData.last_name || ''}
-              onChange={(e) => setEditFormData({...editFormData, last_name: e.target.value})}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="edit-phone-number" className="block text-left text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
-            <input
-              type="tel"
-              id="edit-phone-number"
-              name="phone_number"
-              value={editFormData.phone_number || ''}
-              onChange={(e) => setEditFormData({...editFormData, phone_number: e.target.value})}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div className="flex justify-center space-x-4 pt-4">
-            <button
-              type="button"
-              onClick={() => {
-                setShowModal(false);
-                setEditFormData({});
-                setActionMessage({ type: '', text: '' });
-              }}
-              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
-              disabled={actionLoading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={actionLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {actionLoading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-const DeleteUserModal = ({
-  showModal,
-  setShowModal,
-  confirmDeleteUser,
-  actionLoading,
-  actionMessage,
-  selectedUser
-}) => {
-  if (!showModal) return null;
-
-  return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Delete User</h3>
-          <button
-            onClick={() => setShowModal(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        {actionMessage.text && (
-          <div className={`mb-4 p-3 rounded ${
-            actionMessage.type === 'success'
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-          }`}>
-            <div className="flex items-center">
-              {actionMessage.type === 'success' ? (
-                <CheckCircle className="h-4 w-4 mr-2" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 mr-2" />
-              )}
-              {actionMessage.text}
-            </div>
-          </div>
-        )}
-
-        <div className="mb-6">
-          <div className="flex items-center mb-4">
-            <AlertTriangle className="h-8 w-8 text-red-500 mr-3" />
-            <div>
-              <h4 className="font-medium text-gray-900">Confirm Deletion</h4>
-              <p className="text-sm text-gray-600">This action cannot be undone.</p>
-            </div>
-          </div>
-          <p className="text-gray-700">
-            Are you sure you want to delete <strong>{selectedUser?.name}</strong>?
-            This will remove the user from the system.
-          </p>
-        </div>
-
-        <div className="flex justify-end space-x-3">
-          <button
-            onClick={() => setShowModal(false)}
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
-            disabled={actionLoading}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={confirmDeleteUser}
-            disabled={actionLoading}
-            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {actionLoading ? 'Deleting...' : 'Delete User'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 import { BookingsTable } from './BookingsTable';
 import { InvoicesTable } from './InvoicesTable';
 import SpaceCard from './SpaceCard';
@@ -473,7 +126,6 @@ const AdminDashboard = () => {
       if (response.ok) {
         setActionMessage({ type: 'success', text: 'User created successfully!' });
 
-        // If role is not client, assign the selected role
         if (addUserData.role !== 'client' && data.user) {
           try {
             const rolesResponse = await makeAuthenticatedRequest('/api/roles/', 'GET');
@@ -499,10 +151,7 @@ const AdminDashboard = () => {
         }, 2000);
 
       } else {
-        setActionMessage({
-          type: 'error',
-          text: data.message || (data.errors ? data.errors.join(', ') : 'Registration failed.')
-        });
+        setActionMessage({ type: 'error', text: data.message || 'Registration failed.' });
       }
     } catch (error) {
       setActionMessage({ type: 'error', text: 'Network error or server unavailable.' });
@@ -589,34 +238,29 @@ const AdminDashboard = () => {
     }
   };
 
-  // Calculate stats from real data
-  const stats = {
-    totalUsers: Array.isArray(users) ? users.length : 0,
-    totalSpaces: Array.isArray(spaces) ? spaces.length : 0,
-    totalBookings: Array.isArray(bookings) ? bookings.length : 0,
-    totalRevenue: Array.isArray(invoices)
-      ? invoices.filter(i => i && i.status === 'paid').reduce((sum, i) => sum + parseFloat(i.amount || 0), 0)
-      : 0,
-    pendingReviews: Array.isArray(bookings) ? bookings.filter(b => b && !b.has_review && b.status === 'confirmed').length : 0,
-    activeAgreements: Array.isArray(bookings) ? bookings.filter(b => b && b.has_agreement_instance).length : 0
-  };
+  // Use existing SpaceCard for admin
+  const AdminSpaceCardWrapper = ({ space }) => {
+    const [showDetails, setShowDetails] = useState(false);
 
-  // Get users with role information
-  const recentUsers = (Array.isArray(users) ? users : []).map((user) => {
-    const role = user?.user_roles?.[0]?.role?.role || "client";
-    return {
-      id: user.id,
-      name: `${user.first_name} ${user.last_name}`,
-      email: user.email,
-      phone_number: user.phone_number,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      role,
-      joinDate: user.created_at
-        ? new Date(user.created_at).toLocaleDateString()
-        : "",
-    };
-  });
+    return (
+      <div className="relative">
+        <SpaceCard space={space} />
+        <div className="absolute top-2 right-2">
+          <button
+            onClick={() => setShowDetails(true)}
+            className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700"
+            title="View Details"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+        </div>
+
+        {showDetails && (
+          <SpaceDetails space={space} onClose={() => setShowDetails(false)} />
+        )}
+      </div>
+    );
+  };
 
   const StatCard = ({ icon: Icon, title, value, change, color = 'blue' }) => (
     <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 border-${color}-500`}>
@@ -718,10 +362,72 @@ const AdminDashboard = () => {
         {activeTab === 'overview' && (
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard icon={() => <Users className="h-10 w-10 text-blue-600" />} title="Total Users" value={stats.totalUsers.toLocaleString()} />
-              <StatCard icon={() => <Building className="h-10 w-10 text-green-600" />} title="Active Spaces" value={stats.totalSpaces} />
-              <StatCard icon={() => <Calendar className="h-10 w-10 text-purple-600" />} title="Total Bookings" value={stats.totalBookings} />
-              <StatCard icon={() => <HandCoins className="h-10 w-10 text-yellow-600" />} title="Revenue (Ksh)" value={`${stats.totalRevenue.toLocaleString()}`} />
+              <StatCard icon={Users} title="Total Users" value={stats.totalUsers} />
+              <StatCard icon={Building} title="Active Spaces" value={stats.totalSpaces} />
+              <StatCard icon={Calendar} title="Total Bookings" value={stats.totalBookings} />
+              <StatCard icon={HandCoins} title="Revenue (Ksh)" value={`${stats.totalRevenue.toLocaleString()}`} />
+            </div>
+
+            {/* Recent Activity Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Users */}
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="p-6 border-b">
+                  <h3 className="text-lg font-semibold text-gray-900">Recent Users</h3>
+                </div>
+                <div className="p-6">
+                  {recentUsers.slice(0, 5).map(user => (
+                    <div key={user.id} className="flex items-center justify-between py-3 border-b last:border-b-0">
+                      <div>
+                        <p className="font-medium text-gray-900">{user.name}</p>
+                        <p className="text-sm text-gray-600">{user.email}</p>
+                      </div>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                        user.role === 'owner' ? 'bg-green-100 text-green-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {user.role}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Platform Stats */}
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="p-6 border-b">
+                  <h3 className="text-lg font-semibold text-gray-900">Platform Statistics</h3>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Active Bookings</span>
+                      <span className="font-semibold">
+                        {bookings.filter(b => b.status === 'confirmed' || b.status === 'active').length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Pending Bookings</span>
+                      <span className="font-semibold">
+                        {bookings.filter(b => b.status === 'pending').length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Available Spaces</span>
+                      <span className="font-semibold">
+                        {spaces.filter(s => s.status === 'available').length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Total Revenue</span>
+                      <span className="font-semibold text-green-600">
+                        Ksh {stats.totalRevenue.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -813,38 +519,357 @@ const AdminDashboard = () => {
               <h3 className="text-lg font-semibold text-gray-900">All Spaces ({spaces.length})</h3>
             </div>
 
-      {/* Modals - Now using the external components */}
-      <AddUserModal
-        showModal={showAddUserModal}
-        setShowModal={setShowAddUserModal}
-        addUserData={addUserData}
-        setAddUserData={setAddUserData}
-        submitAddUser={submitAddUser}
-        actionLoading={actionLoading}
-        actionMessage={actionMessage}
-      />
+            {spaces.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {spaces.map(space => (
+                  <AdminSpaceCardWrapper key={space.id} space={space} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-white rounded-lg shadow-md">
+                <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No spaces available</p>
+              </div>
+            )}
+          </div>
+        )}
 
-      <EditUserModal
-        showModal={showEditModal}
-        setShowModal={setShowEditModal}
-        editFormData={editFormData}
-        setEditFormData={setEditFormData}
-        submitEditUser={submitEditUser}
-        actionLoading={actionLoading}
-        actionMessage={actionMessage}
-        selectedUser={selectedUser}
-        setSelectedUser={setSelectedUser}
-        setActionMessage={setActionMessage}
-      />
+        {/* Bookings Tab - Use existing BookingsTable */}
+        {activeTab === 'bookings' && (
+          <div className="space-y-6">
+            <BookingsTable />
+          </div>
+        )}
 
-      <DeleteUserModal
-        showModal={showDeleteModal}
-        setShowModal={setShowDeleteModal}
-        confirmDeleteUser={confirmDeleteUser}
-        actionLoading={actionLoading}
-        actionMessage={actionMessage}
-        selectedUser={selectedUser}
-      />
+        {/* Invoices Tab - Use existing InvoicesTable */}
+        {activeTab === 'invoices' && (
+          <div className="space-y-6">
+            <InvoicesTable />
+          </div>
+        )}
+      </div>
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Add New User</h3>
+              <button
+                onClick={() => setShowAddUserModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {actionMessage.text && (
+              <div className={`mb-4 p-3 rounded ${
+                actionMessage.type === 'success'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}>
+                <div className="flex items-center">
+                  {actionMessage.type === 'success' ? (
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                  )}
+                  {actionMessage.text}
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={submitAddUser} className="space-y-4">
+              <div>
+                <label htmlFor="add-first-name" className="block text-left text-gray-700 text-sm font-bold mb-2">First Name:</label>
+                <input
+                  type="text"
+                  id="add-first-name"
+                  name="first_name"
+                  value={addUserData.first_name}
+                  onChange={(e) => setAddUserData({...addUserData, first_name: e.target.value})}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="add-last-name" className="block text-left text-gray-700 text-sm font-bold mb-2">Last Name:</label>
+                <input
+                  type="text"
+                  id="add-last-name"
+                  name="last_name"
+                  value={addUserData.last_name}
+                  onChange={(e) => setAddUserData({...addUserData, last_name: e.target.value})}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="add-email" className="block text-left text-gray-700 text-sm font-bold mb-2">Email:</label>
+                <input
+                  type="email"
+                  id="add-email"
+                  name="email"
+                  value={addUserData.email}
+                  onChange={(e) => setAddUserData({...addUserData, email: e.target.value})}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="add-phone-number" className="block text-left text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
+                <input
+                  type="tel"
+                  id="add-phone-number"
+                  name="phone_number"
+                  value={addUserData.phone_number}
+                  onChange={(e) => setAddUserData({...addUserData, phone_number: e.target.value})}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="add-password" className="block text-left text-gray-700 text-sm font-bold mb-2">Password:</label>
+                <input
+                  type="password"
+                  id="add-password"
+                  name="password"
+                  value={addUserData.password}
+                  onChange={(e) => setAddUserData({...addUserData, password: e.target.value})}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="add-confirm-password" className="block text-left text-gray-700 text-sm font-bold mb-2">Confirm Password:</label>
+                <input
+                  type="password"
+                  id="add-confirm-password"
+                  name="confirmPassword"
+                  value={addUserData.confirmPassword}
+                  onChange={(e) => setAddUserData({...addUserData, confirmPassword: e.target.value})}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="add-role" className="block text-left text-gray-700 text-sm font-bold mb-2">Role:</label>
+                <select
+                  id="add-role"
+                  name="role"
+                  value={addUserData.role}
+                  onChange={(e) => setAddUserData({...addUserData, role: e.target.value})}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="client">Client</option>
+                  <option value="owner">Owner</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddUserModal(false)}
+                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
+                  disabled={actionLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {actionLoading ? 'Creating...' : 'Add User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Edit User</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {actionMessage.text && (
+              <div className={`mb-4 p-3 rounded ${
+                actionMessage.type === 'success'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}>
+                <div className="flex items-center">
+                  {actionMessage.type === 'success' ? (
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                  )}
+                  {actionMessage.text}
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={submitEditUser} className="space-y-4">
+              <div>
+                <label htmlFor="edit-first-name" className="block text-left text-gray-700 text-sm font-bold mb-2">First Name:</label>
+                <input
+                  type="text"
+                  id="edit-first-name"
+                  name="first_name"
+                  value={editFormData.first_name || ''}
+                  onChange={(e) => setEditFormData({...editFormData, first_name: e.target.value})}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-last-name" className="block text-left text-gray-700 text-sm font-bold mb-2">Last Name:</label>
+                <input
+                  type="text"
+                  id="edit-last-name"
+                  name="last_name"
+                  value={editFormData.last_name || ''}
+                  onChange={(e) => setEditFormData({...editFormData, last_name: e.target.value})}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-phone-number" className="block text-left text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
+                <input
+                  type="tel"
+                  id="edit-phone-number"
+                  name="phone_number"
+                  value={editFormData.phone_number || ''}
+                  onChange={(e) => setEditFormData({...editFormData, phone_number: e.target.value})}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-password" className="block text-left text-gray-700 text-sm font-bold mb-2">New Password (optional):</label>
+                <input
+                  type="password"
+                  id="edit-password"
+                  name="password"
+                  value={editFormData.password || ''}
+                  onChange={(e) => setEditFormData({...editFormData, password: e.target.value})}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Leave blank to keep current password"
+                />
+              </div>
+
+              <div className="flex justify-center space-x-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditFormData({});
+                    setActionMessage({ type: '', text: '' });
+                  }}
+                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
+                  disabled={actionLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {actionLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Delete User</h3>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {actionMessage.text && (
+              <div className={`mb-4 p-3 rounded ${
+                actionMessage.type === 'success'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}>
+                <div className="flex items-center">
+                  {actionMessage.type === 'success' ? (
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                  )}
+                  {actionMessage.text}
+                </div>
+              </div>
+            )}
+
+            <div className="mb-6">
+              <div className="flex items-center mb-4">
+                <AlertTriangle className="h-8 w-8 text-red-500 mr-3" />
+                <div>
+                  <h4 className="font-medium text-gray-900">Confirm Deletion</h4>
+                  <p className="text-sm text-gray-600">This action cannot be undone.</p>
+                </div>
+              </div>
+              <p className="text-gray-700">
+                Are you sure you want to delete <strong>{selectedUser?.name}</strong>?
+                This will remove the user from the system.
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
+                disabled={actionLoading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteUser}
+                disabled={actionLoading}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {actionLoading ? 'Deleting...' : 'Delete User'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
