@@ -17,6 +17,9 @@ export function BookingForm({
   submitting,
   handleProceed,
 }) {
+  const today = new Date().toISOString().split('T')[0];
+  const minStartDate = today;
+
   return (
     <form onSubmit={handleProceed} className="space-y-6">
       {/* Start Date & Time */}
@@ -29,6 +32,7 @@ export function BookingForm({
             <input
               type="date"
               value={startDate}
+              min={minStartDate}
               onChange={(e) => setStartDate(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors bg-gray-50 hover:bg-white"
               required
@@ -84,6 +88,12 @@ export function BookingForm({
             </span>
           </div>
         </div>
+        {/* ADD VALIDATION MESSAGE */}
+        {startDate === today && (
+          <p className="text-xs text-orange-600 mt-2">
+            ⚠️ Make sure start time is later than current time for today's bookings
+          </p>
+        )}
       </div>
 
       {/* Number of Guests */}
