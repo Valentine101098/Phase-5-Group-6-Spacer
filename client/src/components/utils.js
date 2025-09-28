@@ -1,5 +1,5 @@
 // src/utils/utils.js
-
+import { API_BASE_URL } from "../config/api";
 // Your existing function
 export function calculateTotalAmount({ startDate, endDate, startTime, endTime, pricePerHour }) {
   if (!startDate || !endDate || !startTime || !endTime || !pricePerHour) return 0;
@@ -14,7 +14,7 @@ export function calculateTotalAmount({ startDate, endDate, startTime, endTime, p
 // Add the API client class
 class ApiClient {
     constructor() {
-        this.baseURL = "http://127.0.0.1:5000/api";
+        this.baseURL = `${API_BASE_URL}/api`;
     }
 
     async refreshToken() {
@@ -51,7 +51,7 @@ class ApiClient {
 
     async request(endpoint, options = {}) {
         let token = localStorage.getItem('auth_token');
-        
+
         if (!token) {
             throw new Error('No authentication token found');
         }

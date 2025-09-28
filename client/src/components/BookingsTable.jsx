@@ -31,7 +31,7 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
       // console.log("fetchBookings: ",accessToken)
       try {
         setLoading(true);
-        const response = await fetch('http://127.0.0.1:5000/api/bookings/', {
+        const response = await fetch(`${API_BASE_URL}/api/bookings`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
   const handleCancel = async (bookingId) => {
     // console.log("handleCancel: ", accessToken)
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/bookings/${bookingId}/cancel`, {
+      const response = await fetch(`${API_BASE_URL}/api/bookings${bookingId}/cancel`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${accessToken}`,

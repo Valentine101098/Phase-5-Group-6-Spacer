@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import SpaceCard from "./SpaceCard";
+import { API_BASE_URL } from "../config/api";
 
 export default function Spaces({ searchResults, isSearching, onClearSearch }) {
     const [spaces, setSpaces] = useState([]);
@@ -14,7 +15,7 @@ export default function Spaces({ searchResults, isSearching, onClearSearch }) {
                 try {
                     setLoading(true);
                     setError(null);
-                    const response = await fetch("http://127.0.0.1:5000/api/spaces");
+                    const response = await fetch(`${API_BASE_URL}/api/spaces`);
                     if (!response.ok) {
                         const errorText = await response.text();
                         throw new Error(`HTTP error! status: ${response.status}, Body: ${errorText}`);

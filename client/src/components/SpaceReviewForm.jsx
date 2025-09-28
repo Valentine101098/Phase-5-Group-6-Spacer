@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { API_BASE_URL } from "../config/api";
 
 export default function SpaceReviewForm({ booking_id, onReviewSubmitted, onCancel, editingReview }) {
 
@@ -18,7 +19,7 @@ export default function SpaceReviewForm({ booking_id, onReviewSubmitted, onCance
         e.preventDefault();
 
         const method = editingReview ? 'PATCH' : 'POST';
-        const url = editingReview ? `http://127.0.0.1:5000/api/reviews/${editingReview.id}` : 'http://127.0.0.1:5000/api/reviews/';
+        const url = editingReview ? `${API_BASE_URL}/api/reviews/${editingReview.id}` : `${API_BASE_URL}/api/reviews/`;
 
         fetch(url, {
             method,
@@ -32,11 +33,11 @@ export default function SpaceReviewForm({ booking_id, onReviewSubmitted, onCance
                 comment,
             }),
         })
-            .then(res => res.json())  
+            .then(res => res.json())
             .then(data => {
                 setRating(5);
                 setComment("");
-                onReviewSubmitted(data); 
+                onReviewSubmitted(data);
                 if (editingReview) onCancel();
             })
             .catch(err => console.error("Error submitting review:", err));
@@ -69,7 +70,7 @@ export default function SpaceReviewForm({ booking_id, onReviewSubmitted, onCance
             >
                 {editingReview ? "Update Review" : "Submit Review"}
             </button>
-                
+
             {editingReview && (
                 <button
                     type="button"
