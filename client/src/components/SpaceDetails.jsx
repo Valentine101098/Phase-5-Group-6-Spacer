@@ -26,7 +26,9 @@ export default function SpaceDetails({ space, onClose }) {
             })
                 .then(res => res.json())
                 .then(data => {
-                    const spaceBookings = data.filter(booking => booking.space_id === space.id);
+                    const spaceBookings = data.data.filter(
+                        ({ space_id, user_id }) => space_id === space.id && user_id === user.id
+                    );
                     setUserBookings(spaceBookings);
                 })
                 .catch(err => console.error("Error fetching user bookings:", err));
@@ -48,7 +50,7 @@ export default function SpaceDetails({ space, onClose }) {
     const handleReviewSubmitted = (newReview) => {
         if (editingReview) {
             // replace edited review
-            setReviews(reviews.map(r => (r.id === newReview.id ? newReview : r)));
+            setReviews(reviews.map(r => (r.id === editingReview.id ? { ...r, ...newReview, id: editingReview.id } : r)));
             setEditingReview(null);
         } else {
             // prepend new review
@@ -85,18 +87,22 @@ export default function SpaceDetails({ space, onClose }) {
                 </div>
 
                 <p className="mb-3">{space.description}</p>
-                <p><strong>Space Type:</strong> {space.space_type}</p>
-                <p><strong>Maximum Guests:</strong> {space.max_guests}</p>
-                <p><strong>Price:</strong> Kshs {space.price_per_hour}/hr</p>
-
-                {space.template?.terms && (
-                    <div className="mt-4 border-t pt-4">
-                        <h3 className="text-xl font-semibold mb-2">Agreement Terms</h3>
-                        <div className="bg-blue-50 p-4 rounded-lg max-h-48 overflow-y-auto">
-                            {space.template.terms}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 shadow p-4 rounded-xl bg-white">
+                    <div className="text-center p-4 bg-green-50 rounded-xl">
+                        <div className="text-sm text-gray-600">Space Type</div>
+                        <div className="text-lg font-bold text-green-600">{space?.space_type}</div>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-xl">
+                        <div className="text-sm text-gray-600">Max Guests</div>
+                        <div className="text-lg font-bold text-blue-600">{space?.max_guests}</div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-xl">
+                        <div className="text-sm text-gray-600">Kshs Per Hour</div>
+                        <div className="text-lg font-bold text-purple-600">
+                            {parseFloat(space?.price_per_hour || 0).toFixed(2)}
                         </div>
                     </div>
-                )}
+                </div>
 
                 {/* Reviews */}
                 <div className="mt-4 border-t pt-4 flex-1">
@@ -170,7 +176,7 @@ export default function SpaceDetails({ space, onClose }) {
                 {hasBooked && !showReviewForm && !userReview && (
                     <button
                         onClick={() => setShowReviewForm(true)}
-                        className="bg-green-500 text-white px-4 py-2 mt-3 w-40 rounded-lg hover:bg-green-600"
+                        className="bg-yellow-400 text-yellow-900 px-4 py-2  mt-3 w-40 mx-auto rounded-lg hover:bg-yellow-600 hover:text-yellow-900 transition"
                     >
                         Add Review
                     </button>
@@ -181,7 +187,7 @@ export default function SpaceDetails({ space, onClose }) {
                     {space.status === "available" && (
                         <Link to={`/spaces/${space.id}/booking`}>
                         <button className="bg-blue-500 text-white px-4 py-2 w-40 rounded-lg hover:bg-blue-600">
-                            Book
+                            Book Now
                         </button>
                         </Link>
                     )}
