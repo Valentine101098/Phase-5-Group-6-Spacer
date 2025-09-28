@@ -1,38 +1,9 @@
 
-import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Home, MapPin, Star, Users, Shield } from "lucide-react";
+import { Home, MapPin, Users, Shield } from "lucide-react";
 import Spaces from "./Spaces";
-import SpaceCreation from "./SpaceCreation";
 
 const HomePage = () => {
-  const [spaces, setSpaces] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchSpaces = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await fetch("http://127.0.0.1:5000/api/spaces");
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`HTTP error! status: ${response.status}, Body: ${errorText}`);
-        }
-        const data = await response.json();
-        setSpaces(data);
-      } catch (err) {
-        console.error("Error fetching properties for Home page:", err);
-        setError("Failed to load properties. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSpaces();
-  }, []);
-
-
 
   const features = [
     {
@@ -52,29 +23,11 @@ const HomePage = () => {
     }
   ];
 
-  const handleImageError = (e) => {
-    e.target.src = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop';
-  };
-
-  const getImageUrl = (pictures) => {
-    let imageUrl = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop';
-
-    if (pictures && pictures.length > 0) {
-      const firstPicture = pictures[0];
-      if (firstPicture.startsWith('http')) {
-        imageUrl = firstPicture;
-      } else {
-        imageUrl = `http://localhost:5000${firstPicture}`;
-      }
-    }
-    return imageUrl;
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-blue-600 to-purple-700 text-white">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/60 to-purple-700/60 backdrop-blur-sm"></div>
         <div className="relative max-w-7xl mx-auto px-4 py-20 text-center">
           <h1 className="text-5xl font-bold mb-6">
             Find Your Perfect Working Environment/Space in Nairobi
@@ -118,102 +71,12 @@ const HomePage = () => {
               Featured Spaces
             </h2>
             <Spaces />
-            <SpaceCreation onSpaceCreated={(newspace) => {setSpaces((prev) => [newspace, ...prev])}}/>
           </div>
         </div>
           <div className="flex items-center text-blue-600">
             <MapPin className="h-5 w-5 mr-2" />
             <span className="font-medium">Nairobi, Kenya</span>
           </div>
-
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="ml-4 text-gray-600">Loading amazing spaces...</p>
-          </div>
-        ) : error ? (
-          <div className="text-center bg-red-50 border border-red-200 rounded-lg p-8">
-            <div className="text-red-600 mb-4">
-              <Home className="h-12 w-12 mx-auto opacity-50" />
-            </div>
-            <p className="text-red-700 font-medium">{error}</p>
-          </div>
-        ) : spaces.length === 0 ? (
-          <div className="text-center bg-gray-50 border border-gray-200 rounded-lg p-8">
-            <div className="text-gray-400 mb-4">
-              <Home className="h-12 w-12 mx-auto" />
-            </div>
-            <p className="text-gray-600 font-medium">
-              No spaces currently available
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {spaces.map((prop) => {
-              let images = [];
-              if (typeof prop.images === "string") {
-                try {
-                  images = JSON.parse(prop.images);
-                } catch (e) {
-                  console.error("Invalid pictures JSON:", prop.images);
-                  images = [];
-                }
-              } else if (Array.isArray(prop.images)) {
-                images = prop.images;
-              }
-
-              const imageUrl = getImageUrl(images);
-
-              return (
-                <Link
-                  to={`/api/spaces/${prop.id}`}
-                  key={prop.id}
-                  className="block group hover:scale-105 transition-transform duration-200"
-                >
-                  <div className="bg-white rounded-xl shadow-md overflow-hidden group-hover:shadow-xl transition-shadow duration-200">
-                    <div className="relative">
-                      <img
-                        src={imageUrl}
-                        alt={prop.name}
-                        className="w-full h-48 object-cover"
-                        onError={handleImageError}
-                      />
-                      <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">
-                        Available
-                      </div>
-                      <div className="absolute top-3 left-3 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                        <Star className="inline h-3 w-3 mr-1" />
-                        Featured
-                      </div>
-                    </div>
-
-                    <div className="p-5">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                        {prop.name}
-                      </h3>
-                      <div className="flex items-center text-gray-600 text-sm mb-3">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        <span>{prop.location}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-2xl font-bold text-green-600">
-                            Ksh {prop.rent?.toLocaleString()}
-                          </span>
-                          <span className="text-gray-500 text-sm">/month</span>
-                        </div>
-                        <div className="text-blue-600 font-medium text-sm group-hover:text-blue-800">
-                          View Details →
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* Call to Action */}
