@@ -87,9 +87,22 @@ export default function SpaceDetails({ space, onClose }) {
                 </div>
 
                 <p className="mb-3">{space.description}</p>
-                <p><strong>Space Type:</strong> {space.space_type}</p>
-                <p><strong>Maximum Guests:</strong> {space.max_guests}</p>
-                <p><strong>Price:</strong> Kshs {space.price_per_hour}/hr</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 shadow p-4 rounded-xl bg-white">
+                    <div className="text-center p-4 bg-green-50 rounded-xl">
+                        <div className="text-sm text-gray-600">Space Type</div>
+                        <div className="text-lg font-bold text-green-600">{space?.space_type}</div>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-xl">
+                        <div className="text-sm text-gray-600">Max Guests</div>
+                        <div className="text-lg font-bold text-blue-600">{space?.max_guests}</div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-xl">
+                        <div className="text-sm text-gray-600">Kshs Per Hour</div>
+                        <div className="text-lg font-bold text-purple-600">
+                            {parseFloat(space?.price_per_hour || 0).toFixed(2)}
+                        </div>
+                    </div>
+                </div>
 
                 {/* Reviews */}
                 <div className="mt-4 border-t pt-4 flex-1">
