@@ -1,9 +1,7 @@
 
-import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Home, MapPin, Star, Users, Shield } from "lucide-react";
+import { Home, MapPin, Users, Shield } from "lucide-react";
 import Spaces from "./Spaces";
-import SpaceCreation from "./SpaceCreation";
 
 const HomePage = () => {
 
@@ -73,7 +71,6 @@ const HomePage = () => {
               Featured Spaces
             </h2>
             <Spaces />
-            <SpaceCreation onSpaceCreated={(newspace) => {setSpaces((prev) => [newspace, ...prev])}}/>
           </div>
         </div>
           <div className="flex items-center text-blue-600">
