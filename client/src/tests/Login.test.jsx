@@ -140,7 +140,7 @@ describe('Login', () => {
 
     renderWithContext(<Login />, authenticatedAuthValue);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/admin/dashboard');
+    expect(mockNavigate).toHaveBeenCalledWith('/admin-dashboard');
   });
 
   it('redirects owner user to owner dashboard', () => {
@@ -158,7 +158,7 @@ describe('Login', () => {
 
     renderWithContext(<Login />, authenticatedAuthValue);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/owner/dashboard');
+    expect(mockNavigate).toHaveBeenCalledWith('/owner-dashboard');
   });
 
   it('redirects client user to client dashboard', () => {
@@ -176,7 +176,7 @@ describe('Login', () => {
 
     renderWithContext(<Login />, authenticatedAuthValue);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/client/dashboard');
+    expect(mockNavigate).toHaveBeenCalledWith('/client-dashboard');
   });
 
   it('redirects user with multiple roles to admin dashboard (admin priority)', () => {
@@ -194,7 +194,7 @@ describe('Login', () => {
 
     renderWithContext(<Login />, authenticatedAuthValue);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/admin/dashboard');
+    expect(mockNavigate).toHaveBeenCalledWith('/admin-dashboard');
   });
 
   it('redirects user with no roles to profile', () => {
