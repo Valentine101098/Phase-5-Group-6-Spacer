@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { X, CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { API_BASE_URL } from "../config/api";
 
 export default function ReviewFormModal({ spaceId, bookingId, onClose, onReviewAdded }) {
   const { user, accessToken } = useAuth();
@@ -21,7 +22,7 @@ export default function ReviewFormModal({ spaceId, bookingId, onClose, onReviewA
     setLoading(true);
     setError(null);
 
-    fetch(`http://127.0.0.1:5000/api/reviews/spaces/${spaceId}?limit=5`)
+    fetch(`${API_BASE_URL}/api/reviews/spaces${spaceId}?limit=5`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch reviews");
         return res.json();
@@ -40,7 +41,7 @@ export default function ReviewFormModal({ spaceId, bookingId, onClose, onReviewA
   const fetchUserReview = () => {
     if (!user || !accessToken) return;
 
-    fetch(`http://127.0.0.1:5000/api/reviews/spaces/${spaceId}/user`, {
+    fetch(`${API_BASE_URL}/api/reviews/spaces/${spaceId}/user`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
       .then((res) => {
@@ -74,8 +75,8 @@ export default function ReviewFormModal({ spaceId, bookingId, onClose, onReviewA
     const activeReview = editingReview || userReview;
     const method = activeReview ? "PATCH" : "POST";
     const url = activeReview
-      ? `http://127.0.0.1:5000/api/reviews/${activeReview.id}`
-      : "http://127.0.0.1:5000/api/reviews/";
+      ? `${API_BASE_URL}/api/reviews/${activeReview.id}`
+      : `${API_BASE_URL}/api/reviews/`;
 
     fetch(url, {
       method,

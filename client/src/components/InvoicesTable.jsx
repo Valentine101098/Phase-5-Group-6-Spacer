@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronUp, ChevronDown, DollarSign, Calendar } from 'lucide-react';
 // import { bearerToken } from './tokens';
 import { useAuth } from '../contexts/AuthContext';
+import { API_BASE_URL } from '../config/api';
 import { formatCurrency } from './currency';
 
 
@@ -17,11 +18,11 @@ export function InvoicesTable() {
   useEffect(() => {
     if (!accessToken) {
       return
-    }    
+    }
     const fetchInvoices = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://127.0.0.1:5000/api/invoices/', {
+        const response = await fetch(`${API_BASE_URL}/api/invoices/`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -82,7 +83,7 @@ export function InvoicesTable() {
         inv.id.toString().includes(searchTerm.toLowerCase()) ||
         inv.space_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inv.status.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesStatus = statusFilter === 'all' || inv.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -114,8 +115,8 @@ export function InvoicesTable() {
     if (sortConfig.key !== column) {
       return <ChevronUp className="w-4 h-4 text-gray-400" />;
     }
-    return sortConfig.direction === 'asc' ? 
-      <ChevronUp className="w-4 h-4 text-blue-600" /> : 
+    return sortConfig.direction === 'asc' ?
+      <ChevronUp className="w-4 h-4 text-blue-600" /> :
       <ChevronDown className="w-4 h-4 text-blue-600" />;
   };
 
@@ -131,7 +132,7 @@ export function InvoicesTable() {
     <div className="w-full max-w-7xl mx-auto p-6 bg-white">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Invoices Management</h1>
-        
+
         <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -143,7 +144,7 @@ export function InvoicesTable() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -176,15 +177,15 @@ export function InvoicesTable() {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="flex items-center">
             <DollarSign className="w-8 h-8 text-green-600 mr-3" />
             <div>
               <p className="text-sm font-medium text-green-600">Total Paid</p>
               <p className="text-2xl font-bold text-green-900">
-                {formatCurrency(
-                  filteredAndSortedInvoices.reduce((sum, inv) => 
+                {formatAmount(
+                  filteredAndSortedInvoices.reduce((sum, inv) =>
                     sum + (inv.status === 'paid' ? parseFloat(inv.amount) : 0), 0
                   )
                 )}
@@ -199,8 +200,8 @@ export function InvoicesTable() {
             <div>
               <p className="text-sm font-medium text-yellow-600">Outstanding</p>
               <p className="text-2xl font-bold text-yellow-900">
-                {formatCurrency(
-                  filteredAndSortedInvoices.reduce((sum, inv) => 
+                {formatAmount(
+                  filteredAndSortedInvoices.reduce((sum, inv) =>
                     sum + (inv.status !== 'paid' ? parseFloat(inv.amount) : 0), 0
                   )
                 )}
