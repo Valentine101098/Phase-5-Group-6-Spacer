@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 
 const getDashboardPath = (roles) => {
@@ -96,10 +97,10 @@ function Login() {
         </button>
       </form>
       <p className="mt-4 text-gray-600">
-        Don't have an account? <a href="/signup" className="text-primary hover:text-secondary hover:underline">Sign Up</a>
+        Don't have an account? <Link to="/signup" className="text-primary hover:text-secondary hover:underline">Sign Up</Link>
       </p>
       <p className="mt-2 text-gray-600">
-        Forgot your password? <a href="/forgot-password" className="text-primary hover:text-secondary hover:underline">Reset it</a>
+        Forgot your password? <Link to="/forgot-password" className="text-primary hover:text-secondary hover:underline">Reset it</Link>
       </p>
     </div>
   );
