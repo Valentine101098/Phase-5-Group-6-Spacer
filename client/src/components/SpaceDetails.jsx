@@ -2,13 +2,25 @@ import { useState, useEffect } from "react";
 import SpaceReviewForm from "./SpaceReviewForm";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function SpaceDetails({ space, onClose }) {
     const [reviews, setReviews] = useState([]);
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [editingReview, setEditingReview] = useState(null);
     const [userBookings, setUserBookings] = useState([]);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const { user, accessToken } = useAuth();
+
+    const totalImages = space.images.length;
+
+    const goPrev = () => {
+        setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? totalImages - 1 : prevIndex - 1));
+    };
+    
+    const goNext = () => {
+        setCurrentImageIndex((prevIndex) => (prevIndex === totalImages - 1 ? 0 : prevIndex + 1));
+    };  
 
     const fetchReviews = () => {
         fetch(`http://127.0.0.1:5000/api/reviews/spaces/${space.id}?limit=5`)
@@ -75,16 +87,56 @@ export default function SpaceDetails({ space, onClose }) {
                     </span>
                 </h2>
 
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                    {space.images.slice(0, 4).map((imgUrl, index) => (
-                        <img
-                            key={index}
-                            src={imgUrl}
-                            alt={`Space Image ${index + 1}`}
-                            className="w-full h-40 object-cover shadow-lg rounded-lg"
-                        />
-                    ))}
+                {/* Gallery Section */}
+                <div className="flex justify-center shadow rounded p-4 mb-4">
+                    <div className="grid gap-4 max-w-4xl w-full">
+                        {/* Featured Image with arrows + counter */}
+                        {space.images[currentImageIndex] && (
+                            <div className="relative flex justify-center">
+                                <button
+                                    onClick={goPrev}
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full hover:bg-opacity-70"
+                                >
+                                    <ChevronLeft size={24} />
+                                </button>
+                                <img
+                                    src={space.images[currentImageIndex]}
+                                    alt={`Featured Space ${currentImageIndex + 1}`}
+                                    className="h-auto max-w-full rounded-lg object-cover shadow-lg"
+                                />
+
+                                <button
+                                    onClick={goNext}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full hover:bg-opacity-70"
+                                >
+                                    <ChevronRight size={24} />
+                                </button>
+
+                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-60 text-white text-sm px-3 py-1 rounded-full">
+                                    {currentImageIndex + 1} / {totalImages}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-5 gap-4 justify-center">
+                            {space.images.slice(0, 6).map((imgUrl, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setCurrentImageIndex(index)}
+                                    className={`focus:outline-none ${index === currentImageIndex ? "ring-2 ring-green-500 rounded-lg" : ""
+                                        }`}
+                                >
+                                    <img
+                                        src={imgUrl}
+                                        alt={`Space Thumbnail ${index + 1}`}
+                                        className="h-auto max-w-full rounded-lg object-cover"
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
+
 
                 <p className="mb-3">{space.description}</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 shadow p-4 rounded-xl bg-white">
