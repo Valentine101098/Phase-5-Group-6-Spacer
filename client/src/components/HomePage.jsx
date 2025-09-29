@@ -56,7 +56,7 @@ const SpaceSearch = ({ onSearch, onClear }) => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}{queryParams.toString()}`);
+      const response = await fetch(`${API_BASE_URL}/spaces?${queryParams.toString()}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
