@@ -3,6 +3,7 @@ import { Search, ChevronUp, ChevronDown, DollarSign, Calendar } from 'lucide-rea
 // import { bearerToken } from './tokens';
 import { useAuth } from '../contexts/AuthContext';
 import { API_BASE_URL } from '../config/api';
+import { formatCurrency } from './currency';
 
 
 export function InvoicesTable() {
@@ -48,12 +49,12 @@ export function InvoicesTable() {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const formatAmount = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+  // const formatAmount = (amount) => {
+  //   return new Intl.NumberFormat('en-US', {
+  //     style: 'currency',
+  //     currency: 'USD',
+  //   }).format(amount);
+  // };
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -240,7 +241,7 @@ export function InvoicesTable() {
               <tr key={inv.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{inv.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{inv.space_title || '—'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatAmount(inv.amount)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatCurrency(inv.amount)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{inv.payment_method || '—'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(inv.paid_at)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
