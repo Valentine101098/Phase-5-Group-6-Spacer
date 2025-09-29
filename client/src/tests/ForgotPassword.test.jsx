@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import ForgotPassword from '../components/ForgotPassword';
+import { API_BASE_URL } from '../config/api';
 
 const mockNavigate = vi.fn();
 
@@ -75,7 +76,7 @@ describe('ForgotPassword', () => {
       expect(screen.getByText('Password reset link sent to your email.')).toBeInTheDocument();
     });
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:5000/auth/forgot-password', {
+    expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/auth/forgot-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

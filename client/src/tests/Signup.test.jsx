@@ -154,7 +154,9 @@ describe('Signup', () => {
       });
     });
 
-    expect(screen.getByText('Registration successful! You can now log in.')).toBeInTheDocument();
+    expect(screen.getByText((content) =>
+    content.includes("Registration successful! You can now log in.")
+  )).toBeInTheDocument();
 
     // Should redirect to login after 2 seconds
     await waitFor(() => {

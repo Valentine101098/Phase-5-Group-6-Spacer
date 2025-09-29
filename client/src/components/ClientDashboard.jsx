@@ -5,6 +5,7 @@ import SpaceCard from './SpaceCard';
 import SpaceDetails from './SpaceDetails';
 import { BookingsTable } from './BookingsTable';
 import { InvoicesTable } from './InvoicesTable';
+import { formatCurrency } from './currency';
 
 import { Link } from 'react-router-dom';
 
@@ -190,7 +191,7 @@ const ClientDashboard = () => {
           {/* Price Badge */}
           <div className="absolute top-3 right-3">
             <span className="bg-black bg-opacity-70 text-white px-2 py-1 text-xs font-semibold rounded">
-              Ksh {space.price_per_hour || 0}/hr
+              {formatCurrency(space.price_per_hour)}/hr
             </span>
           </div>
         </div>
@@ -356,8 +357,8 @@ const ClientDashboard = () => {
               />
               <StatCard 
                 icon={CreditCard} 
-                title="Total Spent (Ksh)" 
-                value={`${clientStats.totalSpent.toFixed(2)}`} 
+                title="Total Spent" 
+                value={formatCurrency(clientStats.totalSpent)} 
                 subtitle="All time" 
                 color="orange" 
               />
@@ -409,7 +410,7 @@ const ClientDashboard = () => {
                           </div>
                           <div>
                             <p className="font-medium">Amount</p>
-                            <p className="font-semibold text-gray-900">Ksh {parseFloat(booking.total_amount || 0).toFixed(2)}</p>
+                            <p className="font-semibold text-gray-900">{formatCurrency(booking.total_amount)}</p>
                           </div>
                         </div>
                         <div className="flex justify-end mt-4 space-x-2">

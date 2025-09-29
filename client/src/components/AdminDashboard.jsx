@@ -5,6 +5,8 @@ import { BookingsTable } from './BookingsTable';
 import { InvoicesTable } from './InvoicesTable';
 import SpaceCard from './SpaceCard';
 import SpaceDetails from './SpaceDetails';
+import { API_BASE_URL } from '../config/api';
+import { formatCurrency } from './currency';
 
 const AdminDashboard = () => {
   const { makeAuthenticatedRequest, user, isAuthenticated } = useAuth();
@@ -15,7 +17,7 @@ const AdminDashboard = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Modal states
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -109,7 +111,7 @@ const AdminDashboard = () => {
     try {
       setActionLoading(true);
 
-      const response = await fetch('http://127.0.0.1:5000/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -125,7 +127,7 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         setActionMessage({ type: 'success', text: 'User created successfully!' });
-        
+
         if (addUserData.role !== 'client' && data.user) {
           try {
             const rolesResponse = await makeAuthenticatedRequest('/api/roles/', 'GET');
@@ -176,7 +178,7 @@ const AdminDashboard = () => {
       if (editFormData.first_name !== selectedUser.first_name) payload.first_name = editFormData.first_name;
       if (editFormData.last_name !== selectedUser.last_name) payload.last_name = editFormData.last_name;
       if (editFormData.phone_number !== selectedUser.phone_number) payload.phone_number = editFormData.phone_number;
-      
+
       if (editFormData.password) {
         if (editFormData.password.length < 8) {
           setActionMessage({ type: 'error', text: 'Password must be at least 8 characters long.' });
@@ -241,12 +243,12 @@ const AdminDashboard = () => {
   // Use existing SpaceCard for admin
   const AdminSpaceCardWrapper = ({ space }) => {
     const [showDetails, setShowDetails] = useState(false);
-    
+
     return (
       <div className="relative">
         <SpaceCard space={space} />
         <div className="absolute top-2 right-2">
-          <button 
+          <button
             onClick={() => setShowDetails(true)}
             className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700"
             title="View Details"
@@ -254,7 +256,7 @@ const AdminDashboard = () => {
             <Eye className="h-4 w-4" />
           </button>
         </div>
-        
+
         {showDetails && (
           <SpaceDetails space={space} onClose={() => setShowDetails(false)} />
         )}
@@ -365,9 +367,9 @@ const AdminDashboard = () => {
               <StatCard icon={Users} title="Total Users" value={stats.totalUsers} />
               <StatCard icon={Building} title="Active Spaces" value={stats.totalSpaces} />
               <StatCard icon={Calendar} title="Total Bookings" value={stats.totalBookings} />
-              <StatCard icon={HandCoins} title="Revenue (Ksh)" value={`${stats.totalRevenue.toLocaleString()}`} />
+              <StatCard icon={HandCoins} title="Total Revenue" value={formatCurrency(stats.totalRevenue)} />
             </div>
-            
+
             {/* Recent Activity Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Recent Users */}
@@ -384,7 +386,7 @@ const AdminDashboard = () => {
                       </div>
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                         user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                        user.role === 'owner' ? 'bg-green-100 text-green-800' : 
+                        user.role === 'owner' ? 'bg-green-100 text-green-800' :
                         'bg-blue-100 text-blue-800'
                       }`}>
                         {user.role}
@@ -422,7 +424,7 @@ const AdminDashboard = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Total Revenue</span>
                       <span className="font-semibold text-green-600">
-                        Ksh {stats.totalRevenue.toLocaleString()}
+                        {formatCurrency(stats.totalRevenue)}
                       </span>
                     </div>
                   </div>
@@ -477,7 +479,7 @@ const AdminDashboard = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                             user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                            user.role === 'owner' ? 'bg-green-100 text-green-800' : 
+                            user.role === 'owner' ? 'bg-green-100 text-green-800' :
                             'bg-blue-100 text-blue-800'
                           }`}>
                             {user.role}
@@ -490,13 +492,13 @@ const AdminDashboard = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button 
+                          <button
                             onClick={() => handleEditUser(user)}
                             className="text-blue-600 hover:text-blue-900 mr-3"
                           >
                             Edit
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDeleteUser(user)}
                             className="text-red-600 hover:text-red-900"
                           >
@@ -562,11 +564,11 @@ const AdminDashboard = () => {
                 <X className="h-6 w-6" />
               </button>
             </div>
- 
+
             {actionMessage.text && (
               <div className={`mb-4 p-3 rounded ${
-                actionMessage.type === 'success' 
-                  ? 'bg-green-100 text-green-800' 
+                actionMessage.type === 'success'
+                  ? 'bg-green-100 text-green-800'
                   : 'bg-red-100 text-red-800'
               }`}>
                 <div className="flex items-center">
@@ -579,7 +581,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
- 
+
             <form onSubmit={submitAddUser} className="space-y-4">
               <div>
                 <label htmlFor="add-first-name" className="block text-left text-gray-700 text-sm font-bold mb-2">First Name:</label>
@@ -593,7 +595,7 @@ const AdminDashboard = () => {
                   required
                 />
               </div>
- 
+
               <div>
                 <label htmlFor="add-last-name" className="block text-left text-gray-700 text-sm font-bold mb-2">Last Name:</label>
                 <input
@@ -606,7 +608,7 @@ const AdminDashboard = () => {
                   required
                 />
               </div>
- 
+
               <div>
                 <label htmlFor="add-email" className="block text-left text-gray-700 text-sm font-bold mb-2">Email:</label>
                 <input
@@ -619,7 +621,7 @@ const AdminDashboard = () => {
                   required
                 />
               </div>
- 
+
               <div>
                 <label htmlFor="add-phone-number" className="block text-left text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
                 <input
@@ -632,7 +634,7 @@ const AdminDashboard = () => {
                   required
                 />
               </div>
- 
+
               <div>
                 <label htmlFor="add-password" className="block text-left text-gray-700 text-sm font-bold mb-2">Password:</label>
                 <input
@@ -658,7 +660,7 @@ const AdminDashboard = () => {
                   required
                 />
               </div>
- 
+
               <div>
                 <label htmlFor="add-role" className="block text-left text-gray-700 text-sm font-bold mb-2">Role:</label>
                 <select
@@ -673,7 +675,7 @@ const AdminDashboard = () => {
                   <option value="admin">Admin</option>
                 </select>
               </div>
- 
+
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
@@ -712,8 +714,8 @@ const AdminDashboard = () => {
 
             {actionMessage.text && (
               <div className={`mb-4 p-3 rounded ${
-                actionMessage.type === 'success' 
-                  ? 'bg-green-100 text-green-800' 
+                actionMessage.type === 'success'
+                  ? 'bg-green-100 text-green-800'
                   : 'bg-red-100 text-red-800'
               }`}>
                 <div className="flex items-center">
@@ -822,8 +824,8 @@ const AdminDashboard = () => {
 
             {actionMessage.text && (
               <div className={`mb-4 p-3 rounded ${
-                actionMessage.type === 'success' 
-                  ? 'bg-green-100 text-green-800' 
+                actionMessage.type === 'success'
+                  ? 'bg-green-100 text-green-800'
                   : 'bg-red-100 text-red-800'
               }`}>
                 <div className="flex items-center">

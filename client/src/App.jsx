@@ -51,13 +51,13 @@ function AppContent() {
               {user && user.roles && (
                 <>
                   {user.roles.includes('admin') && (
-                    <Link to="/admin-dashboard">Admin Dashboard</Link>
+                    <Link to="/admin-dashboard">My Dashboard</Link>
                   )}
                   {user.roles.includes('client') && (
-                    <Link to="/client-dashboard">Client Dashboard</Link>
+                    <Link to="/client-dashboard">My Dashboard</Link>
                   )}
                   {user.roles.includes('owner') && (
-                    <Link to="/owner-dashboard">Owner Dashboard</Link>
+                    <Link to="/owner-dashboard">My Dashboard</Link>
                   )}
                 </>
               )}
@@ -73,7 +73,7 @@ function AppContent() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-       
+
 <Route path="/spaces/:id/booking" element={<PrivateRoute><BookingPage /></PrivateRoute>} />
 
 <Route path="/invoices/:id" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
@@ -81,7 +81,7 @@ function AppContent() {
 <Route path="/dashboard/bookings" element={<PrivateRoute><BookingsTable /></PrivateRoute>} />
 
 <Route path="/dashboard/invoices" element={<PrivateRoute><InvoicesTable /></PrivateRoute>} />
-         
+
 
           <Route
             path="/profile"
@@ -91,7 +91,7 @@ function AppContent() {
               </PrivateRoute>
             }
           />
-              
+
           <Route
             path="/admin-dashboard"
             element={
@@ -119,7 +119,7 @@ function AppContent() {
             }
           />
 
-          <Route path="*" element={<NoPage />} /> 
+          <Route path="*" element={<NoPage />} />
         </Routes>
       </div>
     </>

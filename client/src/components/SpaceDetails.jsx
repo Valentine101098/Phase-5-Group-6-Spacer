@@ -3,6 +3,7 @@ import SpaceReviewForm from "./SpaceReviewForm";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { API_BASE_URL } from "../config/api";
 
 export default function SpaceDetails({ space, onClose }) {
     const [reviews, setReviews] = useState([]);
@@ -23,7 +24,7 @@ export default function SpaceDetails({ space, onClose }) {
     };  
 
     const fetchReviews = () => {
-        fetch(`http://127.0.0.1:5000/api/reviews/spaces/${space.id}?limit=5`)
+        fetch(`${API_BASE_URL}/api/reviews/spaces/${space.id}?limit=5`)
             .then(res => res.json())
             .then(data => setReviews(data))
             .catch(err => console.error("Error fetching reviews:", err));
@@ -31,7 +32,7 @@ export default function SpaceDetails({ space, onClose }) {
 
     const fetchUserBookings = () => {
         if (user) {
-            fetch(`http://127.0.0.1:5000/api/bookings/`, {
+            fetch(`${API_BASE_URL}/api/bookings/`, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
                 }
@@ -179,7 +180,7 @@ export default function SpaceDetails({ space, onClose }) {
                                         </button>
                                         <button
                                             onClick={() => {
-                                                fetch(`http://127.0.0.1:5000/api/reviews/${review.id}`, {
+                                                fetch(`${API_BASE_URL}/api/reviews/${review.id}`, {
                                                     method: "DELETE",
                                                     headers: {
                                                         Authorization: `Bearer ${accessToken}`,

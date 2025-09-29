@@ -6,6 +6,7 @@ import SpaceCreation from './SpaceCreation';
 import SpaceDetails from './SpaceDetails';
 import { BookingsTable } from './BookingsTable';
 import { InvoicesTable } from './InvoicesTable';
+import { formatCurrency } from './currency';
 
 const OwnerDashboard = () => {
   const { user, isAuthenticated, makeAuthenticatedRequest } = useAuth();
@@ -303,8 +304,8 @@ const OwnerDashboard = () => {
               />
               <StatCard 
                 icon={Wallet} 
-                title="Revenue (Ksh)" 
-                value={`${ownerStats.monthlyRevenue.toLocaleString()}`} 
+                title="Revenue" 
+                value={formatCurrency(ownerStats.monthlyRevenue)} 
                 subtitle="Total earned"
                 color="purple" 
               />
@@ -351,7 +352,7 @@ const OwnerDashboard = () => {
                           <div className="flex justify-between items-center text-sm text-gray-600">
                             <span>{new Date(booking.start_time).toLocaleDateString()}</span>
                             <span className="font-semibold text-gray-900">
-                              Ksh {parseFloat(booking.total_amount || 0).toFixed(2)}
+                              {formatCurrency(booking.total_amount)}
                             </span>
                           </div>
                         </div>

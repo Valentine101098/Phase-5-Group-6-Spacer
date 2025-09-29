@@ -1,12 +1,13 @@
 // features/temp/api.js
 // import { bearerToken } from '../components/tokens';
 // import { useAuth } from '../../../contexts/AuthContext';
+import { API_BASE_URL } from '../config/api';
 
-const BASE_URL = 'http://127.0.0.1:5000/api';
+// const BASE_URL = 'http://127.0.0.1:5000/api';
 
 
 export async function fetchSpaceById(id) {
-  const response = await fetch(`${BASE_URL}/spaces/${id}`);
+  const response = await fetch(`${API_BASE_URL}/api/spaces/${id}`);
   if (!response.ok) {
     throw new Error('Failed to fetch space details');
   }
@@ -14,7 +15,7 @@ export async function fetchSpaceById(id) {
 }
 
 export async function createBooking(bookingData, bearerToken) {
-  const response = await fetch(`${BASE_URL}/bookings/`, {
+  const response = await fetch(`${API_BASE_URL}/api/bookings/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -25,7 +26,7 @@ export async function createBooking(bookingData, bearerToken) {
 
   if (!response.ok) {
     const errorData = await response.json();
-    
+
     throw new Error(errorData.error || 'Failed to create booking');
   }
   return response.json();
