@@ -29,7 +29,12 @@ export default function Spaces() {
     }, []);
 
     if (loading) {
-        return <div>Loading spaces...</div>;
+        return <div className="fixed inset-0 flex items-center justify-center bg-gray-50 z-50">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+                        <p className="text-lg font-semibold text-black">Loading spaces...</p>
+                    </div>
+                </div>;
     }
 
     if (error) {
