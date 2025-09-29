@@ -1,9 +1,10 @@
 // src/contexts/AuthContext.js
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { API_BASE_URL } from '../config/api';
 
 const AuthContext = createContext(null);
 
-const BASE_URL = 'http://127.0.0.1:5000'; // Ensure this matches your backend URL (local or Render)
+// const BASE_URL = 'http://127.0.0.1:5000'; // Ensure this matches your backend URL (local or Render)
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -50,7 +51,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}${url}`, {
+      const response = await fetch(`${API_BASE_URL}${url}`, {
         method: method,
         headers: headers,
         body: data ? JSON.stringify(data) : null,
@@ -66,7 +67,7 @@ export const AuthProvider = ({ children }) => {
           // Retry the original request with the new access token
           currentAccessToken = refreshResult.data.access_token;
           headers['Authorization'] = `Bearer ${currentAccessToken}`;
-          const retryResponse = await fetch(`${BASE_URL}${url}`, {
+          const retryResponse = await fetch(`${API_BASE_URL}${url}`, {
             method: method,
             headers: headers,
             body: data ? JSON.stringify(data) : null,
@@ -96,7 +97,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
