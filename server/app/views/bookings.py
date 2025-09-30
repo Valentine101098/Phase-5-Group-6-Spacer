@@ -5,6 +5,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.models import Booking, Space, AgreementTemplate, AgreementInstance, Invoice, db
 from .auth import roles_required
 from datetime import datetime,  timedelta, timezone
+from sqlalchemy import or_, asc, desc, func, cast, String
 
 bookings_bp = Blueprint("bookings", __name__)
 bookings_api = Api(bookings_bp)
@@ -46,27 +47,75 @@ def booking_to_dict_safe(booking):
     }
 
 
+
+
 class BookingListResource(Resource):
     @jwt_required()
     def get(self):
-        """Get all bookings (admin sees all, client sees own, owner sees bookings of their spaces)"""
+        """Get bookings with search, filter, sort, and pagination"""
         user_id = get_jwt_identity()
         roles = get_jwt().get("roles", [])
 
         if "admin" in roles:
-            bookings = Booking.query.all()
+            query = Booking.query
         elif "owner" in roles:
-            bookings = (
-                Booking.query.join(Space)
-                .filter(Space.owner_id == user_id)
-                .all()
-            )
+            query = Booking.query.join(Space).filter(Space.owner_id == user_id)
         elif "client" in roles:
-            bookings = Booking.query.filter_by(user_id=user_id).all()
+            query = Booking.query.filter(Booking.user_id == user_id)
         else:
-            bookings = []
+            return {"data": [], "total": 0, "page": 1, "pages": 0}, 200
 
-        return {"data": [booking_to_dict_safe(b) for b in bookings]}, 200
+        search = request.args.get("search", "").strip().lower()
+        if search:
+            query = query.join(Space).filter(
+                or_(
+                    func.cast(Booking.id, db.String).ilike(f"%{search}%"),
+                    func.lower(Space.title).ilike(f"%{search}%"),
+                    func.lower(Booking.status.cast(db.String)).ilike(f"%{search}%"),
+                )
+            )
+
+
+        status_filter = request.args.get("status")
+        if status_filter:
+            query = query.filter(
+                func.lower(cast(Booking.status, String)) == status_filter.lower()
+            )
+
+        sort_key = request.args.get("sort", "id")  
+        sort_dir = request.args.get("direction", "asc")
+
+        sort_mapping = {
+            "id": Booking.id,
+            "space_title": Space.title,
+            "checkin": Booking.start_time,
+            "checkout": Booking.end_time,
+            "duration": (Booking.end_time - Booking.start_time),
+            "guests": Booking.estimated_guests,
+            "amount": Booking.total_amount,
+            "status": Booking.status,
+        }
+
+        if sort_key in sort_mapping:
+            sort_column = sort_mapping[sort_key]
+            if sort_dir == "desc":
+                query = query.order_by(desc(sort_column))
+            else:
+                query = query.order_by(asc(sort_column))
+
+        page = request.args.get("page", 1, type=int)
+        per_page = 10
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+        bookings = [booking_to_dict_safe(b) for b in pagination.items]
+
+        return {
+            "data": bookings,
+            "total": pagination.total,
+            "page": pagination.page,
+            "pages": pagination.pages,
+        }, 200
+
 
 
     @jwt_required()

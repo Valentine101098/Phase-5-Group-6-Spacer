@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, ChevronUp, ChevronDown, Calendar, Users, DollarSign, Clock, X } from 'lucide-react';
-// import { bearerToken } from '../features/bookings/components/tokens';
+import React, { useState, useEffect } from 'react';
+import { Search, ChevronUp, ChevronDown, Calendar, Users, DollarSign, Clock, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import ReviewFormModal from './ReviewFormModal';
 import { Link } from "react-router-dom";
@@ -12,27 +11,52 @@ export function BookingsTable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
   const [statusFilter, setStatusFilter] = useState('all');
-  const { accessToken, user  } = useAuth()
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [total, setTotal] = useState(0);
+  const { accessToken, user } = useAuth();
+  const [reviewModalBooking, setReviewModalBooking] = useState(null);
+  const [stats, setStats] = useState({
+    confirmedCount: 0,
+    totalGuests: 0,
+    totalRevenue: 0,
+    avgDuration: 0
+  });
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPage(1);
+    }, 500); 
 
-const [reviewModalBooking, setReviewModalBooking] = useState(null);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-// const handleLeaveReview = (booking) => {
-//   setReviewModalBooking(booking);
-// };
-
-  // Fetch bookings from API
   useEffect(() => {
     if (!accessToken) {
-      return
+      return;
     }
     const fetchBookings = async () => {
-      // console.log("fetchBookings: ",accessToken)
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/api/bookings/`, {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          sort: sortConfig.key,
+          direction: sortConfig.direction,
+        });
+
+        if (debouncedSearchTerm) {
+          params.append('search', debouncedSearchTerm);
+        }
+
+        if (statusFilter !== 'all') {
+          params.append('status', statusFilter);
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/bookings/?${params.toString()}`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -45,20 +69,29 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
 
         const data = await response.json();
         setBookings(data.data);
-        console.table(data.data);
+        setTotal(data.total);
+        setTotalPages(data.pages);
+        
+        // stats
+        const confirmed = data.data.filter(b => b.status === 'confirmed');
+        setStats({
+          confirmedCount: confirmed.length,
+          totalGuests: confirmed.reduce((sum, b) => sum + b.estimated_guests, 0),
+          totalRevenue: confirmed.reduce((sum, b) => sum + b.total_amount, 0),
+          avgDuration: confirmed.length > 0 
+            ? confirmed.reduce((sum, b) => sum + calculateDuration(b.start_time, b.end_time), 0) / confirmed.length 
+            : 0
+        });
       } catch (err) {
         setError(err.message);
-        console.log("failed_accesstoken: ", accessToken)
-
       } finally {
         setLoading(false);
       }
     };
 
     fetchBookings();
-  }, [accessToken]);
+  }, [accessToken, page, sortConfig, debouncedSearchTerm, statusFilter]);
 
-  // Calculate duration in hours
   const calculateDuration = (startTime, endTime) => {
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -67,11 +100,8 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
     return Math.round(diffInHours * 10) / 10;
   };
 
-
-
   // Cancel booking function
   const handleCancel = async (bookingId) => {
-    // console.log("handleCancel: ", accessToken)
     try {
       const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/cancel`, {
         method: 'PUT',
@@ -82,7 +112,6 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
       });
 
       if (response.ok) {
-
         setBookings(prevBookings =>
           prevBookings.map(booking =>
             booking.id === bookingId ? { ...booking, status: 'cancelled' } : booking
@@ -100,19 +129,23 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
       direction = 'desc';
     }
     setSortConfig({ key, direction });
+    setPage(1); 
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    
+  };
+
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+    setPage(1); 
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
-
-  // const formatAmount = (amount) => {
-  //   return new Intl.NumberFormat('en-US', {
-  //     style: 'currency',
-  //     currency: 'USD',
-  //   }).format(amount);
-  // };
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -123,71 +156,6 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
     }
   };
 
-  const uniqueStatuses = useMemo(() => {
-    const statuses = [...new Set(bookings.map(booking => booking.status))];
-    return statuses;
-  }, [bookings]);
-
-const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
-  let filtered = bookings.filter(booking => {
-    const matchesSearch =
-      booking.id.toString().includes(searchTerm.toLowerCase()) ||
-      booking.space_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.status.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === 'all' || booking.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  if (sortConfig.key) {
-    filtered.sort((a, b) => {
-      let aValue, bValue;
-
-      switch (sortConfig.key) {
-        case 'space_title':
-          aValue = a.space_title;
-          bValue = b.space_title;
-          break;
-        case 'checkin':
-          aValue = new Date(a.start_time);
-          bValue = new Date(b.start_time);
-          break;
-        case 'checkout':
-          aValue = new Date(a.end_time);
-          bValue = new Date(b.end_time);
-          break;
-        case 'duration':
-          aValue = calculateDuration(a.start_time, a.end_time);
-          bValue = calculateDuration(b.start_time, b.end_time);
-          break;
-        case 'guests':
-          aValue = a.estimated_guests;
-          bValue = b.estimated_guests;
-          break;
-        case 'amount':
-          aValue = a.total_amount;
-          bValue = b.total_amount;
-          break;
-        default:
-          aValue = a[sortConfig.key];
-          bValue = b[sortConfig.key];
-      }
-
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }
-
-  return {
-    filteredAndSortedBookings: filtered,
-    confirmedBookings: filtered.filter(b => b.status === "confirmed"),
-  };
-}, [bookings, searchTerm, statusFilter, sortConfig]);
-
-
   const SortIcon = ({ column }) => {
     if (sortConfig.key !== column) {
       return <ChevronUp className="w-4 h-4 text-gray-400" />;
@@ -197,7 +165,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
       <ChevronDown className="w-4 h-4 text-blue-600" />;
   };
 
-  if (loading) {
+  if (loading && page === 1) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -217,28 +185,26 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
               type="text"
               placeholder="Search bookings..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={handleStatusFilterChange}
             className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Statuses</option>
-            {uniqueStatuses.map(status => (
-              <option key={status} value={status}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </option>
-            ))}
+            <option value="confirmed">Confirmed</option>
+            <option value="pending">Pending</option>
+            <option value="cancelled">Cancelled</option>
           </select>
         </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-            Error: {error} ()
+            Error: {error}
           </div>
         )}
       </div>
@@ -250,7 +216,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
             <Calendar className="w-8 h-8 text-blue-600 mr-3" />
             <div>
               <p className="text-sm font-medium text-blue-600">Confirmed Bookings</p>
-              <p className="text-2xl font-bold text-blue-900">{confirmedBookings.length}</p>
+              <p className="text-2xl font-bold text-blue-900">{stats.confirmedCount}</p>
             </div>
           </div>
         </div>
@@ -260,9 +226,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
             <Users className="w-8 h-8 text-green-600 mr-3" />
             <div>
               <p className="text-sm font-medium text-green-600">Total Guests</p>
-              <p className="text-2xl font-bold text-green-900">
-                {confirmedBookings.reduce((sum, booking) => sum + booking.estimated_guests, 0)}
-              </p>
+              <p className="text-2xl font-bold text-green-900">{stats.totalGuests}</p>
             </div>
           </div>
         </div>
@@ -273,7 +237,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
             <div>
               <p className="text-sm font-medium text-yellow-600">Total Revenue</p>
               <p className="text-2xl font-bold text-yellow-900">
-                {formatCurrency(confirmedBookings.reduce((sum, booking) => sum + booking.total_amount, 0))}
+                {formatCurrency(stats.totalRevenue)}
               </p>
             </div>
           </div>
@@ -285,12 +249,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
             <div>
               <p className="text-sm font-medium text-purple-600">Avg Duration</p>
               <p className="text-2xl font-bold text-purple-900">
-                {confirmedBookings.length > 0
-                  ? (confirmedBookings.reduce((sum, booking) =>
-                      sum + calculateDuration(booking.start_time, booking.end_time), 0
-                    ) / confirmedBookings.length).toFixed(1) + 'h'
-                  : '0h'
-                }
+                {stats.avgDuration > 0 ? stats.avgDuration.toFixed(1) + 'h' : '0h'}
               </p>
             </div>
           </div>
@@ -380,7 +339,7 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredAndSortedBookings.map((booking) => (
+            {bookings.map((booking) => (
               <tr key={booking.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   #{booking.id}
@@ -408,61 +367,84 @@ const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
                     {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                   </span>
                 </td>
-<td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-  {user.roles.includes("client") && booking.status === "confirmed" ? (
-    <Link
-      to={`/spaces/${booking.space_id}/booking`}
-      className="text-blue-600 hover:text-blue-900 flex items-center space-x-1"
-    >
-      <span>Book Again</span>
-    </Link>
-  ) : user.roles.includes("client") && booking.status === "pending" ? (
-    <Link
-      to={`/invoices/${booking.invoice_id}`}
-      className="text-green-600 hover:text-green-900 flex items-center space-x-1"
-    >
-      <span>Pay Now</span>
-    </Link>
-  ) : (user.roles.includes("admin") || user.roles.includes("owner")) &&
-    new Date(booking.end_time) > new Date() &&
-    booking.status !== "cancelled" ? (
-    <button
-      onClick={() => handleCancel(booking.id)}
-      className="text-red-600 hover:text-red-900 flex items-center space-x-1"
-    >
-      <X className="w-4 h-4" />
-      <span>Cancel</span>
-    </button>
-  ) : (
-    <span>—</span>
-  )}
-</td>
-
-
-
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  {user.roles.includes("client") && booking.status === "confirmed" ? (
+                    <Link
+                      to={`/spaces/${booking.space_id}/booking`}
+                      className="text-blue-600 hover:text-blue-900 flex items-center space-x-1"
+                    >
+                      <span>Book Again</span>
+                    </Link>
+                  ) : user.roles.includes("client") && booking.status === "pending" ? (
+                    <Link
+                      to={`/invoices/${booking.invoice_id}`}
+                      className="text-green-600 hover:text-green-900 flex items-center space-x-1"
+                    >
+                      <span>Pay Now</span>
+                    </Link>
+                  ) : (user.roles.includes("admin") || user.roles.includes("owner")) &&
+                    new Date(booking.end_time) > new Date() &&
+                    booking.status !== "cancelled" ? (
+                    <button
+                      onClick={() => handleCancel(booking.id)}
+                      className="text-red-600 hover:text-red-900 flex items-center space-x-1"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Cancel</span>
+                    </button>
+                  ) : (
+                    <span>—</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {filteredAndSortedBookings.length === 0 && (
+        {bookings.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">No bookings found matching your criteria.</p>
           </div>
         )}
       </div>
-      {reviewModalBooking && (
-  <ReviewFormModal
-    spaceId={reviewModalBooking.space_id}
-    bookingId={reviewModalBooking.id}
-    onClose={() => setReviewModalBooking(null)}
-    onReviewAdded={(review) => {
-      console.log("New review saved:", review);
-    }}
-  />
-)}
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-gray-700">
+            Showing page {page} of {totalPages} ({total} total bookings)
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {reviewModalBooking && (
+        <ReviewFormModal
+          spaceId={reviewModalBooking.space_id}
+          bookingId={reviewModalBooking.id}
+          onClose={() => setReviewModalBooking(null)}
+          onReviewAdded={(review) => {
+            console.log("New review saved:", review);
+          }}
+        />
+      )}
     </div>
   );
-};
-
+}
