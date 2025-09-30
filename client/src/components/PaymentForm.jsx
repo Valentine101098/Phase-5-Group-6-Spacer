@@ -10,7 +10,7 @@ export function PaymentForm({
   return (
     <form onSubmit={handleValidatePayment} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
           Payment Confirmation Code
         </label>
         <input
@@ -18,11 +18,11 @@ export function PaymentForm({
           value={paymentConfirmationCode}
           onChange={(e) => setPaymentConfirmationCode(e.target.value)}
           placeholder="Enter your payment confirmation code"
-          className="w-full p-3 border border-gray-300 rounded-lg text-lg"
+          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg text-base sm:text-lg"
           disabled={validating}
           required
         />
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-xs sm:text-sm text-gray-600 mt-1">
           Enter the confirmation code you received after making the payment
         </p>
       </div>
@@ -33,17 +33,17 @@ export function PaymentForm({
         </div>
       )}
 
-      <div className="flex gap-4 pt-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
         <Link
           to="/"
-          className="bg-gray-600 text-white py-3 px-6 rounded hover:bg-gray-700"
+          className="bg-gray-600 text-white py-2 px-4 sm:py-3 sm:px-6 rounded hover:bg-gray-700 text-center text-sm sm:text-base"
         >
           Cancel
         </Link>
         <button
           type="submit"
           disabled={validating || !paymentConfirmationCode.trim()}
-          className={`flex-1 py-3 px-6 rounded font-medium ${
+          className={`flex-1 py-2 px-4 sm:py-3 sm:px-6 rounded font-medium text-sm sm:text-base ${
             !validating && paymentConfirmationCode.trim()
               ? 'bg-green-600 text-white hover:bg-green-700'
               : 'bg-gray-400 text-gray-200 cursor-not-allowed'
