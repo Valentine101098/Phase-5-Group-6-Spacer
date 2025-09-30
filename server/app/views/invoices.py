@@ -10,31 +10,69 @@ invoices_bp = Blueprint("invoices", __name__)
 invoices_api = Api(invoices_bp)
 
 
+from flask_restful import Resource
+from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
+from sqlalchemy import func, or_, cast, String
+from flask import request
+from app.models import db, Invoice, Booking, Space
+
 class InvoiceListResource(Resource):
     @jwt_required()
     def get(self):
-        """List invoices (client sees their own, owner sees invoices for their spaces, admin sees all)"""
+        """List invoices with pagination, search, filter, and sort"""
         user_id = get_jwt_identity()
         roles = get_jwt().get("roles", [])
 
         if "admin" in roles:
-            invoices = Invoice.query.all()
+            query = Invoice.query.join(Booking).join(Space)
         elif "owner" in roles:
-            invoices = (
+            query = (
                 Invoice.query
-                .join(Invoice.booking)
-                .join(Booking.space)
+                .join(Booking)
+                .join(Space)
                 .filter(Space.owner_id == user_id)
-                .all()
             )
         elif "client" in roles:
-            invoices = (
-                Invoice.query.join(Booking)
-                .filter(Booking.user_id == user_id)
-                .all()
-            )
+            query = Invoice.query.join(Booking).filter(Booking.user_id == user_id)
         else:
-            invoices = []
+            return {"data": [], "total": 0, "pages": 0}, 200
+
+        search = (request.args.get("search") or "").strip().lower()
+        if search:
+            query = query.filter(
+                or_(
+                    cast(Invoice.id, String).ilike(f"%{search}%"),
+                    func.lower(cast(Invoice.status, String)).ilike(f"%{search}%"),
+                    func.lower(cast(Invoice.payment_method, String)).ilike(f"%{search}%"),
+                    func.lower(Space.title).ilike(f"%{search}%"),
+                )
+            )
+
+        status_filter = request.args.get("status")
+        if status_filter and status_filter.lower() != "all":
+            query = query.filter(
+                func.lower(cast(Invoice.status, String)) == status_filter.lower()
+            )
+
+        sort = request.args.get("sort", "id")
+        direction = request.args.get("direction", "asc")
+        sort_column = {
+            "id": Invoice.id,
+            "amount": Invoice.amount,
+            "status": Invoice.status,
+            "payment_method": Invoice.payment_method,
+            "paid_at": Invoice.paid_at,
+            "space_title": Space.title,
+        }.get(sort, Invoice.id)
+
+        if direction == "desc":
+            sort_column = sort_column.desc()
+
+        query = query.order_by(sort_column)
+
+        page = int(request.args.get("page", 1))
+        per_page = 10
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
         return {
             "data": [
@@ -47,9 +85,13 @@ class InvoiceListResource(Resource):
                     "paid_at": i.paid_at.isoformat() if i.paid_at else None,
                     "space_title": i.booking.space.title if i.booking and i.booking.space else None,
                 }
-                for i in invoices
-            ]
+                for i in pagination.items
+            ],
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "page": pagination.page,
         }, 200
+
 
 
 
