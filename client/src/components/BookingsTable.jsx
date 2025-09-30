@@ -1,87 +1,34 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, ChevronUp, ChevronDown, Calendar, Users, DollarSign, Clock, X } from 'lucide-react';
+import React from 'react';
+import { Search, ChevronUp, ChevronDown, Calendar, Users, DollarSign, Clock, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import ReviewFormModal from './ReviewFormModal';
 import { Link } from "react-router-dom";
 import { API_BASE_URL } from '../config/api';
 import { formatCurrency } from './currency';
+import { calculateDuration } from './utils';
+import { useBookings } from './useBookings';
 
 export function BookingsTable() {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [statusFilter, setStatusFilter] = useState('all');
-  const { accessToken, user  } = useAuth()
+  const {
+    bookings,
+    loading,
+    error,
+    searchTerm,
+    setSearchTerm,
+    sortConfig,
+    setSortConfig,
+    statusFilter,
+    setStatusFilter,
+    page,
+    setPage,
+    totalPages,
+    total,
+    stats,
+    handleCancel
+  } = useBookings();
 
-  const [reviewModalBooking, setReviewModalBooking] = useState(null);
-
-  // Fetch bookings from API
-  useEffect(() => {
-    if (!accessToken) {
-      return
-    }
-    const fetchBookings = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/api/bookings/`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setBookings(data.data);
-        console.table(data.data);
-      } catch (err) {
-        setError(err.message);
-        console.log("failed_accesstoken: ", accessToken)
-
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookings();
-  }, [accessToken]);
-
-  // Calculate duration in hours
-  const calculateDuration = (startTime, endTime) => {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    const diffInMs = end - start;
-    const diffInHours = diffInMs / (1000 * 60 * 60);
-    return Math.round(diffInHours * 10) / 10;
-  };
-
-  // Cancel booking function
-  const handleCancel = async (bookingId) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/bookings${bookingId}/cancel`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        setBookings(prevBookings =>
-          prevBookings.map(booking =>
-            booking.id === bookingId ? { ...booking, status: 'cancelled' } : booking
-          )
-        );
-      }
-    } catch (err) {
-      console.error('Failed to cancel booking:', err);
-    }
-  };
+  const { user } = useAuth(); 
+  const [reviewModalBooking, setReviewModalBooking] = React.useState(null);
 
   const handleSort = (key) => {
     let direction = 'asc';
@@ -89,6 +36,17 @@ export function BookingsTable() {
       direction = 'desc';
     }
     setSortConfig({ key, direction });
+    setPage(1); 
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    
+  };
+
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+    setPage(1); 
   };
 
   const formatDate = (dateString) => {
@@ -105,70 +63,6 @@ export function BookingsTable() {
     }
   };
 
-  const uniqueStatuses = useMemo(() => {
-    const statuses = [...new Set(bookings.map(booking => booking.status))];
-    return statuses;
-  }, [bookings]);
-
-  const { filteredAndSortedBookings, confirmedBookings } = useMemo(() => {
-    let filtered = bookings.filter(booking => {
-      const matchesSearch =
-        booking.id.toString().includes(searchTerm.toLowerCase()) ||
-        booking.space_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.status.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus =
-        statusFilter === 'all' || booking.status === statusFilter;
-
-      return matchesSearch && matchesStatus;
-    });
-
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        let aValue, bValue;
-
-        switch (sortConfig.key) {
-          case 'space_title':
-            aValue = a.space_title;
-            bValue = b.space_title;
-            break;
-          case 'checkin':
-            aValue = new Date(a.start_time);
-            bValue = new Date(b.start_time);
-            break;
-          case 'checkout':
-            aValue = new Date(a.end_time);
-            bValue = new Date(b.end_time);
-            break;
-          case 'duration':
-            aValue = calculateDuration(a.start_time, a.end_time);
-            bValue = calculateDuration(b.start_time, b.end_time);
-            break;
-          case 'guests':
-            aValue = a.estimated_guests;
-            bValue = b.estimated_guests;
-            break;
-          case 'amount':
-            aValue = a.total_amount;
-            bValue = b.total_amount;
-            break;
-          default:
-            aValue = a[sortConfig.key];
-            bValue = b[sortConfig.key];
-        }
-
-        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-
-    return {
-      filteredAndSortedBookings: filtered,
-      confirmedBookings: filtered.filter(b => b.status === "confirmed"),
-    };
-  }, [bookings, searchTerm, statusFilter, sortConfig]);
-
   const SortIcon = ({ column }) => {
     if (sortConfig.key !== column) {
       return <ChevronUp className="w-4 h-4 text-gray-400" />;
@@ -178,7 +72,7 @@ export function BookingsTable() {
       <ChevronDown className="w-4 h-4 text-blue-600" />;
   };
 
-  if (loading) {
+  if (loading && page === 1) {
     return (
       <div className="flex items-center justify-center h-64 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -198,22 +92,20 @@ export function BookingsTable() {
               type="text"
               placeholder="Search bookings..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={handleSearchChange}
+              className="px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={handleStatusFilterChange}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Statuses</option>
-            {uniqueStatuses.map(status => (
-              <option key={status} value={status}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </option>
-            ))}
+            <option value="confirmed">Confirmed</option>
+            <option value="pending">Pending</option>
+            <option value="cancelled">Cancelled</option>
           </select>
         </div>
 
@@ -230,8 +122,8 @@ export function BookingsTable() {
           <div className="flex items-center">
             <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mr-2 sm:mr-3" />
             <div>
-              <p className="text-xs sm:text-sm font-medium text-blue-600">Confirmed</p>
-              <p className="text-lg sm:text-2xl font-bold text-blue-900">{confirmedBookings.length}</p>
+              <p className="text-xs sm:text-sm font-medium text-blue-600">Confirmed Bookings</p>
+              <p className="text-lg sm:text-2xl font-bold text-blue-900">{stats.confirmedCount}</p>
             </div>
           </div>
         </div>
@@ -241,9 +133,7 @@ export function BookingsTable() {
             <Users className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mr-2 sm:mr-3" />
             <div>
               <p className="text-xs sm:text-sm font-medium text-green-600">Total Guests</p>
-              <p className="text-lg sm:text-2xl font-bold text-green-900">
-                {confirmedBookings.reduce((sum, booking) => sum + booking.estimated_guests, 0)}
-              </p>
+              <p className="text-xs lg:text-2xl font-bold text-green-900">{stats.totalGuests}</p>
             </div>
           </div>
         </div>
@@ -252,9 +142,13 @@ export function BookingsTable() {
           <div className="flex items-center">
             <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600 mr-2 sm:mr-3" />
             <div>
-              <p className="text-xs sm:text-sm font-medium text-yellow-600">Revenue</p>
+              <p className="text-xs sm:text-sm font-medium text-yellow-600">
+    {user?.roles?.includes('owner') || user?.roles?.includes('admin') 
+        ? 'Total Revenue' 
+        : 'Total Spent'}
+</p>
               <p className="text-base sm:text-2xl font-bold text-yellow-900">
-                {formatCurrency(confirmedBookings.reduce((sum, booking) => sum + booking.total_amount, 0))}
+                {formatCurrency(stats.totalRevenue)}
               </p>
             </div>
           </div>
@@ -266,12 +160,7 @@ export function BookingsTable() {
             <div>
               <p className="text-xs sm:text-sm font-medium text-purple-600">Avg Duration</p>
               <p className="text-lg sm:text-2xl font-bold text-purple-900">
-                {confirmedBookings.length > 0
-                  ? (confirmedBookings.reduce((sum, booking) =>
-                      sum + calculateDuration(booking.start_time, booking.end_time), 0
-                    ) / confirmedBookings.length).toFixed(1) + 'h'
-                  : '0h'
-                }
+                {stats.avgDuration > 0 ? stats.avgDuration.toFixed(1) + 'h' : '0h'}
               </p>
             </div>
           </div>
@@ -280,7 +169,7 @@ export function BookingsTable() {
 
       {/* Mobile Card View */}
       <div className="block lg:hidden space-y-4">
-        {filteredAndSortedBookings.map((booking) => (
+        {bookings.map((booking) => (
           <div key={booking.id} className="bg-white border rounded-lg p-4 shadow-sm">
             <div className="flex justify-between items-start mb-3">
               <div>
@@ -429,7 +318,7 @@ export function BookingsTable() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredAndSortedBookings.map((booking) => (
+            {bookings.map((booking) => (
               <tr key={booking.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   #{booking.id}
@@ -491,12 +380,39 @@ export function BookingsTable() {
           </tbody>
         </table>
 
-        {filteredAndSortedBookings.length === 0 && (
+        {bookings.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">No bookings found matching your criteria.</p>
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-gray-700">
+            Showing page {page} of {totalPages} ({total} total bookings)
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {reviewModalBooking && (
         <ReviewFormModal

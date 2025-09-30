@@ -11,6 +11,16 @@ export function calculateTotalAmount({ startDate, endDate, startTime, endTime, p
   return Math.max(0, Math.round(diffInHours * parseFloat(pricePerHour)));
 }
 
+
+  export function calculateDuration(startTime, endTime) {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const diffInMs = end - start;
+    const diffInHours = diffInMs / (1000 * 60 * 60);
+    return Math.round(diffInHours * 10) / 10;
+  };
+
+
 // Add the API client class
 class ApiClient {
     constructor() {

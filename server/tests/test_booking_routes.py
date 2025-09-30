@@ -635,8 +635,8 @@ def test_client_cannot_cancel_others_booking(client, app, seed_data_bookings):
     data = json.loads(response.data)
     assert 'Not authorized' in data['error']
 
-def test_admin_owner_cancels_any_booking(client, app, seed_data_bookings):
-    """Test admin or owner can cancel any booking"""
+def test_admin_cancels_booking(client, app, seed_data_bookings):
+    """Test admin can cancel any booking"""
     admin_id = seed_data_bookings['admin_id']
     existing_booking_id = seed_data_bookings['existing_booking_id']
     token = get_token(app, admin_id)
@@ -648,8 +648,10 @@ def test_admin_owner_cancels_any_booking(client, app, seed_data_bookings):
     
     assert response.status_code == 200
     data = json.loads(response.data)
-    assert data['message'] == 'Booking cancelled by admin or owner.'
+    assert data['message'] == 'Booking cancelled by admin.'
     assert data['data']['status'] == 'cancelled'
+
+
 
 def test_cannot_cancel_already_cancelled_booking(client, app, seed_data_bookings):
     """Test cannot cancel an already cancelled booking"""

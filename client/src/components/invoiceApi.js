@@ -29,3 +29,45 @@ export async function validateInvoicePayment(id, confirmationCode, bearerToken) 
   }
   return data;
 }
+
+
+// Fetch paginated invoices
+export async function fetchInvoices({ page, sortKey, sortDirection, search, status }, bearerToken) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    sort: sortKey,
+    direction: sortDirection,
+  });
+
+  if (search) params.append('search', search);
+  if (status !== 'all') params.append('status', status);
+
+  const response = await fetch(`${API_BASE_URL}/api/invoices/?${params.toString()}`, {
+    headers: {
+      'Authorization': `Bearer ${bearerToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// invoice statistics
+export async function fetchInvoiceStats(bearerToken) {
+  const response = await fetch(`${API_BASE_URL}/api/invoices/stats`, {
+    headers: {
+      'Authorization': `Bearer ${bearerToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Stats fetch failed: ${response.status}`);
+  }
+
+  return response.json();
+}

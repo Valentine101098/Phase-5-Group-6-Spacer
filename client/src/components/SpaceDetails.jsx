@@ -19,23 +19,18 @@ export default function SpaceDetails({ space, onClose }) {
             .catch(err => console.error("Error fetching reviews:", err));
     };
 
-    const fetchUserBookings = () => {
-        if (user && accessToken) { // Ensure accessToken is available
-            fetch(`${API_BASE_URL}/api/bookings/`, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                }
-            })
-                .then(res => res.json())
-                .then(data => {
-                    const spaceBookings = data.data.filter(
-                        ({ space_id, user_id }) => space_id === space.id && user_id === user.id
-                    );
-                    setUserBookings(spaceBookings);
-                })
-                .catch(err => console.error("Error fetching user bookings:", err));
+const fetchUserBookings = () => {
+    fetch(`${API_BASE_URL}/api/bookings/?space_id=${space.id}`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
         }
-    };
+    })
+        .then(res => res.json())
+        .then(data => {
+            setUserBookings(data.data);
+        })
+        .catch(err => console.error("Error fetching user bookings:", err));
+};
 
     useEffect(() => {
         fetchReviews();
