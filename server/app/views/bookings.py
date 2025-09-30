@@ -61,8 +61,10 @@ class BookingListResource(Resource):
                 .filter(Space.owner_id == user_id)
                 .all()
             )
-        else:
+        elif "client" in roles:
             bookings = Booking.query.filter_by(user_id=user_id).all()
+        else:
+            bookings = []
 
         return {"data": [booking_to_dict_safe(b) for b in bookings]}, 200
 
@@ -196,23 +198,29 @@ class BookingResource(Resource):
         user_id = get_jwt_identity()
         roles = get_jwt().get("roles", [])
 
-        if booking.user_id != user_id and "admin" not in roles:
-            return {"error": "Not authorized"}, 403
+        if "admin" in roles:
+            return {"data": booking_to_dict_safe(booking)}, 200
 
-        return {"data": booking_to_dict_safe(booking)}, 200
+        if "owner" in roles and booking.space.owner_id == user_id:
+            return {"data": booking_to_dict_safe(booking)}, 200
+
+        if booking.user_id == user_id:
+            return {"data": booking_to_dict_safe(booking)}, 200
+
+        return {"error": "Not authorized"}, 403
+
 
 class BookingCancelResource(Resource):
 
     @jwt_required()
     def put(self, booking_id):
-        """Cancel booking (client or admin)"""
+        """Cancel booking (owner, or admin)"""
         booking = Booking.query.get_or_404(booking_id)
         user_id = get_jwt_identity()
         claims = get_jwt()
-        
+        roles = claims.get("roles", [])
 
-
-        if "admin" in claims.get("roles", []) or "owner" in claims.get("roles", []):
+        if "admin" in roles:
             if booking.status == "cancelled":
                 return {"error": "Booking already cancelled"}, 400
 
@@ -220,12 +228,25 @@ class BookingCancelResource(Resource):
             update_space_status(booking.space)
             db.session.commit()
             return {
-                "message": "Booking cancelled by admin or owner.",
+                "message": "Booking cancelled by admin.",
                 "data": booking_to_dict_safe(booking),
             }, 200
 
+        if "owner" in roles:
+            if booking.space.owner_id != user_id:
+                return {"error": "Not authorized to cancel this booking"}, 403
+            if booking.status == "cancelled":
+                return {"error": "Booking already cancelled"}, 400
 
-        if "client" in claims.get("roles", []):
+            booking.status = "cancelled"
+            update_space_status(booking.space)
+            db.session.commit()
+            return {
+                "message": "Booking cancelled by owner.",
+                "data": booking_to_dict_safe(booking),
+            }, 200
+
+        if "client" in roles:
             if booking.user_id != user_id:
                 return {"error": "Not authorized"}, 403
             if booking.status == "cancelled":
@@ -240,7 +261,6 @@ class BookingCancelResource(Resource):
                 "message": "Booking cancelled",
                 "data": booking_to_dict_safe(booking),
             }, 200
-
 
         return {"error": "Not authorized"}, 403
 
