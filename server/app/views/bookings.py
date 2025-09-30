@@ -64,6 +64,10 @@ class BookingListResource(Resource):
             query = Booking.query.filter(Booking.user_id == user_id)
         else:
             return {"data": [], "total": 0, "page": 1, "pages": 0}, 200
+        
+        space_id = request.args.get("space_id", type=int)
+        if space_id:
+            query = query.filter(Booking.space_id == space_id)       
 
         search = request.args.get("search", "").strip().lower()
         if search:
@@ -335,11 +339,6 @@ class BookingConfirmResource(Resource):
         return {"message": "Booking confirmed", "data": booking_to_dict_safe(booking)}, 200
 
 
-from flask_restful import Resource
-from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
-from datetime import datetime
-from app.models import db, Booking, Space
-
 class BookingStatsResource(Resource):
     @jwt_required()
     def get(self):
@@ -358,7 +357,8 @@ class BookingStatsResource(Resource):
                 "confirmedCount": 0,
                 "totalGuests": 0,
                 "totalRevenue": 0.0,
-                "avgDuration": 0.0
+                "avgDuration": 0.0,
+                "totalCount": 0.0
             }, 200
 
         bookings = query.all()
@@ -374,12 +374,14 @@ class BookingStatsResource(Resource):
             if b.start_time and b.end_time:
                 durations.append((b.end_time - b.start_time).total_seconds() / 3600)
         avg_duration = sum(durations) / len(durations) if durations else 0.0
+        
 
         return {
             "confirmedCount": confirmed_count,
             "totalGuests": total_guests,
             "totalRevenue": total_revenue,
-            "avgDuration": avg_duration
+            "avgDuration": avg_duration,
+            'totalCount': len(bookings),
         }, 200
 
 

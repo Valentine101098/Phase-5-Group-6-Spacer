@@ -142,7 +142,11 @@ export function BookingsTable() {
           <div className="flex items-center">
             <DollarSign className="w-8 h-8 text-yellow-600 mr-3" />
             <div>
-              <p className="text-sm font-medium text-yellow-600">Total Revenue</p>
+              <p className="text-sm font-medium text-yellow-600">
+    {user?.roles?.includes('owner') || user?.roles?.includes('admin') 
+        ? 'Total Revenue' 
+        : 'Total Spent'}
+</p>
               <p className="text-2xl font-bold text-yellow-900">
                 {formatCurrency(stats.totalRevenue)}
               </p>
