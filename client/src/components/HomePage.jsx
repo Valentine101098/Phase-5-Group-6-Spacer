@@ -178,7 +178,7 @@ const SpaceSearch = ({ onSearch, onClear }) => {
                 <select
                   value={searchParams.spaceType}
                   onChange={(e) => handleInputChange('spaceType', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ml-12 mt-1"
                 >
                   <option value="">All Types</option>
                   {spaceTypes.map(type => (
@@ -331,10 +331,10 @@ const HomePage = () => {
               onClearSearch={handleClearSearch}
             />
           </div>
-          <div className="flex items-center text-blue-600">
-            <MapPin className="h-5 w-5 mr-2" />
-            <span className="font-medium">Nairobi, Kenya</span>
-          </div>
+        </div>
+        <div className="flex items-center justify-center text-blue-600">
+          <MapPin className="h-5 w-5 mr-2" />
+          <div className="font-medium">Nairobi, Kenya</div>
         </div>
       </div>
 
