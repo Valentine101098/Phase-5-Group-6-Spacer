@@ -66,15 +66,6 @@ export function InvoicesTable() {
         setTotal(data.total);
         setTotalPages(data.pages);
 
-        //  stats
-        const paidInvoices = data.data.filter(inv => inv.status === 'paid');
-        const pendingInvoices = data.data.filter(inv => inv.status !== 'paid');
-        
-        setStats({
-          totalCount: data.data.length,
-          totalPaid: paidInvoices.reduce((sum, inv) => sum + parseFloat(inv.amount), 0),
-          totalOutstanding: pendingInvoices.reduce((sum, inv) => sum + parseFloat(inv.amount), 0)
-        });
       } catch (err) {
         setError(err.message);
       } finally {
@@ -85,6 +76,39 @@ export function InvoicesTable() {
     fetchInvoices();
   }, [accessToken, page, sortConfig, debouncedSearchTerm, statusFilter]);
 
+useEffect(() => {
+  if (!accessToken) {
+    return;
+  }
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/invoices/stats`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) throw new Error(`Stats fetch failed: ${response.status}`);
+
+      const statsData = await response.json();
+      setStats({
+        totalCount: statsData.totalCount,
+        totalPaid: statsData.totalPaid,
+        totalOutstanding: statsData.totalOutstanding
+      });
+    } catch (err) {
+      console.error("Error fetching invoice stats:", err);
+    }
+  };
+
+  fetchStats();
+}, [accessToken]);
+
+
+
+
   const formatDate = (dateString) => {
     if (!dateString) return '—';
     const date = new Date(dateString);
@@ -94,8 +118,8 @@ export function InvoicesTable() {
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case 'paid': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'unpaid': return 'bg-yellow-100 text-yellow-800';
+      case 'failed': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -159,8 +183,8 @@ export function InvoicesTable() {
           >
             <option value="all">All Statuses</option>
             <option value="paid">Paid</option>
-            <option value="pending">Unpaid</option>
-            <option value="cancelled">Failed</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="failed">Failed</option>
           </select>
         </div>
 

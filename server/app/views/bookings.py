@@ -335,7 +335,56 @@ class BookingConfirmResource(Resource):
         return {"message": "Booking confirmed", "data": booking_to_dict_safe(booking)}, 200
 
 
+from flask_restful import Resource
+from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
+from datetime import datetime
+from app.models import db, Booking, Space
+
+class BookingStatsResource(Resource):
+    @jwt_required()
+    def get(self):
+        """Return aggregated booking statistics (scoped by role)"""
+        user_id = get_jwt_identity()
+        roles = get_jwt().get("roles", [])
+
+        if "admin" in roles:
+            query = Booking.query.join(Space)
+        elif "owner" in roles:
+            query = Booking.query.join(Space).filter(Space.owner_id == user_id)
+        elif "client" in roles:
+            query = Booking.query.filter(Booking.user_id == user_id)
+        else:
+            return {
+                "confirmedCount": 0,
+                "totalGuests": 0,
+                "totalRevenue": 0.0,
+                "avgDuration": 0.0
+            }, 200
+
+        bookings = query.all()
+
+        confirmed = [b for b in bookings if b.status and b.status.lower() == "confirmed"]
+
+        confirmed_count = len(confirmed)
+        total_guests = sum(b.estimated_guests or 0 for b in confirmed)
+        total_revenue = sum(float(b.total_amount or 0) for b in confirmed)
+
+        durations = []
+        for b in confirmed:
+            if b.start_time and b.end_time:
+                durations.append((b.end_time - b.start_time).total_seconds() / 3600)
+        avg_duration = sum(durations) / len(durations) if durations else 0.0
+
+        return {
+            "confirmedCount": confirmed_count,
+            "totalGuests": total_guests,
+            "totalRevenue": total_revenue,
+            "avgDuration": avg_duration
+        }, 200
+
+
 bookings_api.add_resource(BookingListResource, "/")
 bookings_api.add_resource(BookingResource, "/<int:booking_id>")
 bookings_api.add_resource(BookingCancelResource, "/<int:booking_id>/cancel")
 bookings_api.add_resource(BookingConfirmResource, "/<int:booking_id>/confirm")
+bookings_api.add_resource(BookingStatsResource, "/stats")

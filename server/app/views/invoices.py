@@ -210,3 +210,43 @@ class InvoiceResource(Resource):
 
 
 invoices_api.add_resource(InvoiceResource, "/<int:invoice_id>")
+
+
+class InvoiceStatsResource(Resource):
+    @jwt_required()
+    def get(self):
+        """Return invoice statistics"""
+        user_id = get_jwt_identity()
+        roles = get_jwt().get("roles", [])
+
+        if "admin" in roles:
+            query = Invoice.query.join(Booking).join(Space)
+        elif "owner" in roles:
+            query = (
+                Invoice.query
+                .join(Booking)
+                .join(Space)
+                .filter(Space.owner_id == user_id)
+            )
+        elif "client" in roles:
+            query = Invoice.query.join(Booking).filter(Booking.user_id == user_id)
+        else:
+            return {
+                "totalCount": 0,
+                "totalPaid": 0.0,
+                "totalOutstanding": 0.0
+            }, 200
+
+        invoices = query.all()
+
+        total_count = len(invoices)
+        total_paid = sum(float(i.amount) for i in invoices if i.status.lower() == "paid")
+        total_outstanding = sum(float(i.amount) for i in invoices if i.status.lower() != "paid")
+
+        return {
+            "totalCount": total_count,
+            "totalPaid": total_paid,
+            "totalOutstanding": total_outstanding,
+        }, 200
+
+invoices_api.add_resource(InvoiceStatsResource, "/stats")

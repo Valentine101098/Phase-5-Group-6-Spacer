@@ -72,16 +72,6 @@ export function BookingsTable() {
         setTotal(data.total);
         setTotalPages(data.pages);
         
-        // stats
-        const confirmed = data.data.filter(b => b.status === 'confirmed');
-        setStats({
-          confirmedCount: confirmed.length,
-          totalGuests: confirmed.reduce((sum, b) => sum + b.estimated_guests, 0),
-          totalRevenue: confirmed.reduce((sum, b) => sum + b.total_amount, 0),
-          avgDuration: confirmed.length > 0 
-            ? confirmed.reduce((sum, b) => sum + calculateDuration(b.start_time, b.end_time), 0) / confirmed.length 
-            : 0
-        });
       } catch (err) {
         setError(err.message);
       } finally {
@@ -91,6 +81,38 @@ export function BookingsTable() {
 
     fetchBookings();
   }, [accessToken, page, sortConfig, debouncedSearchTerm, statusFilter]);
+
+useEffect(() => {
+  if (!accessToken) {
+    return;
+  }
+
+  const fetchBookingStats = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bookings/stats`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) throw new Error(`Stats fetch failed: ${response.status}`);
+
+      const statsData = await response.json();
+      setStats({
+        confirmedCount: statsData.confirmedCount,
+        totalGuests: statsData.totalGuests,
+        totalRevenue: statsData.totalRevenue,
+        avgDuration: statsData.avgDuration
+      });
+    } catch (err) {
+      console.error("Error fetching booking stats:", err);
+    }
+  };
+
+  fetchBookingStats();
+}, [accessToken]);
+
 
   const calculateDuration = (startTime, endTime) => {
     const start = new Date(startTime);
