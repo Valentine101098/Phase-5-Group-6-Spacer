@@ -1,3 +1,4 @@
+// src/components/LogoutButton.js
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -24,7 +25,7 @@ function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 sm:px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 text-sm sm:text-base"
+      className="bg-red-600 hover:bg-red-400 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 text-sm sm:text-base font-dancing"
     >
       Logout
     </button>
@@ -32,3 +33,6 @@ function LogoutButton() {
 }
 
 export default LogoutButton;
+
+
+"bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 sm:px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 text-sm sm:text-base"
