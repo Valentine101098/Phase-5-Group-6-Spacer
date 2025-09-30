@@ -46,7 +46,11 @@ const fetchUserBookings = () => {
 
     useEffect(() => {
         fetchReviews();
-        fetchUserBookings();
+        if (user && accessToken){
+            fetchUserBookings();
+        } else{
+            setUserBookings([]);
+        }
     }, [space.id, user, accessToken]); // Added accessToken to dependencies
 
     const hasBooked = userBookings.length > 0;
