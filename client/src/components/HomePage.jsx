@@ -178,7 +178,7 @@ const SpaceSearch = ({ onSearch, onClear }) => {
                 <select
                   value={searchParams.spaceType}
                   onChange={(e) => handleInputChange('spaceType', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ml-12"
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">All Types</option>
                   {spaceTypes.map(type => (
