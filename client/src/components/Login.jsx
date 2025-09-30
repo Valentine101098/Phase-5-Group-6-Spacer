@@ -2,11 +2,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
+import { Link } from 'react-router-dom'; // Keep this import
 
 const getDashboardPath = (roles) => {
   if (!roles || roles.length === 0) {
-
     return '/profile';
   }
   if (roles.includes('admin')) {
@@ -15,10 +14,8 @@ const getDashboardPath = (roles) => {
   if (roles.includes('owner')) {
     return '/owner-dashboard';
   }
-
   return '/client-dashboard';
 };
-
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -26,7 +23,6 @@ function Login() {
   const [error, setError] = useState('');
   const { login, loading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
-
 
   React.useEffect(() => {
     if (!loading && isAuthenticated && user) {
@@ -48,7 +44,7 @@ function Login() {
     if (!result.success) {
       setError(result.error || 'Login failed. Please try again.');
     } else {
-
+      // Login successful, useEffect will handle navigation
     }
   };
 
@@ -57,7 +53,7 @@ function Login() {
   }
 
   if (isAuthenticated) {
-    return null;
+    return null; // Or a redirect to dashboard, but useEffect already handles it
   }
 
   return (
@@ -95,11 +91,19 @@ function Login() {
           {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
+
+      {/* CORRECTED LINKS HERE */}
       <p className="mt-4 text-gray-600">
-        Don't have an account? <a href="/signup" className="text-primary hover:text-secondary hover:underline">Sign Up</a>
+        Don't have an account? {' '}
+        <Link to="/signup" className="text-primary hover:text-secondary hover:underline">
+          Sign Up
+        </Link>
       </p>
       <p className="mt-2 text-gray-600">
-        Forgot your password? <a href="/forgot-password" className="text-primary hover:text-secondary hover:underline">Reset it</a>
+        Forgot your password? {' '}
+        <Link to="/forgot-password" className="text-primary hover:text-secondary hover:underline">
+          Reset it
+        </Link>
       </p>
     </div>
   );

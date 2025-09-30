@@ -37,27 +37,27 @@ function AppContent() {
   return (
     <>
       <nav className="bg-primary text-white p-4 flex justify-between items-center shadow-md">
-        <Link to="/" className="text-2xl font-bold text-white no-underline">Spacer</Link>
+        <Link to="/" className="text-2xl font-bold text-white no-underline font-nabla">SpaceHub</Link>
         <div className="flex space-x-6">
-          <Link to="/" className="text-white hover:text-secondary hover:underline transition-colors duration-200">Home</Link>
+          <Link to="/" className="text-white hover:text-secondary hover:underline transition-colors duration-200 font-dancing">Home</Link>
           {!isAuthenticated ? (
             <>
-              <Link to="/login">Login</Link>
-              <Link to="/signup">Sign Up</Link>
+              <Link to="/login" className='font-dancing'>Login</Link>
+              <Link to="/signup" className='font-dancing'>Sign Up</Link>
             </>
           ) : (
             <>
-              <Link to="/profile">Profile</Link>
+              <Link to="/profile" className='font-dancing'>Profile</Link>
               {user && user.roles && (
                 <>
                   {user.roles.includes('admin') && (
-                    <Link to="/admin-dashboard">My Dashboard</Link>
+                    <Link to="/admin-dashboard" className='font-dancing'>My Dashboard</Link>
                   )}
                   {user.roles.includes('client') && (
-                    <Link to="/client-dashboard">My Dashboard</Link>
+                    <Link to="/client-dashboard" className='font-dancing'>My Dashboard</Link>
                   )}
                   {user.roles.includes('owner') && (
-                    <Link to="/owner-dashboard">My Dashboard</Link>
+                    <Link to="/owner-dashboard" className='font-dancing'>My Dashboard</Link>
                   )}
                 </>
               )}

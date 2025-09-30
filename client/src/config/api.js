@@ -1,4 +1,4 @@
-// src/config/api.js
+// // src/config/api.js
 const API_CONFIG = {
   development: {
     baseURL: 'http://127.0.0.1:5000' || 'http://localhost:5000',
@@ -29,3 +29,18 @@ const getEnvironment = () => {
 // Export the base URL
 export const API_BASE_URL = API_CONFIG[getEnvironment()].baseURL;
 
+// // src/config/api.js
+// const isProduction =
+//   window.location.hostname !== 'localhost' &&
+//   window.location.hostname !== '127.0.0.1';
+
+// export const API_BASE_URL = isProduction
+//   ? 'https://phase-5-group-6-spacer.onrender.com'
+//   : 'http://127.0.0.1:5000';
+
+// // Debug - remove after fixing
+// console.log('Environment detection:', {
+//   hostname: window.location.hostname,
+//   isProduction,
+//   API_BASE_URL
+// });
