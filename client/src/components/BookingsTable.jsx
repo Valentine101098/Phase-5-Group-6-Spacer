@@ -169,7 +169,7 @@ export function BookingsTable() {
 
       {/* Mobile Card View */}
       <div className="block lg:hidden space-y-4">
-        {filteredAndSortedBookings.map((booking) => (
+        {bookings.map((booking) => (
           <div key={booking.id} className="bg-white border rounded-lg p-4 shadow-sm">
             <div className="flex justify-between items-start mb-3">
               <div>
