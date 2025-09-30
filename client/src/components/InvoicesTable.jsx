@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronUp, ChevronDown, DollarSign, Calendar } from 'lucide-react';
-// import { bearerToken } from './tokens';
 import { useAuth } from '../contexts/AuthContext';
 import { API_BASE_URL } from '../config/api';
 import { formatCurrency } from './currency';
-
 
 export function InvoicesTable() {
   const [invoices, setInvoices] = useState([]);
@@ -47,13 +45,6 @@ export function InvoicesTable() {
     if (!dateString) return '—';
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatAmount = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'Ksh',
-    }).format(amount);
   };
 
   const getStatusColor = (status) => {
@@ -122,18 +113,18 @@ export function InvoicesTable() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-white">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Invoices Management</h1>
+    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 bg-white">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Invoices Management</h1>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-3 sm:mb-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -141,14 +132,14 @@ export function InvoicesTable() {
               placeholder="Search invoices..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Statuses</option>
             {uniqueStatuses.map(status => (
@@ -160,31 +151,31 @@ export function InvoicesTable() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-            Error: {error} (showing mock data for demo)
+          <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded mb-3 sm:mb-4 text-sm">
+            Error: {error}
           </div>
         )}
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
           <div className="flex items-center">
-            <Calendar className="w-8 h-8 text-blue-600 mr-3" />
+            <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mr-2 sm:mr-3" />
             <div>
-              <p className="text-sm font-medium text-blue-600">Total Invoices</p>
-              <p className="text-2xl font-bold text-blue-900">{filteredAndSortedInvoices.length}</p>
+              <p className="text-xs sm:text-sm font-medium text-blue-600">Total Invoices</p>
+              <p className="text-lg sm:text-2xl font-bold text-blue-900">{filteredAndSortedInvoices.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-green-50 p-4 rounded-lg">
+        <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
           <div className="flex items-center">
-            <DollarSign className="w-8 h-8 text-green-600 mr-3" />
+            <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mr-2 sm:mr-3" />
             <div>
-              <p className="text-sm font-medium text-green-600">Total Paid</p>
-              <p className="text-2xl font-bold text-green-900">
-                {formatAmount(
+              <p className="text-xs sm:text-sm font-medium text-green-600">Total Paid</p>
+              <p className="text-base sm:text-2xl font-bold text-green-900">
+                {formatCurrency(
                   filteredAndSortedInvoices.reduce((sum, inv) =>
                     sum + (inv.status === 'paid' ? parseFloat(inv.amount) : 0), 0
                   )
@@ -194,13 +185,13 @@ export function InvoicesTable() {
           </div>
         </div>
 
-        <div className="bg-yellow-50 p-4 rounded-lg">
+        <div className="bg-yellow-50 p-3 sm:p-4 rounded-lg">
           <div className="flex items-center">
-            <DollarSign className="w-8 h-8 text-yellow-600 mr-3" />
+            <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600 mr-2 sm:mr-3" />
             <div>
-              <p className="text-sm font-medium text-yellow-600">Outstanding</p>
-              <p className="text-2xl font-bold text-yellow-900">
-                {formatAmount(
+              <p className="text-xs sm:text-sm font-medium text-yellow-600">Outstanding</p>
+              <p className="text-base sm:text-2xl font-bold text-yellow-900">
+                {formatCurrency(
                   filteredAndSortedInvoices.reduce((sum, inv) =>
                     sum + (inv.status !== 'paid' ? parseFloat(inv.amount) : 0), 0
                   )
@@ -211,8 +202,40 @@ export function InvoicesTable() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto shadow-lg rounded-lg">
+      {/* Mobile Card View */}
+      <div className="block lg:hidden space-y-4">
+        {filteredAndSortedInvoices.map((inv) => (
+          <div key={inv.id} className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="flex justify-between items-start mb-3">
+              <div>
+                <p className="font-semibold text-gray-900">#{inv.id}</p>
+                <p className="text-sm text-gray-600">{inv.space_title || '—'}</p>
+              </div>
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(inv.status)}`}>
+                {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
+              </span>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Amount:</span>
+                <span className="font-semibold text-gray-900">{formatCurrency(inv.amount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Method:</span>
+                <span className="font-medium">{inv.payment_method || '—'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Paid At:</span>
+                <span className="font-medium text-xs">{formatDate(inv.paid_at)}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden lg:block overflow-x-auto shadow-lg rounded-lg">
         <table className="min-w-full bg-white">
           <thead className="bg-gray-50">
             <tr>
@@ -262,6 +285,4 @@ export function InvoicesTable() {
       </div>
     </div>
   );
-};
-
-
+}
