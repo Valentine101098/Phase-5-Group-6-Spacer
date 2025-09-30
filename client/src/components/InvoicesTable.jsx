@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Search, ChevronUp, ChevronDown, DollarSign, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { API_BASE_URL } from '../config/api';
 import { formatCurrency } from './currency';
 import { useInvoices } from './useInvoices';
 
