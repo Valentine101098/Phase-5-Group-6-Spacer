@@ -1,8 +1,9 @@
-import { useState } from "react";   
+import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
-export default function SpaceCreation({ onSpaceCreated }) {
-    const { makeAuthenticatedRequest } = useAuth(); 
+export default function SpaceCreation({ existingSpace, onSpaceCreated, onSpaceUpdated }) {
+    const { makeAuthenticatedRequest } = useAuth();
+
     const [form, setForm] = useState({
         title: "",
         description: "",
@@ -15,16 +16,31 @@ export default function SpaceCreation({ onSpaceCreated }) {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
+    // Pre-fill form if editing
+    useEffect(() => {
+        if (existingSpace) {
+            setForm({
+                title: existingSpace.title || "",
+                description: existingSpace.description || "",
+                price_per_hour: existingSpace.price_per_hour || "",
+                space_type: existingSpace.space_type || "",
+                max_guests: existingSpace.max_guests || "",
+                images: existingSpace.images?.length ? existingSpace.images : [""],
+                terms: existingSpace.terms || "",
+            });
+        }
+    }, [existingSpace]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm(prev => ({
+        setForm((prev) => ({
             ...prev,
             [name]: value,
         }));
     };
 
     const handleImageChange = (index, value) => {
-        setForm(prev => {
+        setForm((prev) => {
             const updatedImages = [...prev.images];
             updatedImages[index] = value;
             return {
@@ -35,7 +51,7 @@ export default function SpaceCreation({ onSpaceCreated }) {
     };
 
     const addImageField = () => {
-        setForm(prev => ({
+        setForm((prev) => ({
             ...prev,
             images: [...prev.images, ""],
         }));
@@ -43,7 +59,7 @@ export default function SpaceCreation({ onSpaceCreated }) {
 
     const removeImageField = (index) => {
         if (form.images.length > 1) {
-            setForm(prev => {
+            setForm((prev) => {
                 const updatedImages = prev.images.filter((_, i) => i !== index);
                 return {
                     ...prev,
@@ -57,46 +73,56 @@ export default function SpaceCreation({ onSpaceCreated }) {
         e.preventDefault();
         setLoading(true);
         setError(null);
-        
+
         // Convert numeric fields
         const formData = {
             ...form,
             price_per_hour: parseFloat(form.price_per_hour) || 0,
             max_guests: parseInt(form.max_guests) || 1,
-            images: form.images.filter(img => img.trim() !== ""), // Remove empty image URLs
+            images: form.images.filter((img) => img.trim() !== ""), // Remove empty URLs
         };
-        
-        try {
-            // Use makeAuthenticatedRequest instead of raw fetch
-            // This automatically handles token refresh if needed
-            const result = await makeAuthenticatedRequest('/api/spaces/', 'POST', formData);
-            
-            if (result.success) {
-                const newSpace = result.data;
-                
-                // Reset form
-                setForm({
-                    title: "",
-                    description: "",
-                    price_per_hour: "",
-                    space_type: "",
-                    max_guests: "",
-                    images: [""],
-                    terms: "",
-                });
 
-                if (onSpaceCreated) {
-                    onSpaceCreated(newSpace);
+        try {
+            let result;
+
+            if (existingSpace) {
+                // PATCH (edit)
+                result = await makeAuthenticatedRequest(
+                    `/api/spaces/${existingSpace.id}`,
+                    "PATCH",
+                    formData
+                );
+
+                if (result.success) {
+                    onSpaceUpdated?.(result.data);
+                    alert("Space updated successfully!");
+                } else {
+                    throw new Error(result.error || "Failed to update space");
                 }
-                
-                alert("Space created successfully!");
             } else {
-                
-                throw new Error(result.error || "Failed to create space");
+                // POST (create)
+                result = await makeAuthenticatedRequest("/api/spaces/", "POST", formData);
+
+                if (result.success) {
+                    onSpaceCreated?.(result.data);
+                    alert("Space created successfully!");
+
+                    // Reset form after successful creation
+                    setForm({
+                        title: "",
+                        description: "",
+                        price_per_hour: "",
+                        space_type: "",
+                        max_guests: "",
+                        images: [""],
+                        terms: "",
+                    });
+                } else {
+                    throw new Error(result.error || "Failed to create space");
+                }
             }
-            
         } catch (err) {
-            console.error("Error creating space:", err);
+            console.error("Error submitting space:", err);
             setError(err.message);
         } finally {
             setLoading(false);
@@ -105,7 +131,10 @@ export default function SpaceCreation({ onSpaceCreated }) {
 
     return (
         <div className="max-w-lg mx-auto p-4 bg-white dark:bg-primary shadow-lg rounded-lg">
-            <h2 className="text-2xl font-bold mb-4 text-white">Create New Space</h2>
+            <h2 className="text-2xl font-bold mb-4 text-white">
+                {existingSpace ? "Edit Space" : "Create New Space"}
+            </h2>
+
             {error && (
                 <div className="text-red-500 mb-4 bg-red-50 p-3 rounded border border-red-200">
                     <p className="font-medium">Error:</p>
@@ -113,9 +142,9 @@ export default function SpaceCreation({ onSpaceCreated }) {
                 </div>
             )}
 
-            <div onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit}>
                 <label className="block mb-2 font-semibold text-white">Title</label>
-                <input 
+                <input
                     type="text"
                     name="title"
                     value={form.title}
@@ -126,7 +155,7 @@ export default function SpaceCreation({ onSpaceCreated }) {
                 />
 
                 <label className="block mb-2 font-semibold text-white">Description</label>
-                <textarea 
+                <textarea
                     name="description"
                     value={form.description}
                     placeholder="Space Description"
@@ -136,8 +165,10 @@ export default function SpaceCreation({ onSpaceCreated }) {
                     required
                 />
 
-                <label className="block mb-2 font-semibold text-white">Price per Hour (Kshs)</label>
-                <input 
+                <label className="block mb-2 font-semibold text-white">
+                    Price per Hour (Kshs)
+                </label>
+                <input
                     type="number"
                     name="price_per_hour"
                     value={form.price_per_hour}
@@ -148,9 +179,9 @@ export default function SpaceCreation({ onSpaceCreated }) {
                     className="w-full border p-2 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                 />
-                
+
                 <label className="block mb-2 font-semibold text-white">Space Type</label>
-                <input 
+                <input
                     type="text"
                     name="space_type"
                     value={form.space_type}
@@ -160,8 +191,10 @@ export default function SpaceCreation({ onSpaceCreated }) {
                     required
                 />
 
-                <label className="block mb-2 font-semibold text-white">Maximum Guests</label>
-                <input 
+                <label className="block mb-2 font-semibold text-white">
+                    Maximum Guests
+                </label>
+                <input
                     type="number"
                     name="max_guests"
                     value={form.max_guests}
@@ -172,8 +205,10 @@ export default function SpaceCreation({ onSpaceCreated }) {
                     required
                 />
 
-                <label className="block mb-2 font-semibold text-white">Agreement Terms</label>
-                <textarea 
+                <label className="block mb-2 font-semibold text-white">
+                    Agreement Terms
+                </label>
+                <textarea
                     name="terms"
                     value={form.terms}
                     placeholder="Agreement Terms and Conditions"
@@ -203,23 +238,30 @@ export default function SpaceCreation({ onSpaceCreated }) {
                         )}
                     </div>
                 ))}
-                
+
                 <button
                     type="button"
                     onClick={addImageField}
                     className="mb-4 text-green-500 hover:text-green-700 hover:underline font-medium"
                 >
                     + Add Another Image
-                </button>   
+                </button>
 
                 <button
-                    onClick={handleSubmit}
+                    type="submit"
                     disabled={loading}
-                    className={`w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`w-full ${existingSpace ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-500 hover:bg-blue-600"
+                        } text-white py-2 rounded transition ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                    {loading ? "Creating Space..." : "Create Space"}
+                    {loading
+                        ? existingSpace
+                            ? "Updating Space..."
+                            : "Creating Space..."
+                        : existingSpace
+                            ? "Update Space"
+                            : "Create Space"}
                 </button>
-            </div>
+            </form>
         </div>
     );
 }
