@@ -49,12 +49,12 @@ export function InvoicesTable() {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // const formatAmount = (amount) => {
-  //   return new Intl.NumberFormat('en-US', {
-  //     style: 'currency',
-  //     currency: 'USD',
-  //   }).format(amount);
-  // };
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'Ksh',
+    }).format(amount);
+  };
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
