@@ -184,7 +184,7 @@ export function InvoicesTable() {
             <div>
               <p className="text-sm font-medium text-green-600">Total Paid</p>
               <p className="text-2xl font-bold text-green-900">
-                {formatAmount(
+                {formatCurrency(
                   filteredAndSortedInvoices.reduce((sum, inv) =>
                     sum + (inv.status === 'paid' ? parseFloat(inv.amount) : 0), 0
                   )
@@ -200,7 +200,7 @@ export function InvoicesTable() {
             <div>
               <p className="text-sm font-medium text-yellow-600">Outstanding</p>
               <p className="text-2xl font-bold text-yellow-900">
-                {formatAmount(
+                {formatCurrency(
                   filteredAndSortedInvoices.reduce((sum, inv) =>
                     sum + (inv.status !== 'paid' ? parseFloat(inv.amount) : 0), 0
                   )

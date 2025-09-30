@@ -32,7 +32,7 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
       // console.log("fetchBookings: ",accessToken)
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/api/bookings`, {
+        const response = await fetch(`${API_BASE_URL}/api/bookings/`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -67,25 +67,13 @@ const [reviewModalBooking, setReviewModalBooking] = useState(null);
     return Math.round(diffInHours * 10) / 10;
   };
 
-// plaec holder handlers —
-// const handleLeaveReview = (bookingId) => {
-//   console.log(`Leave a review for booking ${bookingId}`);
-//   alert(`Leave a review for booking ${bookingId}`);
-// };
-
-// const handlePayNow = (bookingId) => {
-//   console.log(`Proceed to payment for booking ${bookingId}`);
-//   alert(`Proceed to payment for booking ${bookingId}`);
-// };
-
-
 
 
   // Cancel booking function
   const handleCancel = async (bookingId) => {
     // console.log("handleCancel: ", accessToken)
     try {
-      const response = await fetch(`${API_BASE_URL}/api/bookings${bookingId}/cancel`, {
+      const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/cancel`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
