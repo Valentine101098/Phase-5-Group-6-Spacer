@@ -16,6 +16,8 @@ export default function SpaceDetails({ space, onClose }) {
 
     const totalImages = space.images.length;
 
+    const isOwner = user && space.owner_id === user.id;
+
     const goPrev = () => {
         setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? totalImages - 1 : prevIndex - 1));
     };
@@ -230,7 +232,7 @@ const fetchUserBookings = () => {
                 )}
 
                 {/* Add Review button */}
-                {hasBooked && !showReviewForm && !userReview && (
+                {hasBooked && !showReviewForm && !userReview && !isOwner &&(
                     <button
                         onClick={() => setShowReviewForm(true)}
                         className="bg-yellow-400 text-yellow-900 px-4 py-2 mt-3 w-full sm:w-40 mx-auto rounded-lg hover:bg-yellow-600 hover:text-yellow-900 transition text-sm sm:text-base" // Responsive width
