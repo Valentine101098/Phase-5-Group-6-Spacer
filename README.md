@@ -55,6 +55,7 @@ Check out the deployed application:
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
+
 - Python 3.8 or higher
 - Pipenv
 - Node.js 14 or higher
@@ -96,6 +97,7 @@ pipenv shell
 # Create the database
 createdb spacer_db
 ```
+
 This creates an empty PostgreSQL database named `spacer_db`.
 
 #### Step 2: Run migrations
@@ -222,4 +224,4 @@ npm test
 
 ## License
 
-This project is licensed under the [MIT License](./LICENSE).
+This project is licensed under the [MIT License](./LICENSE)
