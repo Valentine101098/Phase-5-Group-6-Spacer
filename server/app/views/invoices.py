@@ -15,25 +15,26 @@ class InvoiceListResource(Resource):
     def get(self):
         """List invoices (client sees their own, owner sees invoices for their spaces, admin sees all)"""
         user_id = get_jwt_identity()
-        role = get_jwt().get("role")
+        roles = get_jwt().get("roles", [])
 
-        if role == "client":
+        if "admin" in roles:
+            invoices = Invoice.query.all()
+        elif "owner" in roles:
+            invoices = (
+                Invoice.query
+                .join(Invoice.booking)
+                .join(Booking.space)
+                .filter(Space.owner_id == user_id)
+                .all()
+            )
+        elif "client" in roles:
             invoices = (
                 Invoice.query.join(Booking)
                 .filter(Booking.user_id == user_id)
                 .all()
             )
-        elif role == "owner":
-            invoices = (
-                Invoice.query
-                .join(Invoice.booking)      
-                .join(Booking.space)        
-                .filter(Space.owner_id == user_id)
-                .all()
-            )
-
-        else:  # admin
-            invoices = Invoice.query.all()
+        else:
+            invoices = []
 
         return {
             "data": [
@@ -51,6 +52,7 @@ class InvoiceListResource(Resource):
         }, 200
 
 
+
 invoices_api.add_resource(InvoiceListResource, "/")
 
 
@@ -59,12 +61,21 @@ class InvoiceResource(Resource):
     def get(self, invoice_id):
         """Get single invoice"""
         user_id = get_jwt_identity()
-        role = get_jwt().get("role")
+        roles = get_jwt().get("roles", [])
         invoice = Invoice.query.get_or_404(invoice_id)
 
-        if role == "client" and invoice.booking.user_id != user_id:
-            return {"error": "Not authorized"}, 403
-        if role == "owner" and invoice.booking.space.owner_id != user_id:
+        if "admin" in roles:
+            pass
+
+        elif "owner" in roles:
+            if invoice.booking.space.owner_id != user_id:
+                return {"error": "Not authorized"}, 403
+
+        elif "client" in roles:
+            if invoice.booking.user_id != user_id:
+                return {"error": "Not authorized"}, 403
+
+        else:
             return {"error": "Not authorized"}, 403
 
         return {
@@ -86,6 +97,7 @@ class InvoiceResource(Resource):
                 "space_title": invoice.booking.space.title if invoice.booking.space else None
             }
         }, 200
+
 
 
 
