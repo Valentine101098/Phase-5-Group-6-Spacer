@@ -104,105 +104,103 @@ function Profile() {
   };
 
   if (authLoading || loading) {
-    return <div className="text-center py-8 text-lg text-primary">Loading profile...</div>;
+    return <div className="text-center py-8 text-base sm:text-lg text-primary px-4">Loading profile...</div>;
   }
 
   if (error && !profileData) {
     return (
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center text-red-500">
+      <div className="bg-white p-4 sm:p-8 rounded-lg shadow-md w-full max-w-md mx-4 text-center text-red-500 text-sm sm:text-base">
         Error: {error}
       </div>
     );
   }
 
   if (!profileData) {
-    // Should not happen if auth is true and no error
-    return <div className="text-center py-8 text-lg text-gray-700">No profile data available.</div>;
+    return <div className="text-center py-8 text-base sm:text-lg text-gray-700 px-4">No profile data available.</div>;
   }
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl text-center">
-      <h2 className="text-2xl font-semibold mb-6 text-primary">My Profile</h2>
-      {successMessage && <p className="text-green-500 text-sm mb-4">{successMessage}</p>}
-      {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+    <div className="bg-white p-4 sm:p-8 rounded-lg shadow-md w-full max-w-2xl mx-4 text-center">
+      <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-primary">My Profile</h2>
+      {successMessage && <p className="text-green-500 text-xs sm:text-sm mb-4">{successMessage}</p>}
+      {error && <p className="text-red-500 text-xs sm:text-sm mb-4">{error}</p>}
 
       {!isEditing ? (
-        <div className="profile-details text-left space-y-2">
+        <div className="profile-details text-left space-y-2 text-sm sm:text-base">
           <p><strong className="font-semibold text-gray-700">First Name:</strong> {profileData.first_name}</p>
           <p><strong className="font-semibold text-gray-700">Last Name:</strong> {profileData.last_name}</p>
-          <p><strong className="font-semibold text-gray-700">Email:</strong> {profileData.email}</p>
+          <p className="break-words"><strong className="font-semibold text-gray-700">Email:</strong> {profileData.email}</p>
           <p><strong className="font-semibold text-gray-700">Phone Number:</strong> {profileData.phone_number}</p>
           <p><strong className="font-semibold text-gray-700">Roles:</strong> {profileData.roles ? profileData.roles.join(', ') : 'N/A'}</p>
           <p><strong className="font-semibold text-gray-700">Member Since:</strong> {new Date(profileData.created_at).toLocaleDateString()}</p>
           <button
             onClick={() => setIsEditing(true)}
-            className="bg-secondary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 mt-4"
+            className="bg-secondary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 mt-4 text-sm sm:text-base w-full sm:w-auto"
           >
             Edit Profile
           </button>
         </div>
       ) : (
-        <form onSubmit={handleUpdateProfile} className="profile-edit-form space-y-4 text-left">
-          {/* --- Form fields unchanged --- */}
+        <form onSubmit={handleUpdateProfile} className="profile-edit-form space-y-3 sm:space-y-4 text-left">
           <div>
-            <label htmlFor="first_name" className="block text-gray-700 text-sm font-bold mb-2">First Name:</label>
+            <label htmlFor="first_name" className="block text-gray-700 text-xs sm:text-sm font-bold mb-2">First Name:</label>
             <input
               type="text"
               id="first_name"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
               value={formValues.first_name}
               onChange={handleFormChange}
               required
             />
           </div>
           <div>
-            <label htmlFor="last_name" className="block text-gray-700 text-sm font-bold mb-2">Last Name:</label>
+            <label htmlFor="last_name" className="block text-gray-700 text-xs sm:text-sm font-bold mb-2">Last Name:</label>
             <input
               type="text"
               id="last_name"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
               value={formValues.last_name}
               onChange={handleFormChange}
               required
             />
           </div>
           <div>
-            <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">Email:</label>
+            <label htmlFor="email" className="block text-gray-700 text-xs sm:text-sm font-bold mb-2">Email:</label>
             <input
               type="email"
               id="email"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
               value={formValues.email}
               onChange={handleFormChange}
               required
             />
           </div>
           <div>
-            <label htmlFor="phone_number" className="block text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
+            <label htmlFor="phone_number" className="block text-gray-700 text-xs sm:text-sm font-bold mb-2">Phone Number:</label>
             <input
               type="tel"
               id="phone_number"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
               value={formValues.phone_number}
               onChange={handleFormChange}
               required
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">New Password (leave blank to keep current):</label>
+            <label htmlFor="password" className="block text-gray-700 text-xs sm:text-sm font-bold mb-2">New Password (leave blank to keep current):</label>
             <input
               type="password"
               id="password"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
               value={formValues.password}
               onChange={handleFormChange}
             />
           </div>
-          <div className="flex justify-center space-x-4 mt-4">
+          <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4 mt-4">
             <button
               type="submit"
               disabled={loading}
-              className="bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
@@ -214,7 +212,7 @@ function Profile() {
                 setError('');
                 setSuccessMessage('');
               }}
-              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
+              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 text-sm sm:text-base"
             >
               Cancel
             </button>

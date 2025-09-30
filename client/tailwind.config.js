@@ -14,11 +14,11 @@ export default  {
           DEFAULT: '#90E0EF', // Lighter blue
           lighter: '#CAF0F8', // Even lighter blue for backgrounds
         },
-        // You can also define specific names if you prefer:
-        // 'brand-blue-dark': '#0077B6',
-        // 'brand-blue-light': '#00B4D8',
-        // 'accent-light': '#90E0EF',
-        // 'bg-light': '#CAF0F8',
+      },
+      fontFamily: {
+        'nabla': ['Nabla', 'sans-serif'],
+        'blakaink': ['Blaka Ink', 'sans-serif'],
+        'dancing': ['Dancing Script', 'sans-serif'],
       },
     },
   },
