@@ -1,149 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Search, ChevronUp, ChevronDown, Calendar, Users, DollarSign, Clock, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import ReviewFormModal from './ReviewFormModal';
 import { Link } from "react-router-dom";
 import { API_BASE_URL } from '../config/api';
 import { formatCurrency } from './currency';
+import { calculateDuration } from './utils';
+import { useBookings } from './useBookings';
 
 export function BookingsTable() {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [total, setTotal] = useState(0);
-  const { accessToken, user } = useAuth();
-  const [reviewModalBooking, setReviewModalBooking] = useState(null);
-  const [stats, setStats] = useState({
-    confirmedCount: 0,
-    totalGuests: 0,
-    totalRevenue: 0,
-    avgDuration: 0
-  });
+  const {
+    bookings,
+    loading,
+    error,
+    searchTerm,
+    setSearchTerm,
+    sortConfig,
+    setSortConfig,
+    statusFilter,
+    setStatusFilter,
+    page,
+    setPage,
+    totalPages,
+    total,
+    stats,
+    handleCancel
+  } = useBookings();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-      setPage(1);
-    }, 500); 
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  useEffect(() => {
-    if (!accessToken) {
-      return;
-    }
-    const fetchBookings = async () => {
-      try {
-        setLoading(true);
-        const params = new URLSearchParams({
-          page: page.toString(),
-          sort: sortConfig.key,
-          direction: sortConfig.direction,
-        });
-
-        if (debouncedSearchTerm) {
-          params.append('search', debouncedSearchTerm);
-        }
-
-        if (statusFilter !== 'all') {
-          params.append('status', statusFilter);
-        }
-
-        const response = await fetch(`${API_BASE_URL}/api/bookings/?${params.toString()}`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setBookings(data.data);
-        setTotal(data.total);
-        setTotalPages(data.pages);
-        
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookings();
-  }, [accessToken, page, sortConfig, debouncedSearchTerm, statusFilter]);
-
-useEffect(() => {
-  if (!accessToken) {
-    return;
-  }
-
-  const fetchBookingStats = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/bookings/stats`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) throw new Error(`Stats fetch failed: ${response.status}`);
-
-      const statsData = await response.json();
-      setStats({
-        confirmedCount: statsData.confirmedCount,
-        totalGuests: statsData.totalGuests,
-        totalRevenue: statsData.totalRevenue,
-        avgDuration: statsData.avgDuration
-      });
-    } catch (err) {
-      console.error("Error fetching booking stats:", err);
-    }
-  };
-
-  fetchBookingStats();
-}, [accessToken]);
-
-
-  const calculateDuration = (startTime, endTime) => {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    const diffInMs = end - start;
-    const diffInHours = diffInMs / (1000 * 60 * 60);
-    return Math.round(diffInHours * 10) / 10;
-  };
-
-  // Cancel booking function
-  const handleCancel = async (bookingId) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/cancel`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        setBookings(prevBookings =>
-          prevBookings.map(booking =>
-            booking.id === bookingId ? { ...booking, status: 'cancelled' } : booking
-          )
-        );
-      }
-    } catch (err) {
-      console.error('Failed to cancel booking:', err);
-    }
-  };
+  const { user } = useAuth(); 
+  const [reviewModalBooking, setReviewModalBooking] = React.useState(null);
 
   const handleSort = (key) => {
     let direction = 'asc';

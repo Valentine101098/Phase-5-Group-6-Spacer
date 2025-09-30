@@ -3,111 +3,25 @@ import { Search, ChevronUp, ChevronDown, DollarSign, Calendar, ChevronLeft, Chev
 import { useAuth } from '../contexts/AuthContext';
 import { API_BASE_URL } from '../config/api';
 import { formatCurrency } from './currency';
+import { useInvoices } from './useInvoices';
 
 export function InvoicesTable() {
-  const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [total, setTotal] = useState(0);
-  const { accessToken } = useAuth();
-  const [stats, setStats] = useState({
-    totalCount: 0,
-    totalPaid: 0,
-    totalOutstanding: 0
-  });
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-      setPage(1);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  useEffect(() => {
-    if (!accessToken) {
-      return;
-    }
-    const fetchInvoices = async () => {
-      try {
-        setLoading(true);
-        const params = new URLSearchParams({
-          page: page.toString(),
-          sort: sortConfig.key,
-          direction: sortConfig.direction,
-        });
-
-        if (debouncedSearchTerm) {
-          params.append('search', debouncedSearchTerm);
-        }
-
-        if (statusFilter !== 'all') {
-          params.append('status', statusFilter);
-        }
-
-        const response = await fetch(`${API_BASE_URL}/api/invoices/?${params.toString()}`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        const data = await response.json();
-        setInvoices(data.data);
-        setTotal(data.total);
-        setTotalPages(data.pages);
-
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInvoices();
-  }, [accessToken, page, sortConfig, debouncedSearchTerm, statusFilter]);
-
-useEffect(() => {
-  if (!accessToken) {
-    return;
-  }
-
-  const fetchStats = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/invoices/stats`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) throw new Error(`Stats fetch failed: ${response.status}`);
-
-      const statsData = await response.json();
-      setStats({
-        totalCount: statsData.totalCount,
-        totalPaid: statsData.totalPaid,
-        totalOutstanding: statsData.totalOutstanding
-      });
-    } catch (err) {
-      console.error("Error fetching invoice stats:", err);
-    }
-  };
-
-  fetchStats();
-}, [accessToken]);
-
-
-
+  const {
+    invoices,
+    loading,
+    error,
+    searchTerm,
+    setSearchTerm,
+    sortConfig,
+    setSortConfig,
+    statusFilter,
+    setStatusFilter,
+    page,
+    setPage,
+    totalPages,
+    total,
+    stats
+  } = useInvoices();
 
   const formatDate = (dateString) => {
     if (!dateString) return '—';
