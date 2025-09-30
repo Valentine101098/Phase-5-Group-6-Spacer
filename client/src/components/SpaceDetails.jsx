@@ -3,6 +3,7 @@ import SpaceReviewForm from "./SpaceReviewForm";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { API_BASE_URL } from "../config/api";
+import { Star, X } from "lucide-react"; // Import X for close icon
 
 export default function SpaceDetails({ space, onClose }) {
     const [reviews, setReviews] = useState([]);
@@ -34,7 +35,7 @@ const fetchUserBookings = () => {
     useEffect(() => {
         fetchReviews();
         fetchUserBookings();
-    }, [space.id, user]);
+    }, [space.id, user, accessToken]); // Added accessToken to dependencies
 
     const hasBooked = userBookings.length > 0;
     const latestBooking = userBookings[0];
@@ -56,62 +57,66 @@ const fetchUserBookings = () => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-white rounded-2xl shadow-lg w-1/2 p-6 max-h-[90vh] overflow-y-auto flex flex-col">
-                <button onClick={onClose} className="text-red-500 self-end">Close</button>
-                <h2 className="text-2xl font-bold mb-4">
-                    {space.title}{" "}
-                    <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${space.status === "available"
-                                ? "bg-green-300 text-green-900"
-                                : "bg-red-300 text-red-900"
-                            }`}
-                    >
-                        {space.status}
-                    </span>
-                </h2>
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4"> {/* Added padding for mobile */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-lg md:max-w-2xl lg:max-w-3xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto flex flex-col"> {/* Responsive width and padding */}
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white"> {/* Responsive text size */}
+                        {space.title}{" "}
+                        <span
+                            className={`px-2 py-1 text-xs font-semibold rounded ${space.status === "available"
+                                    ? "bg-green-300 text-green-900"
+                                    : "bg-red-300 text-red-900"
+                                }`}
+                        >
+                            {space.status}
+                        </span>
+                    </h2>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> {/* Adjusted close button color */}
+                        <X className="h-6 w-6" /> {/* Using Lucide X icon */}
+                    </button>
+                </div>
 
-                <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-4 mb-4"> {/* Responsive grid for images */}
                     {space.images.slice(0, 4).map((imgUrl, index) => (
                         <img
                             key={index}
                             src={imgUrl}
                             alt={`Space Image ${index + 1}`}
-                            className="w-full h-40 object-cover shadow-lg rounded-lg"
+                            className="w-full h-40 sm:h-48 object-cover shadow-lg rounded-lg" // Responsive height
                         />
                     ))}
                 </div>
 
-                <p className="mb-3">{space.description}</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 shadow p-4 rounded-xl bg-white">
-                    <div className="text-center p-4 bg-green-50 rounded-xl">
-                        <div className="text-sm text-gray-600">Space Type</div>
-                        <div className="text-lg font-bold text-green-600">{space?.space_type}</div>
+                <p className="mb-3 text-gray-700 dark:text-gray-300 text-sm sm:text-base">{space.description}</p> {/* Responsive text size and color */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 shadow p-4 rounded-xl bg-white dark:bg-gray-700"> {/* Responsive grid and spacing */}
+                    <div className="text-center p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 rounded-xl"> {/* Responsive padding and dark mode support */}
+                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Space Type</div> {/* Responsive text size */}
+                        <div className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">{space?.space_type}</div> {/* Responsive text size and dark mode support */}
                     </div>
-                    <div className="text-center p-4 bg-blue-50 rounded-xl">
-                        <div className="text-sm text-gray-600">Max Guests</div>
-                        <div className="text-lg font-bold text-blue-600">{space?.max_guests}</div>
+                    <div className="text-center p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Max Guests</div>
+                        <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">{space?.max_guests}</div>
                     </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-xl">
-                        <div className="text-sm text-gray-600">Kshs Per Hour</div>
-                        <div className="text-lg font-bold text-purple-600">
+                    <div className="text-center p-3 sm:p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Kshs Per Hour</div>
+                        <div className="text-base sm:text-lg font-bold text-purple-600 dark:text-purple-400">
                             {parseFloat(space?.price_per_hour || 0).toFixed(2)}
                         </div>
                     </div>
                 </div>
 
                 {/* Reviews */}
-                <div className="mt-4 border-t pt-4 flex-1">
-                    <h3 className="text-xl font-semibold mb-2">Recent Reviews</h3>
+                <div className="mt-4 border-t pt-4 flex-1 border-gray-200 dark:border-gray-600">
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-900 dark:text-white">Recent Reviews</h3> {/* Responsive text size and dark mode */}
                     {reviews.length > 0 ? (
                         reviews.map((review) => (
-                            <div key={review.id} className="border-b py-2">
-                                <p>
-                                    {review.user.first_name} : {review.rating}⭐
+                            <div key={review.id} className="border-b py-2 border-gray-100 dark:border-gray-700 text-gray-800 dark:text-gray-200"> {/* Dark mode support */}
+                                <p className="text-sm sm:text-base"> {/* Responsive text size */}
+                                    {review.user.first_name} : {review.rating} <Star className="inline h-4 w-4 text-yellow-400 fill-current" />
                                 </p>
-                                <p>{review.comment}</p>
+                                <p className="text-sm sm:text-base">{review.comment}</p> {/* Responsive text size */}
                                 {user && review.user_id === user.id && (
-                                    <div className="flex gap-2 mt-1">
+                                    <div className="flex gap-2 mt-1 text-sm"> {/* Responsive text size */}
                                         <button
                                             onClick={() => {
                                                 setEditingReview(review);
@@ -145,14 +150,14 @@ const fetchUserBookings = () => {
                             </div>
                         ))
                     ) : (
-                        <p className="text-gray-500 italic">No Reviews yet.</p>
-                    )}
+                        <p className="text-gray-500 italic text-sm sm:text-base">No Reviews yet.</p>)
+}
                 </div>
 
                 {/* Review Form */}
                 {showReviewForm && hasBooked && (
-                    <div className="mt-4 border-t pt-4">
-                        <h3 className="text-xl font-semibold mb-2">
+                    <div className="mt-4 border-t pt-4 border-gray-200 dark:border-gray-600">
+                        <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-900 dark:text-white">
                             {editingReview ? "Edit Your Review" : "Add Your Review"}
                         </h3>
                         <SpaceReviewForm
@@ -172,17 +177,17 @@ const fetchUserBookings = () => {
                 {hasBooked && !showReviewForm && !userReview && (
                     <button
                         onClick={() => setShowReviewForm(true)}
-                        className="bg-yellow-400 text-yellow-900 px-4 py-2  mt-3 w-40 mx-auto rounded-lg hover:bg-yellow-600 hover:text-yellow-900 transition"
+                        className="bg-yellow-400 text-yellow-900 px-4 py-2 mt-3 w-full sm:w-40 mx-auto rounded-lg hover:bg-yellow-600 hover:text-yellow-900 transition text-sm sm:text-base" // Responsive width
                     >
                         Add Review
                     </button>
                 )}
 
                 {/* Book button pinned at bottom */}
-                <div className="mt-6 flex justify-end">
+                <div className="mt-6 flex justify-center sm:justify-end"> {/* Responsive alignment */}
                     {space.status === "available" && (
                         <Link to={`/spaces/${space.id}/booking`}>
-                        <button className="bg-blue-500 text-white px-4 py-2 w-40 rounded-lg hover:bg-blue-600">
+                        <button className="bg-blue-600 text-white px-5 py-2 w-full sm:w-40 rounded-lg hover:bg-blue-700 text-sm sm:text-base"> {/* Responsive width */}
                             Book Now
                         </button>
                         </Link>

@@ -10,7 +10,7 @@ import { formatCurrency } from './currency';
 
 const OwnerDashboard = () => {
   const { user, isAuthenticated, makeAuthenticatedRequest } = useAuth();
-  
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,10 +65,10 @@ const OwnerDashboard = () => {
       // Normalize responses - owner should only see their spaces
       const allSpaces = normalizeArray(spacesRes);
       const allBookings = normalizeArray(bookingsRes);
-      
+
       // Filter spaces and bookings for owner (assuming owner_id field exists)
       const ownerSpaces = allSpaces.filter(space => space.owner_id === user?.id);
-      const ownerBookings = allBookings.filter(booking => 
+      const ownerBookings = allBookings.filter(booking =>
         ownerSpaces.some(space => space.id === booking.space_id)
       );
 
@@ -95,10 +95,10 @@ const OwnerDashboard = () => {
   // Handle space deletion using existing API pattern
   const handleDeleteSpace = async (spaceId) => {
     if (!window.confirm('Are you sure you want to delete this space? This action cannot be undone.')) return;
-    
+
     try {
       const result = await makeAuthenticatedRequest(`/api/spaces/${spaceId}`, 'DELETE');
-      
+
       if (result.success) {
         setSpaces(prev => prev.filter(space => space.id !== spaceId));
         setError({ type: 'success', message: 'Space deleted successfully!' });
@@ -124,7 +124,7 @@ const OwnerDashboard = () => {
       .reduce((sum, invoice) => sum + parseFloat(invoice.amount || invoice.total_amount || 0), 0),
     pendingBookings: bookings.filter(b => b.status === 'pending').length,
     confirmedBookings: bookings.filter(b => b.status === 'confirmed' || b.status === 'active').length,
-    averageRating: reviews.length > 0 ? 
+    averageRating: reviews.length > 0 ?
       (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1) : 0,
     totalReviews: reviews.length,
   };
@@ -150,20 +150,20 @@ const OwnerDashboard = () => {
   // Use existing SpaceCard component but wrap it for owner-specific actions
   const OwnerSpaceCardWrapper = ({ space }) => {
     const [showDetails, setShowDetails] = useState(false);
-    
+
     return (
       <div className="relative">
         <SpaceCard space={space} />
         {/* Add owner-specific overlay/actions */}
         <div className="absolute top-2 right-2 flex gap-2">
-          <button 
+          <button
             onClick={() => setShowDetails(true)}
             className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700"
             title="View Details"
           >
             <Eye className="h-4 w-4" />
           </button>
-          <button 
+          <button
             onClick={() => handleDeleteSpace(space.id)}
             className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700"
             title="Delete Space"
@@ -171,7 +171,7 @@ const OwnerDashboard = () => {
             <X className="h-4 w-4" />
           </button>
         </div>
-        
+
         {showDetails && (
           <SpaceDetails space={space} onClose={() => setShowDetails(false)} />
         )}
@@ -180,14 +180,14 @@ const OwnerDashboard = () => {
   };
 
   const StatCard = ({ icon: Icon, title, value, subtitle, color = 'blue' }) => (
-    <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 border-${color}-500`}>
+    <div className={`bg-white rounded-lg shadow-md p-4 sm:p-6 border-l-4 border-${color}-500`}>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-gray-600 text-sm font-medium">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{value}</p>
+          {subtitle && <p className="text-xs sm:text-sm text-gray-500 mt-1">{subtitle}</p>}
         </div>
-        <Icon className={`h-10 w-10 text-${color}-500`} />
+        <Icon className={`h-8 w-8 sm:h-10 sm:w-10 text-${color}-500`} />
       </div>
     </div>
   );
@@ -195,7 +195,7 @@ const OwnerDashboard = () => {
   const TabButton = ({ id, label, isActive, onClick }) => (
     <button
       onClick={() => onClick(id)}
-      className={`px-6 py-3 text-sm font-medium rounded-lg transition-colors ${
+      className={`px-4 py-2 sm:px-6 sm:py-3 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
         isActive
           ? 'bg-blue-600 text-white shadow-md'
           : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
@@ -208,7 +208,7 @@ const OwnerDashboard = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading your dashboard...</p>
@@ -220,12 +220,12 @@ const OwnerDashboard = () => {
   // Authentication error
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-red-600 mb-2">Authentication Required</h3>
-          <p className="text-red-600 mb-4">Please log in to access the owner dashboard.</p>
-          <button 
+          <h3 className="text-lg sm:text-xl font-semibold text-red-600 mb-2">Authentication Required</h3>
+          <p className="text-sm sm:text-base text-red-600 mb-4">Please log in to access the owner dashboard.</p>
+          <button
             onClick={() => window.location.href = '/login'}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
@@ -241,17 +241,17 @@ const OwnerDashboard = () => {
       {/* Space Creation Modal */}
       {showSpaceCreation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-2xl font-bold text-gray-900">Create New Space</h2>
-              <button 
+          <div className="bg-white rounded-lg shadow-xl max-w-full sm:max-w-2xl lg:max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Create New Space</h2>
+              <button
                 onClick={() => setShowSpaceCreation(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <SpaceCreation onSpaceCreated={handleSpaceCreated} />
             </div>
           </div>
@@ -261,21 +261,21 @@ const OwnerDashboard = () => {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Owner Dashboard</h1>
-              <p className="text-gray-600">Manage your spaces and track your business performance</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Owner Dashboard</h1>
+              <p className="text-sm sm:text-base text-gray-600">Manage your spaces and track your business performance</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Last updated: {new Date().toLocaleString()}</span>
+            <div className="flex items-center space-x-2 sm:space-x-4 mt-2 sm:mt-0">
+              <span className="text-xs sm:text-sm text-gray-500">Last updated: {new Date().toLocaleString()}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Navigation Tabs */}
-        <div className="flex space-x-2 mb-8 overflow-x-auto">
+        <div className="flex space-x-2 sm:space-x-4 mb-6 sm:mb-8 overflow-x-auto pb-2">
           <TabButton id="dashboard" label="Dashboard" isActive={activeTab === 'dashboard'} onClick={setActiveTab} />
           <TabButton id="spaces" label="My Spaces" isActive={activeTab === 'spaces'} onClick={setActiveTab} />
           <TabButton id="bookings" label="Bookings" isActive={activeTab === 'bookings'} onClick={setActiveTab} />
@@ -285,71 +285,71 @@ const OwnerDashboard = () => {
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard 
-                icon={Building} 
-                title="Total Spaces" 
-                value={ownerStats.totalSpaces} 
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <StatCard
+                icon={Building}
+                title="Total Spaces"
+                value={ownerStats.totalSpaces}
                 subtitle="Your listings"
-                color="blue" 
+                color="blue"
               />
-              <StatCard 
-                icon={Calendar} 
-                title="Total Bookings" 
-                value={ownerStats.totalBookings} 
+              <StatCard
+                icon={Calendar}
+                title="Total Bookings"
+                value={ownerStats.totalBookings}
                 subtitle="All time"
-                color="green" 
+                color="green"
               />
-              <StatCard 
-                icon={Wallet} 
-                title="Revenue" 
-                value={formatCurrency(ownerStats.monthlyRevenue)} 
+              <StatCard
+                icon={Wallet}
+                title="Revenue"
+                value={formatCurrency(ownerStats.monthlyRevenue)}
                 subtitle="Total earned"
-                color="purple" 
+                color="purple"
               />
-              <StatCard 
-                icon={Star} 
-                title="Average Rating" 
-                value={ownerStats.averageRating || 'N/A'} 
+              <StatCard
+                icon={Star}
+                title="Average Rating"
+                value={ownerStats.averageRating || 'N/A'}
                 subtitle={`${ownerStats.totalReviews} reviews`}
-                color="yellow" 
+                color="yellow"
               />
             </div>
 
             {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Recent Bookings */}
               <div className="bg-white rounded-lg shadow-md">
-                <div className="p-6 border-b flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">Recent Bookings</h3>
-                  <button 
+                <div className="p-4 sm:p-6 border-b flex justify-between items-center">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">Recent Bookings</h3>
+                  <button
                     onClick={() => setActiveTab('bookings')}
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                   >
                     View All
                   </button>
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   {recentBookings.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {recentBookings.map(booking => (
-                        <div key={booking.id} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-2">
+                        <div key={booking.id} className="border rounded-lg p-3 sm:p-4">
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
                             <div>
-                              <h4 className="font-semibold text-gray-900">{booking.space_title || `Space #${booking.space_id}`}</h4>
-                              <p className="text-sm text-gray-600">Client: User #{booking.user_id}</p>
+                              <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{booking.space_title || `Space #${booking.space_id}`}</h4>
+                              <p className="text-xs sm:text-sm text-gray-600">Client: User #{booking.user_id}</p>
                             </div>
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              booking.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                            <span className={`mt-1 sm:mt-0 px-2 py-1 text-xs font-medium rounded-full ${
+                              booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                               'bg-red-100 text-red-800'
                             }`}>
                               {booking.status}
                             </span>
                           </div>
-                          <div className="flex justify-between items-center text-sm text-gray-600">
+                          <div className="flex justify-between items-center text-xs sm:text-sm text-gray-600">
                             <span>{new Date(booking.start_time).toLocaleDateString()}</span>
                             <span className="font-semibold text-gray-900">
                               {formatCurrency(booking.total_amount)}
@@ -359,9 +359,9 @@ const OwnerDashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-500">No recent bookings</p>
+                    <div className="text-center py-6 sm:py-8">
+                      <Calendar className="h-7 w-7 sm:h-8 sm:w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm sm:text-base text-gray-500">No recent bookings</p>
                     </div>
                   )}
                 </div>
@@ -369,38 +369,38 @@ const OwnerDashboard = () => {
 
               {/* Quick Actions */}
               <div className="bg-white rounded-lg shadow-md">
-                <div className="p-6 border-b">
-                  <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                <div className="p-4 sm:p-6 border-b">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">Quick Actions</h3>
                 </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <button 
+                <div className="p-4 sm:p-6">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <button
                       onClick={() => setShowSpaceCreation(true)}
-                      className="p-4 bg-blue-50 rounded-lg text-center hover:bg-blue-100 transition-colors"
+                      className="p-3 sm:p-4 bg-blue-50 rounded-lg text-center hover:bg-blue-100 transition-colors"
                     >
-                      <Plus className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                      <span className="text-sm font-medium text-blue-900">Add Space</span>
+                      <Plus className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mx-auto mb-1 sm:mb-2" />
+                      <span className="text-xs sm:text-sm font-medium text-blue-900">Add Space</span>
                     </button>
-                    <button 
+                    <button
                       onClick={() => setActiveTab('bookings')}
-                      className="p-4 bg-green-50 rounded-lg text-center hover:bg-green-100 transition-colors"
+                      className="p-3 sm:p-4 bg-green-50 rounded-lg text-center hover:bg-green-100 transition-colors"
                     >
-                      <Calendar className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                      <span className="text-sm font-medium text-green-900">View Bookings</span>
+                      <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mx-auto mb-1 sm:mb-2" />
+                      <span className="text-xs sm:text-sm font-medium text-green-900">View Bookings</span>
                     </button>
-                    <button 
+                    <button
                       onClick={() => setActiveTab('invoices')}
-                      className="p-4 bg-purple-50 rounded-lg text-center hover:bg-purple-100 transition-colors"
+                      className="p-3 sm:p-4 bg-purple-50 rounded-lg text-center hover:bg-purple-100 transition-colors"
                     >
-                      <Wallet className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                      <span className="text-sm font-medium text-purple-900">View Invoices</span>
+                      <Wallet className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 mx-auto mb-1 sm:mb-2" />
+                      <span className="text-xs sm:text-sm font-medium text-purple-900">View Invoices</span>
                     </button>
-                    <button 
+                    <button
                       onClick={() => setActiveTab('reviews')}
-                      className="p-4 bg-orange-50 rounded-lg text-center hover:bg-orange-100 transition-colors"
+                      className="p-3 sm:p-4 bg-orange-50 rounded-lg text-center hover:bg-orange-100 transition-colors"
                     >
-                      <Star className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-                      <span className="text-sm font-medium text-orange-900">View Reviews</span>
+                      <Star className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600 mx-auto mb-1 sm:mb-2" />
+                      <span className="text-xs sm:text-sm font-medium text-orange-900">View Reviews</span>
                     </button>
                   </div>
                 </div>
@@ -411,23 +411,23 @@ const OwnerDashboard = () => {
 
         {/* My Spaces Tab */}
         {activeTab === 'spaces' && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h3 className="text-lg font-semibold text-gray-900">My Spaces ({spaces.length})</h3>
-              <div className="flex gap-4 w-full sm:w-auto">
-                <div className="relative flex-1 sm:flex-none">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+                <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <input
                     type="text"
                     placeholder="Search spaces..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
                   />
                 </div>
-                <button 
+                <button
                   onClick={() => setShowSpaceCreation(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center whitespace-nowrap"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center whitespace-nowrap text-sm"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add New Space
@@ -436,23 +436,23 @@ const OwnerDashboard = () => {
             </div>
 
             {filteredSpaces.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {filteredSpaces.map(space => (
                   <OwnerSpaceCardWrapper key={space.id} space={space} />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 bg-white rounded-lg shadow-md">
-                <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-4">
+              <div className="text-center py-8 sm:py-12 bg-white rounded-lg shadow-md">
+                <Building className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-sm sm:text-base text-gray-500 mb-4">
                   {searchTerm ? 'No spaces found matching your search' : 'You haven\'t added any spaces yet'}
                 </p>
                 {!searchTerm && (
-                  <button 
+                  <button
                     onClick={() => setShowSpaceCreation(true)}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center mx-auto"
+                    className="bg-blue-600 text-white px-5 py-2 sm:px-6 sm:py-3 rounded-lg hover:bg-blue-700 flex items-center mx-auto text-sm sm:text-base"
                   >
-                    <Plus className="h-5 w-5 mr-2" />
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                     Add Your First Space
                   </button>
                 )}
@@ -463,45 +463,45 @@ const OwnerDashboard = () => {
 
         {/* Bookings Tab - Use existing BookingsTable component */}
         {activeTab === 'bookings' && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <BookingsTable />
           </div>
         )}
 
         {/* Invoices Tab - Use existing InvoicesTable component */}
         {activeTab === 'invoices' && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <InvoicesTable />
           </div>
         )}
 
         {/* Reviews Tab */}
         {activeTab === 'reviews' && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <div className="bg-white rounded-lg shadow-md">
-              <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">Customer Reviews</h3>
-                <p className="text-gray-600 text-sm mt-1">Reviews from your space bookings</p>
+              <div className="p-4 sm:p-6 border-b">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Customer Reviews</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">Reviews from your space bookings</p>
               </div>
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 {reviews.length > 0 ? (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {reviews.map(review => {
                       const reviewBooking = bookings.find(b => b.id === review.booking_id);
                       const reviewSpace = spaces.find(s => s.id === reviewBooking?.space_id);
-                      
+
                       return (
-                        <div key={review.id} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-3">
+                        <div key={review.id} className="border rounded-lg p-3 sm:p-4">
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 sm:mb-3">
                             <div>
-                              <h4 className="font-semibold text-gray-900">
+                              <h4 className="font-semibold text-gray-900 text-sm sm:text-base">
                                 {reviewSpace?.title || reviewSpace?.name || `Space #${reviewBooking?.space_id || 'Unknown'}`}
                               </h4>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-xs sm:text-sm text-gray-600">
                                 by User #{review.user_id} • {new Date(review.created_at).toLocaleDateString()}
                               </p>
                             </div>
-                            <div className="flex items-center">
+                            <div className="flex items-center mt-2 sm:mt-0">
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
@@ -511,16 +511,16 @@ const OwnerDashboard = () => {
                               <span className="ml-2 text-sm font-medium">{review.rating}/5</span>
                             </div>
                           </div>
-                          <p className="text-gray-700 mb-3">{review.comment}</p>
+                          <p className="text-sm text-gray-700 mb-3">{review.comment}</p>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <Star className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No reviews yet</p>
-                    <p className="text-sm text-gray-400 mt-2">Reviews will appear here after customers complete bookings</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <Star className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-sm sm:text-base text-gray-500">No reviews yet</p>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-2">Reviews will appear here after customers complete bookings</p>
                   </div>
                 )}
               </div>

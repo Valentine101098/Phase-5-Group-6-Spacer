@@ -1,4 +1,3 @@
-// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -23,7 +22,7 @@ import OwnerDashboard from './components/OwnerDashboard';
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) {
-    return <div className="text-center py-8 text-lg text-primary">Loading authentication...</div>;
+    return <div className="text-center py-4 sm:py-8 text-base sm:text-lg text-primary">Loading authentication...</div>;
   }
   if (!isAuthenticated && !loading) {
     return <Login />;
@@ -36,9 +35,9 @@ function AppContent() {
 
   return (
     <>
-      <nav className="bg-primary text-white p-4 flex justify-between items-center shadow-md">
-        <Link to="/" className="text-2xl font-bold text-white no-underline font-nabla">SpaceHub</Link>
-        <div className="flex space-x-6">
+      <nav className="bg-primary text-white p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center shadow-md"> {/* Responsive padding and layout */}
+        <Link to="/" className="text-xl sm:text-2xl font-bold text-white no-underline font-nabla mb-2 sm:mb-0">SpaceHub</Link> {/* Responsive text size and margin */}
+        <div className="flex flex-wrap justify-center sm:justify-end space-x-3 sm:space-x-6 text-sm sm:text-base"> {/* Responsive spacing and text size */}
           <Link to="/" className="text-white hover:text-secondary hover:underline transition-colors duration-200 font-dancing">Home</Link>
           {!isAuthenticated ? (
             <>
@@ -66,7 +65,7 @@ function AppContent() {
           )}
         </div>
       </nav>
-      <div className="flex-grow p-8 flex justify-center items-start min-h-screen bg-lightblue-lighter">
+      <div className="flex-grow p-4 sm:p-8 flex justify-center items-start min-h-screen bg-lightblue-lighter"> {/* Responsive padding */}
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
@@ -74,13 +73,10 @@ function AppContent() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-<Route path="/spaces/:id/booking" element={<PrivateRoute><BookingPage /></PrivateRoute>} />
-
-<Route path="/invoices/:id" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
-
-<Route path="/dashboard/bookings" element={<PrivateRoute><BookingsTable /></PrivateRoute>} />
-
-<Route path="/dashboard/invoices" element={<PrivateRoute><InvoicesTable /></PrivateRoute>} />
+          <Route path="/spaces/:id/booking" element={<PrivateRoute><BookingPage /></PrivateRoute>} />
+          <Route path="/invoices/:id" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
+          <Route path="/dashboard/bookings" element={<PrivateRoute><BookingsTable /></PrivateRoute>} />
+          <Route path="/dashboard/invoices" element={<PrivateRoute><InvoicesTable /></PrivateRoute>} />
 
 
           <Route
