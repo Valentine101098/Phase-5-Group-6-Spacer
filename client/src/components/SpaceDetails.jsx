@@ -97,7 +97,7 @@ const fetchUserBookings = () => {
                     <div className="grid gap-4 max-w-4xl w-full">
                         {/* Featured Image with arrows + counter */}
                         {space.images[currentImageIndex] && (
-                            <div className="relative flex justify-center">
+                            <div className="relative flex justify-center h-80 w-full">
                                 <button
                                     onClick={goPrev}
                                     className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full hover:bg-opacity-70"
