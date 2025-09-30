@@ -47,17 +47,17 @@ function AppContent() {
             </>
           ) : (
             <>
-              <Link to="/profile">Profile</Link>
+              <Link to="/profile" className='font-dancing'>Profile</Link>
               {user && user.roles && (
                 <>
                   {user.roles.includes('admin') && (
-                    <Link to="/admin-dashboard">My Dashboard</Link>
+                    <Link to="/admin-dashboard" className='font-dancing'>My Dashboard</Link>
                   )}
                   {user.roles.includes('client') && (
-                    <Link to="/client-dashboard">My Dashboard</Link>
+                    <Link to="/client-dashboard" className='font-dancing'>My Dashboard</Link>
                   )}
                   {user.roles.includes('owner') && (
-                    <Link to="/owner-dashboard">My Dashboard</Link>
+                    <Link to="/owner-dashboard" className='font-dancing'>My Dashboard</Link>
                   )}
                 </>
               )}
