@@ -5,6 +5,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.models import Booking, Space, AgreementTemplate, AgreementInstance, Invoice, db
 from .auth import roles_required
 from datetime import datetime,  timedelta, timezone
+from sqlalchemy import or_, asc, desc, func, cast, String
 
 bookings_bp = Blueprint("bookings", __name__)
 bookings_api = Api(bookings_bp)
@@ -46,25 +47,79 @@ def booking_to_dict_safe(booking):
     }
 
 
+
+
 class BookingListResource(Resource):
     @jwt_required()
     def get(self):
-        """Get all bookings (admin sees all, client sees own, owner sees bookings of their spaces)"""
+        """Get bookings with search, filter, sort, and pagination"""
         user_id = get_jwt_identity()
         roles = get_jwt().get("roles", [])
 
         if "admin" in roles:
-            bookings = Booking.query.all()
+            query = Booking.query
         elif "owner" in roles:
-            bookings = (
-                Booking.query.join(Space)
-                .filter(Space.owner_id == user_id)
-                .all()
-            )
+            query = Booking.query.join(Space).filter(Space.owner_id == user_id)
+        elif "client" in roles:
+            query = Booking.query.filter(Booking.user_id == user_id)
         else:
-            bookings = Booking.query.filter_by(user_id=user_id).all()
+            return {"data": [], "total": 0, "page": 1, "pages": 0}, 200
+        
+        space_id = request.args.get("space_id", type=int)
+        if space_id:
+            query = query.filter(Booking.space_id == space_id)       
 
-        return {"data": [booking_to_dict_safe(b) for b in bookings]}, 200
+        search = request.args.get("search", "").strip().lower()
+        if search:
+            query = query.join(Space).filter(
+                or_(
+                    func.cast(Booking.id, db.String).ilike(f"%{search}%"),
+                    func.lower(Space.title).ilike(f"%{search}%"),
+                    func.lower(Booking.status.cast(db.String)).ilike(f"%{search}%"),
+                )
+            )
+
+
+        status_filter = request.args.get("status")
+        if status_filter:
+            query = query.filter(
+                func.lower(cast(Booking.status, String)) == status_filter.lower()
+            )
+
+        sort_key = request.args.get("sort", "id")  
+        sort_dir = request.args.get("direction", "asc")
+
+        sort_mapping = {
+            "id": Booking.id,
+            "space_title": Space.title,
+            "checkin": Booking.start_time,
+            "checkout": Booking.end_time,
+            "duration": (Booking.end_time - Booking.start_time),
+            "guests": Booking.estimated_guests,
+            "amount": Booking.total_amount,
+            "status": Booking.status,
+        }
+
+        if sort_key in sort_mapping:
+            sort_column = sort_mapping[sort_key]
+            if sort_dir == "desc":
+                query = query.order_by(desc(sort_column))
+            else:
+                query = query.order_by(asc(sort_column))
+
+        page = request.args.get("page", 1, type=int)
+        per_page = 10
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+        bookings = [booking_to_dict_safe(b) for b in pagination.items]
+
+        return {
+            "data": bookings,
+            "total": pagination.total,
+            "page": pagination.page,
+            "pages": pagination.pages,
+        }, 200
+
 
 
     @jwt_required()
@@ -196,23 +251,29 @@ class BookingResource(Resource):
         user_id = get_jwt_identity()
         roles = get_jwt().get("roles", [])
 
-        if booking.user_id != user_id and "admin" not in roles:
-            return {"error": "Not authorized"}, 403
+        if "admin" in roles:
+            return {"data": booking_to_dict_safe(booking)}, 200
 
-        return {"data": booking_to_dict_safe(booking)}, 200
+        if "owner" in roles and booking.space.owner_id == user_id:
+            return {"data": booking_to_dict_safe(booking)}, 200
+
+        if booking.user_id == user_id:
+            return {"data": booking_to_dict_safe(booking)}, 200
+
+        return {"error": "Not authorized"}, 403
+
 
 class BookingCancelResource(Resource):
 
     @jwt_required()
     def put(self, booking_id):
-        """Cancel booking (client or admin)"""
+        """Cancel booking (owner, or admin)"""
         booking = Booking.query.get_or_404(booking_id)
         user_id = get_jwt_identity()
         claims = get_jwt()
-        
+        roles = claims.get("roles", [])
 
-
-        if "admin" in claims.get("roles", []) or "owner" in claims.get("roles", []):
+        if "admin" in roles:
             if booking.status == "cancelled":
                 return {"error": "Booking already cancelled"}, 400
 
@@ -220,12 +281,25 @@ class BookingCancelResource(Resource):
             update_space_status(booking.space)
             db.session.commit()
             return {
-                "message": "Booking cancelled by admin or owner.",
+                "message": "Booking cancelled by admin.",
                 "data": booking_to_dict_safe(booking),
             }, 200
 
+        if "owner" in roles:
+            if booking.space.owner_id != user_id:
+                return {"error": "Not authorized to cancel this booking"}, 403
+            if booking.status == "cancelled":
+                return {"error": "Booking already cancelled"}, 400
 
-        if "client" in claims.get("roles", []):
+            booking.status = "cancelled"
+            update_space_status(booking.space)
+            db.session.commit()
+            return {
+                "message": "Booking cancelled by owner.",
+                "data": booking_to_dict_safe(booking),
+            }, 200
+
+        if "client" in roles:
             if booking.user_id != user_id:
                 return {"error": "Not authorized"}, 403
             if booking.status == "cancelled":
@@ -240,7 +314,6 @@ class BookingCancelResource(Resource):
                 "message": "Booking cancelled",
                 "data": booking_to_dict_safe(booking),
             }, 200
-
 
         return {"error": "Not authorized"}, 403
 
@@ -266,7 +339,54 @@ class BookingConfirmResource(Resource):
         return {"message": "Booking confirmed", "data": booking_to_dict_safe(booking)}, 200
 
 
+class BookingStatsResource(Resource):
+    @jwt_required()
+    def get(self):
+        """Return aggregated booking statistics (scoped by role)"""
+        user_id = get_jwt_identity()
+        roles = get_jwt().get("roles", [])
+
+        if "admin" in roles:
+            query = Booking.query.join(Space)
+        elif "owner" in roles:
+            query = Booking.query.join(Space).filter(Space.owner_id == user_id)
+        elif "client" in roles:
+            query = Booking.query.filter(Booking.user_id == user_id)
+        else:
+            return {
+                "confirmedCount": 0,
+                "totalGuests": 0,
+                "totalRevenue": 0.0,
+                "avgDuration": 0.0,
+                "totalCount": 0.0
+            }, 200
+
+        bookings = query.all()
+
+        confirmed = [b for b in bookings if b.status and b.status.lower() == "confirmed"]
+
+        confirmed_count = len(confirmed)
+        total_guests = sum(b.estimated_guests or 0 for b in confirmed)
+        total_revenue = sum(float(b.total_amount or 0) for b in confirmed)
+
+        durations = []
+        for b in confirmed:
+            if b.start_time and b.end_time:
+                durations.append((b.end_time - b.start_time).total_seconds() / 3600)
+        avg_duration = sum(durations) / len(durations) if durations else 0.0
+        
+
+        return {
+            "confirmedCount": confirmed_count,
+            "totalGuests": total_guests,
+            "totalRevenue": total_revenue,
+            "avgDuration": avg_duration,
+            'totalCount': len(bookings),
+        }, 200
+
+
 bookings_api.add_resource(BookingListResource, "/")
 bookings_api.add_resource(BookingResource, "/<int:booking_id>")
 bookings_api.add_resource(BookingCancelResource, "/<int:booking_id>/cancel")
 bookings_api.add_resource(BookingConfirmResource, "/<int:booking_id>/confirm")
+bookings_api.add_resource(BookingStatsResource, "/stats")

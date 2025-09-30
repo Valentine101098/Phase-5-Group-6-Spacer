@@ -109,10 +109,11 @@ def seed_data(app):
 
 
 def get_token(app, user_id, role):
+    """Generate JWT token with roles as a list"""
     with app.app_context():
         return create_access_token(
             identity=user_id,
-            additional_claims={"role": role}
+            additional_claims={"roles": [role]}  # FIXED: Changed to "roles" (plural) as a list
         )
 
 
@@ -125,8 +126,17 @@ def test_client_lists_own_invoices(client, app, seed_data):
                       headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     data = json.loads(resp.data)
+    
+    # Check pagination structure
+    assert "data" in data
+    assert "total" in data
+    assert "pages" in data
+    assert "page" in data
+    
     assert len(data["data"]) == 1
     assert data["data"][0]["booking_id"] == seed_data["booking1_id"]
+    assert data["total"] == 1
+    assert data["page"] == 1
 
 
 def test_owner_lists_invoices_for_their_spaces(client, app, seed_data):
@@ -136,9 +146,16 @@ def test_owner_lists_invoices_for_their_spaces(client, app, seed_data):
                       headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     data = json.loads(resp.data)
+    
+    # Check pagination structure
+    assert "data" in data
+    assert "total" in data
+    assert "pages" in data
+    
     booking_ids = {i["booking_id"] for i in data["data"]}
     assert seed_data["booking1_id"] in booking_ids
     assert seed_data["booking2_id"] in booking_ids
+    assert data["total"] == 2
 
 
 def test_admin_lists_all_invoices(client, app, seed_data):
@@ -148,7 +165,14 @@ def test_admin_lists_all_invoices(client, app, seed_data):
                       headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     data = json.loads(resp.data)
+    
+    # Check pagination structure
+    assert "data" in data
+    assert "total" in data
+    assert "pages" in data
+    
     assert len(data["data"]) == 2
+    assert data["total"] == 2
 
 
 def test_get_invoice_success_for_client(client, app, seed_data):
@@ -158,8 +182,25 @@ def test_get_invoice_success_for_client(client, app, seed_data):
                       headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     data = json.loads(resp.data)
+    
+    # Check invoice fields
     assert data["id"] == seed_data["invoice1_id"]
     assert data["booking_id"] == seed_data["booking1_id"]
+    assert "amount" in data
+    assert "status" in data
+    assert "payment_method" in data
+    assert "transaction_id" in data
+    assert "created_at" in data
+    
+    # Check nested booking object
+    assert "booking" in data
+    assert data["booking"]["id"] == seed_data["booking1_id"]
+    assert "space_id" in data["booking"]
+    assert "start_time" in data["booking"]
+    assert "end_time" in data["booking"]
+    assert "estimated_guests" in data["booking"]
+    assert "status" in data["booking"]
+    assert "space_title" in data["booking"]
 
 
 def test_client_cannot_access_others_invoice(client, app, seed_data):
