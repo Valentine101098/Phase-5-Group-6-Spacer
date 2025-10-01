@@ -143,26 +143,35 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const logout = async () => {
-    setLoading(true);
-    if (accessToken) {
-      const result = await makeAuthenticatedRequest('/auth/logout', 'DELETE');
-      if (!result.success) {
-        console.warn("Backend logout failed, but clearing local tokens anyway:", result.error);
-      }
-    } else {
-      console.log("No access token to revoke, proceeding with local logout.");
+const logout = async () => {
+  setLoading(true);
+  if (accessToken) {
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    } catch (err) {
+      console.warn("Backend logout failed, but clearing local tokens anyway:", err);
     }
+  } else {
+    console.log("No access token to revoke, proceeding with local logout.");
+  }
 
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    setAccessToken(null);
-    setRefreshToken(null);
-    setUser(null);
-    setLoading(false);
-    return { success: true };
-  };
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+  setAccessToken(null);
+  setRefreshToken(null);
+  setUser(null);
+  setLoading(false);
+
+  return { success: true };
+};
+
 
   const refreshAccessTokenInternal = async () => {
     setLoading(true);
