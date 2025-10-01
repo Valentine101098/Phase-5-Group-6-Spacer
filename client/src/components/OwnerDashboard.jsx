@@ -42,6 +42,13 @@ const OwnerDashboard = () => {
     return fallback;
   };
 
+  // Update a space
+  const handleSpaceUpdated = (updatedSpace) => {
+    setSpaces((prev) => prev.map((s) => (s.id === updatedSpace.id ? updatedSpace : s)));
+    setSelectedSpace(null);
+    setShowSpaceCreation(false);
+  };
+
   // Fetch owner-specific data
   const fetchData = async () => {
     if (!isAuthenticated) {
@@ -164,6 +171,13 @@ const OwnerDashboard = () => {
             <Eye className="h-4 w-4" />
           </button>
           <button
+            onClick={() => setSelectedSpace(space)}
+            className="bg-yellow-500 text-white p-2 rounded-full hover:bg-yellow-600"
+            title="Edit Space"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+          <button 
             onClick={() => handleDeleteSpace(space.id)}
             className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700"
             title="Delete Space"
@@ -239,20 +253,29 @@ const OwnerDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Space Creation Modal */}
-      {showSpaceCreation && (
+      {(showSpaceCreation || selectedSpace) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-full sm:max-w-2xl lg:max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-4 sm:p-6 border-b">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Create New Space</h2>
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {selectedSpace ? "Edit Space" : "Create New Space"}
+              </h2>
               <button
-                onClick={() => setShowSpaceCreation(false)}
+                onClick={() => {
+                  setShowSpaceCreation(false);
+                  setSelectedSpace(null);
+                }}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
-            <div className="p-4 sm:p-6">
-              <SpaceCreation onSpaceCreated={handleSpaceCreated} />
+            <div className="p-6">
+              <SpaceCreation
+                existingSpace={selectedSpace}
+                onSpaceCreated={handleSpaceCreated}
+                onSpaceUpdated={handleSpaceUpdated}
+              />
             </div>
           </div>
         </div>

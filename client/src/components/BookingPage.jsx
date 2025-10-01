@@ -138,18 +138,18 @@ export function BookingPage() {
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 <div className="text-center p-3 sm:p-4 bg-green-50 rounded-xl">
-                  <div className="text-xl sm:text-2xl font-bold text-green-600">{space?.space_type}</div>
                   <div className="text-xs sm:text-sm text-gray-600">Space Type</div>
+                  <div className="text-xl sm:text-2xl font-semibold text-green-600">{space?.space_type}</div>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-xl">
-                  <div className="text-xl sm:text-2xl font-bold text-blue-600">{space?.max_guests}</div>
                   <div className="text-xs sm:text-sm text-gray-600">Max Guests</div>
+                  <div className="text-xl sm:text-2xl font-semibold text-blue-600">{space?.max_guests}</div>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-xl">
-                  <div className="text-xl sm:text-2xl font-bold text-purple-600">
+                  <div className="text-xs sm:text-sm text-gray-600">Price Per Hour</div>
+                  <div className="text-xl sm:text-2xl font-semibold text-purple-600">
                     {formatCurrency(space?.price_per_hour)}
                   </div>
-                  <div className="text-xs sm:text-sm text-gray-600">Per Hour</div>
                 </div>
               </div>
             </div>

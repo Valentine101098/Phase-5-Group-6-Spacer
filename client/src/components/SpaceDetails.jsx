@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import SpaceReviewForm from "./SpaceReviewForm";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { API_BASE_URL } from "../config/api";
 import { Star, X } from "lucide-react"; // Import X for close icon
 
@@ -10,7 +11,18 @@ export default function SpaceDetails({ space, onClose }) {
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [editingReview, setEditingReview] = useState(null);
     const [userBookings, setUserBookings] = useState([]);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const { user, accessToken } = useAuth();
+
+    const totalImages = space.images.length;
+
+    const goPrev = () => {
+        setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? totalImages - 1 : prevIndex - 1));
+    };
+    
+    const goNext = () => {
+        setCurrentImageIndex((prevIndex) => (prevIndex === totalImages - 1 ? 0 : prevIndex + 1));
+    };  
 
     const fetchReviews = () => {
         fetch(`${API_BASE_URL}/api/reviews/spaces/${space.id}?limit=5`)
@@ -34,7 +46,11 @@ const fetchUserBookings = () => {
 
     useEffect(() => {
         fetchReviews();
-        fetchUserBookings();
+        if (user && accessToken){
+            fetchUserBookings();
+        } else{
+            setUserBookings([]);
+        }
     }, [space.id, user, accessToken]); // Added accessToken to dependencies
 
     const hasBooked = userBookings.length > 0;
@@ -76,16 +92,56 @@ const fetchUserBookings = () => {
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-4 mb-4"> {/* Responsive grid for images */}
-                    {space.images.slice(0, 4).map((imgUrl, index) => (
-                        <img
-                            key={index}
-                            src={imgUrl}
-                            alt={`Space Image ${index + 1}`}
-                            className="w-full h-40 sm:h-48 object-cover shadow-lg rounded-lg" // Responsive height
-                        />
-                    ))}
+                {/* Gallery Section */}
+                <div className="flex justify-center shadow rounded p-4 mb-4">
+                    <div className="grid gap-4 max-w-4xl w-full">
+                        {/* Featured Image with arrows + counter */}
+                        {space.images[currentImageIndex] && (
+                            <div className="relative flex justify-center">
+                                <button
+                                    onClick={goPrev}
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full hover:bg-opacity-70"
+                                >
+                                    <ChevronLeft size={24} />
+                                </button>
+                                <img
+                                    src={space.images[currentImageIndex]}
+                                    alt={`Featured Space ${currentImageIndex + 1}`}
+                                    className="h-auto max-w-full rounded-lg object-cover shadow-lg"
+                                />
+
+                                <button
+                                    onClick={goNext}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full hover:bg-opacity-70"
+                                >
+                                    <ChevronRight size={24} />
+                                </button>
+
+                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-60 text-white text-sm px-3 py-1 rounded-full">
+                                    {currentImageIndex + 1} / {totalImages}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-5 gap-4 justify-center">
+                            {space.images.slice(0, 6).map((imgUrl, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setCurrentImageIndex(index)}
+                                    className={`focus:outline-none ${index === currentImageIndex ? "ring-2 ring-green-500 rounded-lg" : ""
+                                        }`}
+                                >
+                                    <img
+                                        src={imgUrl}
+                                        alt={`Space Thumbnail ${index + 1}`}
+                                        className="h-auto max-w-full rounded-lg object-cover"
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
+
 
                 <p className="mb-3 text-gray-700 dark:text-gray-300 text-sm sm:text-base">{space.description}</p> {/* Responsive text size and color */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 shadow p-4 rounded-xl bg-white dark:bg-gray-700"> {/* Responsive grid and spacing */}
