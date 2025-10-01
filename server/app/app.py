@@ -10,6 +10,7 @@ from app.models import db, bcrypt
 from app.views.auth import jwt_blocklist
 from dotenv import load_dotenv
 import logging
+from app.extensions import oauth
 
 
 load_dotenv()
@@ -68,6 +69,7 @@ class TestingConfig(Config):
 
 def create_app(config_class=None):
     app = Flask(__name__)
+    app.secret_key = os.getenv('SECRET_KEY', 'default-dev-secret-key-please-change-in-prod')
 
     if config_class is None:
         env = os.getenv('FLASK_ENV', 'development')
@@ -90,6 +92,20 @@ def create_app(config_class=None):
     # Database
     db.init_app(app)
     bcrypt.init_app(app) # Initialize Bcrypt here
+
+    # OAuth
+
+    oauth.init_app(app)
+    oauth.register(
+        name='google',
+        client_id=os.getenv('GOOGLE_CLIENT_ID'),
+        client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+        server_metadata_url=os.getenv('GOOGLE_DISCOVERY_URL'),
+        client_kwargs={
+            'scope': 'openid email profile'
+        }
+    )
+
 
     # JWT
     jwt = JWTManager(app)
