@@ -1,7 +1,7 @@
 from flask_bcrypt import Bcrypt
 from sqlalchemy_serializer import SerializerMixin
 from datetime import timezone, datetime, date, timedelta
-from sqlalchemy import Enum, CheckConstraint, UniqueConstraint
+from sqlalchemy import Enum, CheckConstraint, UniqueConstraint, String
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates, relationship
 from sqlalchemy.types import TypeDecorator, TIMESTAMP
@@ -49,9 +49,11 @@ class User(db.Model, SerializerMixin):
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
     email = db.Column(db.String(40), nullable=False, unique=True, index=True)
-    phone_number = db.Column(db.String(16), nullable=False, index=True)
-    password_hash = db.Column(db.String(120), nullable=False)
+    phone_number = db.Column(db.String(16), nullable=True, index=True)
+    password_hash = db.Column(db.String(120), nullable=True)
     created_at = db.Column(UTCDateTime, default=datetime.now(timezone.utc)) # UTCDateTime
+    oauth_provider = db.Column(String(50), nullable=True)  # 'google' or 'local'
+    oauth_provider_id = db.Column(String(255), nullable=True)  # Google's user ID
 
     user_roles = db.relationship("User_Roles", back_populates="user", cascade="all, delete-orphan")
     reset_tokens = db.relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
@@ -76,6 +78,10 @@ class User(db.Model, SerializerMixin):
         '-agreements_issued.owner',
         '-agreements_received.client'
     )
+
+    __table_args__ = (
+        UniqueConstraint('oauth_provider', 'oauth_provider_id', name='uix_oauth'),
+    )    
 
     def __repr__(self):
         return f"<User {self.first_name} {self.last_name}>"
@@ -109,12 +115,7 @@ class User(db.Model, SerializerMixin):
             raise ValueError("Invalid email format")
         return email.lower() # Store in lowercase
 
-    @validates('phone_number')
-    def validate_phone(self, key, phone):
-        cleaned_phone = ''.join(filter(str.isdigit, phone))
-        if len(cleaned_phone) < 10:
-            raise ValueError("Phone number must be at least 10 digits")
-        return cleaned_phone
+
 
 # --- Role Model ---
 class Role(db.Model, SerializerMixin):
