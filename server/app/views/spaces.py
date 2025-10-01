@@ -54,7 +54,7 @@ def get_spaces():
     min_price = request.args.get('min_price', type=int)
     max_price = request.args.get('max_price', type=int)
     space_type = request.args.get('space_type', '').strip()
-    status = request.args.get('status', 'available')
+    status = request.args.get('status', '')
 
     # Start with base query
     query = db.session.query(Space)

@@ -146,7 +146,7 @@ export function InvoicesTable() {
 
       {/* Mobile Card View */}
       <div className="block lg:hidden space-y-4">
-        {filteredAndSortedInvoices.map((inv) => (
+        {invoices.map((inv) => (
           <div key={inv.id} className="bg-white border rounded-lg p-4 shadow-sm">
             <div className="flex justify-between items-start mb-3">
               <div>
