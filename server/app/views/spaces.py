@@ -56,6 +56,13 @@ def get_spaces():
     space_type = request.args.get('space_type', '').strip()
     status = request.args.get('status', '')
 
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 12, type=int)
+
+    # Limit per_page to reasonable values
+    per_page = min(per_page, 100)
+
     # Start with base query
     query = db.session.query(Space)
 
@@ -89,12 +96,24 @@ def get_spaces():
     if filters:
         query = query.filter(and_(*filters))
 
-    # Execute query
-    spaces = query.all()
+    # Get total count before pagination
+    total_count = query.count()
+
+    # Calculate pagination metadata
+    total_pages = (total_count + per_page - 1) // per_page
+
+    # Apply pagination
+    spaces = query.offset((page - 1) * per_page).limit(per_page).all()
 
     return jsonify({
         'spaces': [space.to_dict() for space in spaces],
         'count': len(spaces),
+        'total': total_count,
+        'page': page,
+        'per_page': per_page,
+        'total_pages': total_pages,
+        'has_next': page < total_pages,
+        'has_prev': page > 1,
         'filters_applied': {
             'keyword': keyword if keyword else None,
             'min_price': min_price,
@@ -111,6 +130,13 @@ def search_spaces():
     min_price = request.args.get('min_price', type=int)
     max_price = request.args.get('max_price', type=int)
     space_type = request.args.get('type', '').strip()
+
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 12, type=int)
+
+    # Limit per_page to reasonable values
+    per_page = min(per_page, 100)
 
     query = db.session.query(Space).filter(Space.status == 'available')
 
@@ -131,9 +157,24 @@ def search_spaces():
     if space_type:
         query = query.filter(Space.space_type.ilike(f'%{space_type}%'))
 
-    spaces = query.all()
+    # Get total count before pagination
+    total_count = query.count()
 
-    return jsonify([space.to_dict() for space in spaces]), 200
+    # Calculate pagination metadata
+    total_pages = (total_count + per_page - 1) // per_page
+
+    # Apply pagination
+    spaces = query.offset((page - 1) * per_page).limit(per_page).all()
+
+    return jsonify({
+        'spaces': [space.to_dict() for space in spaces],
+        'total': total_count,
+        'page': page,
+        'per_page': per_page,
+        'total_pages': total_pages,
+        'has_next': page < total_pages,
+        'has_prev': page > 1
+    }), 200
 
 # Get a specific space by ID
 @spaces_bp.route('/<int:space_id>', methods=['GET'])

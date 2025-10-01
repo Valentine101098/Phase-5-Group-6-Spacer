@@ -48,7 +48,7 @@ class User(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
-    email = db.Column(db.String(40), nullable=False, unique=True, index=True)
+    email = db.Column(db.String(60), nullable=False, unique=True, index=True)
     phone_number = db.Column(db.String(16), nullable=True, index=True)
     password_hash = db.Column(db.String(120), nullable=True)
     created_at = db.Column(UTCDateTime, default=datetime.now(timezone.utc)) # UTCDateTime
@@ -81,7 +81,7 @@ class User(db.Model, SerializerMixin):
 
     __table_args__ = (
         UniqueConstraint('oauth_provider', 'oauth_provider_id', name='uix_oauth'),
-    )    
+    )
 
     def __repr__(self):
         return f"<User {self.first_name} {self.last_name}>"

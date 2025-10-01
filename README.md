@@ -215,6 +215,29 @@ npm test
 5. Wait for code review
 6. Merge after approval
 
+### Screenshots
+
+1. Landing Page
+![Home page](image.png)
+
+2. Signup Page
+![Sign-up page](image-1.png)
+
+3. Login Page
+![Login Page](image-2.png)
+
+4. Admin Dashboard
+![Admin Dashboard](image-3.png)
+
+5. Owner Dashboard
+![Owner Dashboard](image-4.png)
+
+6. Client Dashboard
+![Client Dashboard](image-5.png)
+
+7. Profile Page
+![Profile Page](image-6.png)
+
 ### 👨‍💻 Contributors/Developers
 
 - *Valentine Wanjiru*

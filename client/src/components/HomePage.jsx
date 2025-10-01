@@ -1,8 +1,27 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Home, MapPin, Users, Shield, Search } from "lucide-react";
+import { Home, MapPin, Users, Shield, Search, Sparkles } from "lucide-react";
 import Spaces from "./Spaces";
 import { API_BASE_URL } from '../config/api';
+
+// Enhanced Button Component
+const Button = ({ variant = 'primary', children, className = '', ...props }) => {
+  const baseStyles = "px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95";
+
+  const variants = {
+    primary: "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-blue-500/60",
+    hero: "bg-white text-blue-600 shadow-2xl shadow-white/20 hover:shadow-white/30 backdrop-blur-sm",
+    cta: "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg hover:shadow-2xl",
+    outline: "border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm",
+    filter: "border-2 border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+  };
+
+  return (
+    <button className={`${baseStyles} ${variants[variant]} ${className}`} {...props}>
+      {children}
+    </button>
+  );
+};
 
 // Search Component
 const SpaceSearch = ({ onSearch, onClear }) => {
@@ -56,7 +75,7 @@ const SpaceSearch = ({ onSearch, onClear }) => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/spaces?${queryParams.toString()}`);
+      const response = await fetch(`${API_BASE_URL}/api/spaces?${queryParams.toString()}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -95,61 +114,63 @@ const SpaceSearch = ({ onSearch, onClear }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
-      <div className="space-y-3 sm:space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
+    <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl shadow-blue-500/10 p-6 sm:p-8 mb-8 border border-white/20 transition-all duration-500 hover:shadow-blue-500/20">
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative group">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-400 h-5 w-5 transition-colors group-focus-within:text-blue-600" />
             <input
               type="text"
-              placeholder="Search for spaces..."
+              placeholder="Search for your perfect workspace..."
               value={searchParams.keyword}
               onChange={(e) => handleInputChange('keyword', e.target.value)}
               onKeyPress={handleKeyPress}
-              className="w-full pl-10 pr-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-12 pr-4 py-4 text-base border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
             />
           </div>
 
-          <button
+          <Button
+            variant="filter"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className={`px-3 sm:px-4 py-2 sm:py-3 border rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base ${
+            className={`${
               showAdvanced || hasActiveFilters()
-                ? 'bg-blue-50 border-blue-300 text-blue-700'
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-300 text-blue-700 shadow-md'
+                : ''
             }`}
           >
             Filters
             {hasActiveFilters() && (
-              <span className="bg-blue-500 text-white rounded-full text-xs px-2 py-0.5">
+              <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full text-xs px-2.5 py-1 font-bold shadow-lg animate-bounce">
                 {Object.values(searchParams).filter(v => v && v.toString().trim()).length}
               </span>
             )}
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="primary"
             onClick={handleSearch}
             disabled={isSearching}
-            className="px-4 sm:px-8 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
+            className="disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {isSearching ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 Searching...
               </>
             ) : (
               <>
-                <Search className="h-4 w-4" />
+                <Search className="h-5 w-5" />
                 Search
               </>
             )}
-          </button>
+          </Button>
         </div>
 
         {showAdvanced && (
-          <div className="border-t pt-4 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+          <div className="border-t-2 border-gradient-to-r from-blue-200 to-purple-200 pt-6 space-y-4 animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="block text-xs sm:text-sm font-medium text-gray-700">
+                <label className="block text-sm font-bold text-gray-700 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Price Range (per hour)
                 </label>
                 <div className="flex gap-2">
@@ -158,27 +179,27 @@ const SpaceSearch = ({ onSearch, onClear }) => {
                     placeholder="Min"
                     value={searchParams.minPrice}
                     onChange={(e) => handleInputChange('minPrice', e.target.value)}
-                    className="flex-1 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   />
-                  <span className="flex items-center text-gray-500 text-sm">to</span>
+                  <span className="flex items-center text-gray-400 font-semibold">→</span>
                   <input
                     type="number"
                     placeholder="Max"
                     value={searchParams.maxPrice}
                     onChange={(e) => handleInputChange('maxPrice', e.target.value)}
-                    className="flex-1 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-xs sm:text-sm font-medium text-gray-700">
+                <label className="block text-sm font-bold text-gray-700 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Space Type
                 </label>
                 <select
                   value={searchParams.spaceType}
                   onChange={(e) => handleInputChange('spaceType', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className=" w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
                 >
                   <option value="">All Types</option>
                   {spaceTypes.map(type => (
@@ -193,7 +214,7 @@ const SpaceSearch = ({ onSearch, onClear }) => {
                 {hasActiveFilters() && (
                   <button
                     onClick={handleClear}
-                    className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 flex items-center justify-center gap-2"
+                    className="w-full px-4 py-2.5 text-sm border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all duration-300 font-semibold"
                   >
                     Clear Filters
                   </button>
@@ -204,25 +225,27 @@ const SpaceSearch = ({ onSearch, onClear }) => {
         )}
 
         {hasActiveFilters() && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="text-xs sm:text-sm text-gray-600">Active filters:</span>
+          <div className="flex flex-wrap gap-2 animate-fade-in">
+            <span className="text-sm font-semibold text-gray-500 flex items-center gap-1">
+              <Sparkles className="h-4 w-4" /> Active filters:
+            </span>
             {searchParams.keyword && (
-              <span className="bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">
+              <span className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm hover:shadow-md transition-all">
                 "{searchParams.keyword}"
               </span>
             )}
             {searchParams.minPrice && (
-              <span className="bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">
+              <span className="bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm hover:shadow-md transition-all">
                 Min: Ksh {searchParams.minPrice}/hr
               </span>
             )}
             {searchParams.maxPrice && (
-              <span className="bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">
+              <span className="bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm hover:shadow-md transition-all">
                 Max: Ksh {searchParams.maxPrice}/hr
               </span>
             )}
             {searchParams.spaceType && (
-              <span className="bg-purple-100 text-purple-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">
+              <span className="bg-gradient-to-r from-purple-100 to-pink-200 text-purple-800 px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm hover:shadow-md transition-all">
                 {searchParams.spaceType}
               </span>
             )}
@@ -240,19 +263,22 @@ const HomePage = () => {
 
   const features = [
     {
-      icon: <Home className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />,
+      icon: <Home className="h-8 w-8 text-blue-600" />,
       title: "Quality Spaces",
-      description: "Carefully vetted properties from trusted landlords across Nairobi"
+      description: "Carefully vetted properties from trusted landlords across Nairobi",
+      gradient: "from-blue-500 to-cyan-500"
     },
     {
-      icon: <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />,
+      icon: <Shield className="h-8 w-8 text-green-600" />,
       title: "Secure Platform",
-      description: "Safe and secure transactions with verified property owners"
+      description: "Safe and secure transactions with verified property owners",
+      gradient: "from-green-500 to-emerald-500"
     },
     {
-      icon: <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />,
+      icon: <Users className="h-8 w-8 text-purple-600" />,
       title: "Community Focused",
-      description: "Connect with a community of tenants and property managers"
+      description: "Connect with a community of tenants and property managers",
+      gradient: "from-purple-500 to-pink-500"
     }
   ];
 
@@ -269,97 +295,143 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out;
+        }
+      `}</style>
+
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-blue-600 to-purple-700 text-white">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/60 to-purple-700/60 backdrop-blur-sm"></div>
-        <div className="relative max-w-7xl mx-auto px-4 py-12 sm:py-20 text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
-            Find Your Perfect Working Environment/Space in Nairobi
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-purple-700 to-blue-400">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
+
+        <div className="relative max-w-7xl mx-auto px-4 py-20 sm:py-32 text-center">
+          <div className="inline-block mb-6 animate-float">
+            <span className="bg-white/20 backdrop-blur-md text-white px-6 py-2 rounded-full text-sm font-semibold shadow-2xl border border-white/30">
+              🚀 Premium Workspace Solutions
+            </span>
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black mb-6 text-white drop-shadow-2xl leading-tight">
+            Find Your Perfect<br />
+            <span className="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
+              Working Environment
+            </span>
           </h1>
-          <p className="text-base sm:text-lg lg:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto opacity-90">
-            Discover quality rental work spaces from verified owners.
+
+          <p className="text-lg sm:text-xl lg:text-2xl mb-10 max-w-3xl mx-auto text-white/95 font-medium drop-shadow-lg">
+            Discover quality rental workspaces from verified owners.<br />
             Your dream space is just a click away.
           </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button variant="hero" className="text-lg px-8 py-4">
+              <Sparkles className="h-5 w-5" />
+              Explore Spaces
+            </Button>
+            <Button variant="outline" className="text-lg px-8 py-4">
+              Learn More
+            </Button>
+          </div>
         </div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-blue-50 to-transparent"></div>
       </div>
 
       {/* Search Section */}
-      <div className="max-w-7xl mx-auto px-4 -mt-6 sm:-mt-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 -mt-12 relative z-10">
         <SpaceSearch onSearch={handleSearch} onClear={handleClearSearch} />
       </div>
 
       {/* Features Section */}
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:py-16">
-        <div className="text-center mb-8 sm:mb-12">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Why Choose SpaceHub?
           </h2>
-          <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-medium">
             We make finding and managing rental spaces simple, secure, and stress-free
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           {features.map((feature, index) => (
-            <div key={index} className="text-center p-4 sm:p-6 rounded-lg bg-white shadow-md hover:shadow-lg transition-shadow">
-              <div className="flex justify-center mb-3 sm:mb-4">
-                {feature.icon}
+            <div
+              key={index}
+              className="group text-center p-8 rounded-2xl bg-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 relative overflow-hidden"
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+              <div className="relative">
+                <div className="flex justify-center mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                  <div className={`p-4 rounded-2xl bg-gradient-to-br ${feature.gradient} shadow-lg`}>
+                    {feature.icon}
+                  </div>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold mb-3 text-gray-900">{feature.title}</h3>
+                <p className="text-base text-gray-600 leading-relaxed">{feature.description}</p>
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-900">{feature.title}</h3>
-              <p className="text-sm sm:text-base text-gray-600">{feature.description}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Properties Section */}
-      <div className="max-w-7xl mx-auto px-4 pb-12 sm:pb-16">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 space-y-3 sm:space-y-0">
+      <div className="max-w-7xl mx-auto px-4 pb-16 sm:pb-24">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 space-y-4 sm:space-y-0">
           <div className="flex-1">
-            <h2 className="text-2xl sm:text-3xl ml-0 sm:ml-4 font-bold text-gray-900">
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               {isSearching ? 'Search Results' : 'Featured Spaces'}
               {searchResultsCount !== null && (
-                <span className="text-base sm:text-lg font-normal text-gray-600 ml-2">
+                <span className="text-lg font-semibold text-gray-500 ml-3">
                   ({searchResultsCount} {searchResultsCount === 1 ? 'space' : 'spaces'} found)
                 </span>
               )}
             </h2>
-            <Spaces
-              searchResults={searchResults}
-              isSearching={isSearching}
-              onClearSearch={handleClearSearch}
-            />
+          </div>
+          <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-full shadow-lg font-semibold">
+            <MapPin className="h-5 w-5" />
+            <span>Nairobi, Kenya</span>
           </div>
         </div>
-        <div className="flex items-center justify-center text-blue-600">
-          <MapPin className="h-5 w-5 mr-2" />
-          <div className="font-medium">Nairobi, Kenya</div>
-        </div>
+
+        <Spaces
+          searchResults={searchResults}
+          isSearching={isSearching}
+          onClearSearch={handleClearSearch}
+        />
       </div>
 
       {/* Call to Action */}
-      <div className="bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-12 sm:py-16 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Ready to Get Started?</h2>
-          <p className="text-sm sm:text-base text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
-            Join thousands of satisfied tenants and landlords who trust SpaceHub
-            for their space needs.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-            <Link
-              to="/auth/register"
-              className="inline-block bg-blue-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm sm:text-base"
-            >
-              Sign Up Today
-            </Link>
-            <Link
-              to="/auth/login"
-              className="inline-block border border-gray-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors text-sm sm:text-base"
-            >
-              Already a Member?
-            </Link>
+      <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50"></div>
+
+        <div className="relative max-w-7xl mx-auto px-4 py-20 sm:py-28 text-center">
+          <div className="inline-block mb-6">
+            <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-xl">
+              ✨ Join Our Community
+            </span>
           </div>
+
+          <h2 className="text-3xl sm:text-5xl font-black mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            Ready to Get Started?
+          </h2>
+
+          <p className="text-base sm:text-xl text-gray-300 mb-10 max-w-2xl mx-auto font-medium leading-relaxed">
+            Join thousands of satisfied customers and owners who trust SpaceHub
+            for their workspace needs.
+          </p>
         </div>
       </div>
     </div>
