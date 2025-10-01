@@ -1,45 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, ChevronUp, ChevronDown, DollarSign, Calendar } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { API_BASE_URL } from '../config/api';
+import React from 'react';
+import { Search, ChevronUp, ChevronDown, DollarSign, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCurrency } from './currency';
+import { useInvoices } from './useInvoices';
 
 export function InvoicesTable() {
-  const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [statusFilter, setStatusFilter] = useState('all');
-  const { accessToken  } = useAuth()
-
-  useEffect(() => {
-    if (!accessToken) {
-      return
-    }
-    const fetchInvoices = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/api/invoices/`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        const data = await response.json();
-        setInvoices(data.data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInvoices();
-  }, [accessToken]);
+  const {
+    invoices,
+    loading,
+    error,
+    searchTerm,
+    setSearchTerm,
+    sortConfig,
+    setSortConfig,
+    statusFilter,
+    setStatusFilter,
+    page,
+    setPage,
+    totalPages,
+    total,
+    stats
+  } = useInvoices();
 
   const formatDate = (dateString) => {
     if (!dateString) return '—';
@@ -50,15 +30,11 @@ export function InvoicesTable() {
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case 'paid': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'unpaid': return 'bg-yellow-100 text-yellow-800';
+      case 'failed': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
-
-  const uniqueStatuses = useMemo(() => {
-    return [...new Set(invoices.map(inv => inv.status))];
-  }, [invoices]);
 
   const handleSort = (key) => {
     let direction = 'asc';
@@ -66,41 +42,17 @@ export function InvoicesTable() {
       direction = 'desc';
     }
     setSortConfig({ key, direction });
+    setPage(1);
   };
 
-  const filteredAndSortedInvoices = useMemo(() => {
-    let filtered = invoices.filter(inv => {
-      const matchesSearch =
-        inv.id.toString().includes(searchTerm.toLowerCase()) ||
-        inv.space_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inv.status.toLowerCase().includes(searchTerm.toLowerCase());
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
 
-      const matchesStatus = statusFilter === 'all' || inv.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        let aValue = a[sortConfig.key];
-        let bValue = b[sortConfig.key];
-
-        if (sortConfig.key === 'amount') {
-          aValue = parseFloat(aValue);
-          bValue = parseFloat(bValue);
-        }
-        if (sortConfig.key === 'paid_at') {
-          aValue = aValue ? new Date(aValue) : 0;
-          bValue = bValue ? new Date(bValue) : 0;
-        }
-
-        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-
-    return filtered;
-  }, [invoices, searchTerm, statusFilter, sortConfig]);
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+    setPage(1);
+  };
 
   const SortIcon = ({ column }) => {
     if (sortConfig.key !== column) {
@@ -111,7 +63,7 @@ export function InvoicesTable() {
       <ChevronDown className="w-4 h-4 text-blue-600" />;
   };
 
-  if (loading) {
+  if (loading && page === 1) {
     return (
       <div className="flex items-center justify-center h-64 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -131,22 +83,20 @@ export function InvoicesTable() {
               type="text"
               placeholder="Search invoices..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={handleStatusFilterChange}
             className="px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Statuses</option>
-            {uniqueStatuses.map(status => (
-              <option key={status} value={status}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </option>
-            ))}
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="failed">Failed</option>
           </select>
         </div>
 
@@ -164,7 +114,7 @@ export function InvoicesTable() {
             <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mr-2 sm:mr-3" />
             <div>
               <p className="text-xs sm:text-sm font-medium text-blue-600">Total Invoices</p>
-              <p className="text-lg sm:text-2xl font-bold text-blue-900">{filteredAndSortedInvoices.length}</p>
+              <p className="text-lg sm:text-2xl font-bold text-blue-900">{stats.totalCount}</p>
             </div>
           </div>
         </div>
@@ -175,11 +125,7 @@ export function InvoicesTable() {
             <div>
               <p className="text-xs sm:text-sm font-medium text-green-600">Total Paid</p>
               <p className="text-base sm:text-2xl font-bold text-green-900">
-                {formatCurrency(
-                  filteredAndSortedInvoices.reduce((sum, inv) =>
-                    sum + (inv.status === 'paid' ? parseFloat(inv.amount) : 0), 0
-                  )
-                )}
+                {formatCurrency(stats.totalPaid)}
               </p>
             </div>
           </div>
@@ -191,11 +137,7 @@ export function InvoicesTable() {
             <div>
               <p className="text-xs sm:text-sm font-medium text-yellow-600">Outstanding</p>
               <p className="text-base sm:text-2xl font-bold text-yellow-900">
-                {formatCurrency(
-                  filteredAndSortedInvoices.reduce((sum, inv) =>
-                    sum + (inv.status !== 'paid' ? parseFloat(inv.amount) : 0), 0
-                  )
-                )}
+                {formatCurrency(stats.totalOutstanding)}
               </p>
             </div>
           </div>
@@ -204,7 +146,7 @@ export function InvoicesTable() {
 
       {/* Mobile Card View */}
       <div className="block lg:hidden space-y-4">
-        {filteredAndSortedInvoices.map((inv) => (
+        {invoices.map((inv) => (
           <div key={inv.id} className="bg-white border rounded-lg p-4 shadow-sm">
             <div className="flex justify-between items-start mb-3">
               <div>
@@ -239,28 +181,28 @@ export function InvoicesTable() {
         <table className="min-w-full bg-white">
           <thead className="bg-gray-50">
             <tr>
-              <th onClick={() => handleSort('id')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+              <th onClick={() => handleSort('id')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                 <div className="flex items-center space-x-1"><span>ID</span><SortIcon column="id" /></div>
               </th>
-              <th onClick={() => handleSort('space_title')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+              <th onClick={() => handleSort('space_title')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                 <div className="flex items-center space-x-1"><span>Space</span><SortIcon column="space_title" /></div>
               </th>
-              <th onClick={() => handleSort('amount')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+              <th onClick={() => handleSort('amount')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                 <div className="flex items-center space-x-1"><span>Amount</span><SortIcon column="amount" /></div>
               </th>
-              <th onClick={() => handleSort('payment_method')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+              <th onClick={() => handleSort('payment_method')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                 <div className="flex items-center space-x-1"><span>Method</span><SortIcon column="payment_method" /></div>
               </th>
-              <th onClick={() => handleSort('paid_at')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+              <th onClick={() => handleSort('paid_at')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                 <div className="flex items-center space-x-1"><span>Paid At</span><SortIcon column="paid_at" /></div>
               </th>
-              <th onClick={() => handleSort('status')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+              <th onClick={() => handleSort('status')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                 <div className="flex items-center space-x-1"><span>Status</span><SortIcon column="status" /></div>
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredAndSortedInvoices.map((inv) => (
+            {invoices.map((inv) => (
               <tr key={inv.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{inv.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{inv.space_title || '—'}</td>
@@ -277,12 +219,39 @@ export function InvoicesTable() {
           </tbody>
         </table>
 
-        {filteredAndSortedInvoices.length === 0 && (
+        {invoices.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">No invoices found matching your criteria.</p>
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-gray-700">
+            Showing page {page} of {totalPages} ({total} total invoices)
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

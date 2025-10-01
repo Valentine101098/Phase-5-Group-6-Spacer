@@ -1,17 +1,14 @@
 // src/contexts/AuthContext.js
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { API_BASE_URL } from '../config/api';
 
 const AuthContext = createContext(null);
-
-// const BASE_URL = 'http://127.0.0.1:5000'; // Ensure this matches your backend URL (local or Render)
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [refreshToken, setRefreshToken] = useState(null);
   const [loading, setLoading] = useState(true);
-
 
   useEffect(() => {
     const storedAccessToken = localStorage.getItem('accessToken');
@@ -30,7 +27,6 @@ export const AuthProvider = ({ children }) => {
     }
     setLoading(false);
   }, []);
-
 
   const makeAuthenticatedRequest = async (url, method, data = null, isRefreshTokenRequest = false) => {
     let currentAccessToken = accessToken;
@@ -60,11 +56,9 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         return { success: true, data: await response.json() };
       } else if (response.status === 401 && !isRefreshTokenRequest) {
-        // Access token expired or invalid, try to refresh
         console.log("Access token expired, attempting to refresh...");
-        const refreshResult = await refreshAccessToken();
+        const refreshResult = await refreshAccessTokenInternal();
         if (refreshResult.success) {
-          // Retry the original request with the new access token
           currentAccessToken = refreshResult.data.access_token;
           headers['Authorization'] = `Bearer ${currentAccessToken}`;
           const retryResponse = await fetch(`${API_BASE_URL}${url}`, {
@@ -76,7 +70,6 @@ export const AuthProvider = ({ children }) => {
             return { success: true, data: await retryResponse.json() };
           }
         }
-        // Refresh failed or retry failed, force logout
         console.error("Failed to refresh token or retry request. Forcing logout.");
         logout();
         return { success: false, error: 'Session expired. Please log in again.' };
@@ -90,7 +83,6 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: 'Network error. Please check your connection.' };
     }
   };
-
 
   // --- Authentication Functions ---
 
@@ -107,55 +99,83 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
 
       if (response.ok && data.access_token) {
-        // Store tokens + user
         localStorage.setItem("accessToken", data.access_token);
         localStorage.setItem("refreshToken", data.refresh_token);
-        localStorage.setItem("user", JSON.stringify(data.user)); // Store the user data stringified
+        localStorage.setItem("user", JSON.stringify(data.user));
 
         setAccessToken(data.access_token);
         setRefreshToken(data.refresh_token);
-        setUser(data.user); // Set the user object directly
+        setUser(data.user);
 
-        // Return a consistent structure for success, including the user data
-        return { success: true, data: { user: data.user } }; // <--- UPDATED RETURN
+        return { success: true, data: { user: data.user } };
       } else {
         console.error("Login failed:", data.message || "No access token");
-        // Return a consistent structure for failure
-        return { success: false, error: data.message || "Login failed" }; // <--- UPDATED RETURN
+        return { success: false, error: data.message || "Login failed" };
       }
     } catch (err) {
       setLoading(false);
       console.error("Network error:", err);
-      // Return a consistent structure for network failure
-      return { success: false, error: "Network error. Please check your connection." }; // <--- UPDATED RETURN
+      return { success: false, error: "Network error. Please check your connection." };
     }
   };
 
-  const logout = async () => {
-    setLoading(true);
-    // Invalidate token on the backend
-    if (accessToken) { // Only attempt if there's an accessToken to revoke
-      const result = await makeAuthenticatedRequest('/auth/logout', 'DELETE');
-      if (!result.success) {
-        console.warn("Backend logout failed, but clearing local tokens anyway:", result.error);
-      }
-    } else {
-      console.log("No access token to revoke, proceeding with local logout.");
+  const loginWithTokens = useCallback((access, refresh) => {
+    try {
+      const payload = JSON.parse(atob(access.split('.')[1]));
+      const userObj = {
+        id: payload.sub,
+        roles: payload.roles || [],
+        email: payload.email || null
+      };
+
+      localStorage.setItem('accessToken', access);
+      localStorage.setItem('refreshToken', refresh);
+      localStorage.setItem('user', JSON.stringify(userObj));
+
+      setAccessToken(access);
+      setRefreshToken(refresh);
+      setUser(userObj);
+
+      return { success: true, user: userObj };
+    } catch (err) {
+      console.error('Failed to process OAuth tokens:', err);
+      return { success: false, error: 'Invalid token format' };
     }
+  }, []);
 
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    setAccessToken(null);
-    setRefreshToken(null);
-    setUser(null);
-    setLoading(false);
-    return { success: true };
-  };
+const logout = async () => {
+  setLoading(true);
+  if (accessToken) {
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    } catch (err) {
+      console.warn("Backend logout failed, but clearing local tokens anyway:", err);
+    }
+  } else {
+    console.log("No access token to revoke, proceeding with local logout.");
+  }
 
-  const refreshAccessToken = async () => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+  setAccessToken(null);
+  setRefreshToken(null);
+  setUser(null);
+  setLoading(false);
+
+  return { success: true };
+};
+
+
+  const refreshAccessTokenInternal = async () => {
     setLoading(true);
-    const result = await makeAuthenticatedRequest('/auth/refresh', 'POST', null, true); // Pass true for isRefreshTokenRequest
+    const result = await makeAuthenticatedRequest('/auth/refresh', 'POST', null, true);
     setLoading(false);
 
     if (result.success) {
@@ -165,7 +185,6 @@ export const AuthProvider = ({ children }) => {
       return { success: true, data: result.data };
     } else {
       console.error('Token refresh failed:', result.error);
-      // If refresh also fails, force logout
       logout();
       return { success: false, error: result.error };
     }
@@ -178,9 +197,10 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!accessToken,
     loading,
     login,
+    loginWithTokens, 
     logout,
-    refreshAccessToken,
-    makeAuthenticatedRequest, // Expose for other components
+    refreshAccessToken: refreshAccessTokenInternal,
+    makeAuthenticatedRequest,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -194,5 +214,4 @@ export const useAuth = () => {
   return context;
 };
 
-// --- ADD THIS LINE ---
-export { AuthContext }; // Export the context object itself
+export { AuthContext };

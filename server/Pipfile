@@ -22,6 +22,8 @@ pytest = "*"
 psycopg2-binary = "*"
 python-dotenv = "*"
 faker = "*"
+authlib = "*"
+requests = "*"
 
 [dev-packages]
 pytest = "*"
