@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, url_for, redirect
+from flask import Blueprint, request, jsonify, url_for, redirect, current_app
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     create_refresh_token, get_jwt_identity, get_jwt,
@@ -226,7 +226,7 @@ def google_callback():
         )
         
         frontend_url = (
-            f"http://127.0.0.1:5173/auth/callback"
+            f"{current_app.config['FRONTEND_URL']}/auth/callback"
             f"?access_token={access_token}"
             f"&refresh_token={refresh_token}"
             f"&is_new={is_new_user}"
@@ -236,7 +236,7 @@ def google_callback():
     except Exception as e:
         print(f"Google OAuth error: {str(e)}")
         db.session.rollback()
-        return redirect(f"http://127.0.0.1:5173/auth/callback?error={str(e)}")
+        return redirect(f"{current_app.config['FRONTEND_URL']}/auth/callback?error={str(e)}")
 
 
 

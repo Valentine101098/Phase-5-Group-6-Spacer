@@ -46,6 +46,9 @@ class Config:
     # Logging
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
     LOG_TO_STDOUT = os.getenv('LOG_TO_STDOUT', 'false').lower() == 'true'
+    
+    # Google callback
+    FRONTEND_URL = os.getenv('FRONTEND_URL', "http://127.0.0.1:5173")
 
 class DevelopmentConfig(Config):
     """Development specific configuration."""
