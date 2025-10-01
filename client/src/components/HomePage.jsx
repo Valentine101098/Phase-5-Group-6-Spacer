@@ -114,7 +114,7 @@ const SpaceSearch = ({ onSearch, onClear }) => {
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl shadow-blue-500/10 p-6 sm:p-8 mb-8 border border-white/20 transition-all duration-500 hover:shadow-blue-500/20">
+    <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl shadow-blue-500/10 p-6 sm:p-8 mb-8 border border-white/20 transition-all duration-500 hover:shadow-blue-500/20">
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative group">

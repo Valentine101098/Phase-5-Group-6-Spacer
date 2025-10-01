@@ -12,7 +12,7 @@ export default  {
         secondary: '#00B4D8', // A brighter blue, good for highlights/accents
         lightblue: {
           DEFAULT: '#dbeff3ff', // Lighter blue
-          lighter: '#111213ff', // Even lighter blue for backgrounds
+          lighter: '#efe6efff', // Even lighter blue for backgrounds
         },
       },
       fontFamily: {

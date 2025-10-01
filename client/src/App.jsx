@@ -36,7 +36,7 @@ function AppContent() {
 
   return (
     <>
-      <nav className="bg-blue-200 text-white p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center shadow-md"> {/* Responsive padding and layout */}
+      <nav className="sticky top-0 z-50 bg-blue-300 text-white p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center shadow-md"> {/* Responsive padding and layout */}
         <Link to="/" className="text-4xl sm:text-2xl font-bold text-white no-underline font-nabla mb-2 sm:mb-0 ">SpaceHub</Link> {/* Responsive text size and margin */}
         <div className="flex flex-wrap justify-center sm:justify-end space-x-3 sm:space-x-6 text-sm sm:text-base"> {/* Responsive spacing and text size */}
           <Link to="/" className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-2xl">Home</Link>
