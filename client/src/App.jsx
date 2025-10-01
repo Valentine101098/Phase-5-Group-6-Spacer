@@ -35,28 +35,28 @@ function AppContent() {
 
   return (
     <>
-      <nav className="bg-primary text-white p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center shadow-md"> {/* Responsive padding and layout */}
-        <Link to="/" className="text-xl sm:text-2xl font-bold text-white no-underline font-nabla mb-2 sm:mb-0">SpaceHub</Link> {/* Responsive text size and margin */}
+      <nav className="bg-blue-200 text-white p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center shadow-md"> {/* Responsive padding and layout */}
+        <Link to="/" className="text-4xl sm:text-2xl font-bold text-white no-underline font-nabla mb-2 sm:mb-0 ">SpaceHub</Link> {/* Responsive text size and margin */}
         <div className="flex flex-wrap justify-center sm:justify-end space-x-3 sm:space-x-6 text-sm sm:text-base"> {/* Responsive spacing and text size */}
-          <Link to="/" className="text-white hover:text-secondary hover:underline transition-colors duration-200 font-dancing">Home</Link>
+          <Link to="/" className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-2xl">Home</Link>
           {!isAuthenticated ? (
             <>
-              <Link to="/login" className='font-dancing'>Login</Link>
-              <Link to="/signup" className='font-dancing'>Sign Up</Link>
+              <Link to="/login" className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-2xl">Login</Link>
+              <Link to="/signup" className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-2xl">Sign Up</Link>
             </>
           ) : (
             <>
-              <Link to="/profile" className='font-dancing'>Profile</Link>
+              <Link to="/profile" className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-2xl">Profile</Link>
               {user && user.roles && (
                 <>
                   {user.roles.includes('admin') && (
-                    <Link to="/admin-dashboard" className='font-dancing'>My Dashboard</Link>
+                    <Link to="/admin-dashboard" className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-2xl">My Dashboard</Link>
                   )}
                   {user.roles.includes('client') && (
-                    <Link to="/client-dashboard" className='font-dancing'>My Dashboard</Link>
+                    <Link to="/client-dashboard" className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-2xl">My Dashboard</Link>
                   )}
                   {user.roles.includes('owner') && (
-                    <Link to="/owner-dashboard" className='font-dancing'>My Dashboard</Link>
+                    <Link to="/owner-dashboard" className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-2xl">My Dashboard</Link>
                   )}
                 </>
               )}
