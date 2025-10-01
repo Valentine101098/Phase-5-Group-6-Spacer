@@ -18,6 +18,7 @@ import { PaymentPage } from './components/PaymentPage';
 import { InvoicesTable } from './components/InvoicesTable';
 import ClientDashboard from './components/ClientDashboard';
 import OwnerDashboard from './components/OwnerDashboard';
+import AuthCallback from './components/AuthCallback';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -72,6 +73,7 @@ function AppContent() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           <Route path="/spaces/:id/booking" element={<PrivateRoute><BookingPage /></PrivateRoute>} />
           <Route path="/invoices/:id" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
