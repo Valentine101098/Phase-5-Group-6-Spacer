@@ -227,16 +227,16 @@ def seed_database():
         spaces = []
         owner_users = [users[i] for i in range(1, 6)]  # Users 1-5 are owners
 
-        for i in range(10):
+        for i in range(50):
             owner = random.choice(owner_users)
             space = Space(
                 owner_id=owner.id,
-                title=f"{fake.company()} {SPACE_TYPES[i]}",
-                description=SPACE_DESCRIPTIONS[i],
+                title=f"{fake.company()} {SPACE_TYPES[0]}",
+                description=SPACE_DESCRIPTIONS[0],
                 price_per_hour=Decimal(str(random.uniform(50.0, 500.0))),
                 status=random.choice(['available', 'available', 'available', 'booked']),  # More available than booked
-                images=SPACE_IMAGES[i],
-                space_type=SPACE_TYPES[i],
+                images=random.choice(SPACE_IMAGES),
+                space_type=random.choice(SPACE_TYPES),
                 max_guests=random.randint(10, 200),
                 created_at=fake.date_time_between(start_date='-6M', end_date='now', tzinfo=timezone.utc)
             )
@@ -265,7 +265,7 @@ def seed_database():
         bookings = []
         client_users = [users[i] for i in range(6, 10)] + [users[i] for i in range(2, 4)]  # Clients and some owners
 
-        for i in range(10):
+        for i in range(100):
             space = random.choice(spaces)
             client = random.choice(client_users)
 
@@ -335,8 +335,8 @@ def seed_database():
         db.session.commit()
 
         # Now update some agreements to accepted status after they're created
-        for agreement in agreement_instances[:2]:  # Accept first 2 agreements
-            agreement.signed_at = agreement.created_at + timedelta(hours=random.randint(1, 48))
+        for agreement in agreement_instances:  # Accept first 2 agreements
+            agreement.signed_at = agreement.created_at + timedelta(hours=random.randint(1, 2))
             agreement.status = 'accepted'
         db.session.commit()
         print(f"✅ Created {len(agreement_instances)} agreement instances")
@@ -349,7 +349,7 @@ def seed_database():
         for booking in bookings:
             status = random.choice(["unpaid", "paid", "paid", "failed"])  # More paid than unpaid
             invoice_created_at = (booking.created_at + timedelta(hours=1)).replace(tzinfo=timezone.utc)
-         
+
 
             paid_at_value = None
             transaction_id_value = None
@@ -358,7 +358,7 @@ def seed_database():
                 latest_possible_paid_at = datetime.now(timezone.utc)
                 paid_at_value = (fake.date_time_between(start_date=invoice_created_at, end_date=latest_possible_paid_at, tzinfo=timezone.utc))
                 transaction_id_value = f"TXN_{fake.uuid4()[:12].upper()}"
-            
+
             else:
                 paid_at_value = None
                 transaction_id_value = None

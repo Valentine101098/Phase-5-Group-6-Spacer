@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, url_for, redirect, current_app
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     create_refresh_token, get_jwt_identity, get_jwt,
@@ -10,41 +10,42 @@ import secrets
 from app.models import db, User, Role, User_Roles, PasswordResetToken, VALID_ROLES
 import re
 from flask_restful import Resource
+from app.extensions import oauth
 
 # Create Blueprint
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 # JWT Configuration
-jwt = JWTManager()
+# jwt = JWTManager()
 
 # JWT Blocklist - In production, use Redis or database
 jwt_blocklist = set()
 
 # JWT Configuration Functions
-@jwt.token_in_blocklist_loader
-def check_if_token_revoked(jwt_header, jwt_payload):
-    """Check if JWT token is in blocklist"""
-    return jwt_payload['jti'] in jwt_blocklist
+# @jwt.token_in_blocklist_loader
+# def check_if_token_revoked(jwt_header, jwt_payload):
+#     """Check if JWT token is in blocklist"""
+#     return jwt_payload['jti'] in jwt_blocklist
 
-@jwt.expired_token_loader
-def expired_token_callback(jwt_header, jwt_payload):
-    """Handle expired tokens"""
-    return jsonify({'message': 'Token has expired', 'error': 'token_expired'}), 401
+# @jwt.expired_token_loader
+# def expired_token_callback(jwt_header, jwt_payload):
+#     """Handle expired tokens"""
+#     return jsonify({'message': 'Token has expired', 'error': 'token_expired'}), 401
 
-@jwt.invalid_token_loader
-def invalid_token_callback(error):
-    """Handle invalid tokens"""
-    return jsonify({'message': 'Invalid token', 'error': 'invalid_token'}), 401
+# @jwt.invalid_token_loader
+# def invalid_token_callback(error):
+#     """Handle invalid tokens"""
+#     return jsonify({'message': 'Invalid token', 'error': 'invalid_token'}), 401
 
-@jwt.unauthorized_loader
-def missing_token_callback(error):
-    """Handle missing tokens"""
-    return jsonify({'message': 'Access token required', 'error': 'authorization_required'}), 401
+# @jwt.unauthorized_loader
+# def missing_token_callback(error):
+#     """Handle missing tokens"""
+#     return jsonify({'message': 'Access token required', 'error': 'authorization_required'}), 401
 
-@jwt.revoked_token_loader
-def revoked_token_callback(jwt_header, jwt_payload):
-    """Handle revoked tokens"""
-    return jsonify({'message': 'Token has been revoked', 'error': 'token_revoked'}), 401
+# @jwt.revoked_token_loader
+# def revoked_token_callback(jwt_header, jwt_payload):
+#     """Handle revoked tokens"""
+#     return jsonify({'message': 'Token has been revoked', 'error': 'token_revoked'}), 401
 
 # Role-based access control decorator
 
@@ -131,7 +132,116 @@ def validate_registration_data(data):
     return errors
 
 # Authentication Routes
+# social auth routes
+@auth_bp.route('/google/login')
+def google_login():
+    """Initiate Google OAuth flow"""
 
+    redirect_uri = url_for('auth.google_callback', _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+@auth_bp.route('/google/callback')
+def google_callback():
+    """Handle Google's OAuth callback"""
+    try:
+        token = oauth.google.authorize_access_token()
+        user_info = token['userinfo']
+        
+        google_id = user_info['sub']
+        email = user_info['email']
+        name = user_info.get('name', '')
+        print('name: ', name)
+        
+        user = User.query.filter_by(
+            oauth_provider='google',
+            oauth_provider_id=google_id
+        ).first()
+        
+        is_new_user = False
+        
+        if user:
+            pass
+            
+        else:
+            existing_user = User.query.filter_by(email=email).first()
+            print('line 170: ', name)
+            if existing_user:
+                if existing_user.oauth_provider is None:
+                    existing_user.oauth_provider = 'google'
+                    existing_user.oauth_provider_id = google_id
+                    user = existing_user
+                else:
+                    return jsonify({'error': 'Email already registered with another provider'}), 400
+            else:
+                # Create new user
+               
+                is_new_user = True
+                
+                name_parts = name.strip().split() if name and name.strip() else []
+                first_name = name_parts[0] if len(name_parts) > 0 else 'First_Name'
+                last_name = name_parts[-1] if len(name_parts) > 1 else 'Last_Name'
+                
+                user = User(
+                    email=email,
+                    oauth_provider='google',
+                    oauth_provider_id=google_id,
+                    password_hash=None,
+                    phone_number=None,
+                    first_name=first_name,
+                    last_name=last_name
+                )
+                db.session.add(user)
+                db.session.flush()
+                
+                role = Role.query.filter_by(role='client').first()
+                if not role:
+                    role = Role(role='client')
+                    db.session.add(role)
+                    db.session.flush()
+                
+                user_role = User_Roles(user_id=user.id, role_id=role.id)
+                db.session.add(user_role)
+        
+        db.session.commit()
+        
+        if not user:
+            raise Exception("User object is None after processing")
+        
+        roles = user.get_roles()
+        
+        if roles is None:
+            roles = ['client']
+        
+        claims = {'roles': roles}
+        
+        access_token = create_access_token(
+            identity=user.id,
+            additional_claims=claims,
+            expires_delta=timedelta(hours=1)
+        )
+        refresh_token = create_refresh_token(
+            identity=user.id,
+            additional_claims=claims,
+            expires_delta=timedelta(days=30)
+        )
+        
+        frontend_url = (
+            f"{current_app.config['FRONTEND_URL']}/auth/callback"
+            f"?access_token={access_token}"
+            f"&refresh_token={refresh_token}"
+            f"&is_new={is_new_user}"
+        )
+        return redirect(frontend_url)
+        
+    except Exception as e:
+        print(f"Google OAuth error: {str(e)}")
+        db.session.rollback()
+        return redirect(f"{current_app.config['FRONTEND_URL']}/auth/callback?error={str(e)}")
+
+
+
+
+# local routes
 @auth_bp.route('/register', methods=['POST'])
 def register():
     """Register a new user"""
@@ -220,6 +330,9 @@ def login():
                 'message': 'Invalid email or password',
                 'error': 'invalid_credentials'
             }), 401
+        
+        if user.oauth_provider == 'google':
+            return jsonify({'error': 'Please use "Sign in with Google"'}), 400        
 
         # Create JWT tokens
         roles = user.get_roles()

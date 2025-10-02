@@ -3,6 +3,11 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom'; // Keep this import
+import { API_BASE_URL } from '../config/api';
+import GoogleButton from 'react-google-signin-button';
+import 'react-google-signin-button/dist/button.css';
+
+
 
 const getDashboardPath = (roles) => {
   if (!roles || roles.length === 0) {
@@ -91,6 +96,15 @@ function Login() {
           {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
+      
+<div className='mt-4'>
+  <GoogleButton
+    onClick={() => { 
+      console.log('Google button clicked');
+      window.location.href = `${API_BASE_URL}/auth/google/login`;
+    }}
+  />
+</div>
 
       {/* CORRECTED LINKS HERE */}
       <p className="mt-4 text-gray-600">

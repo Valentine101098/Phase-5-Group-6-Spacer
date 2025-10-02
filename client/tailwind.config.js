@@ -11,8 +11,8 @@ export default  {
         primary: '#0077B6',   // A darker blue, good for main actions/backgrounds
         secondary: '#00B4D8', // A brighter blue, good for highlights/accents
         lightblue: {
-          DEFAULT: '#90E0EF', // Lighter blue
-          lighter: '#CAF0F8', // Even lighter blue for backgrounds
+          DEFAULT: '#dbeff3ff', // Lighter blue
+          lighter: '#efe6efff', // Even lighter blue for backgrounds
         },
       },
       fontFamily: {

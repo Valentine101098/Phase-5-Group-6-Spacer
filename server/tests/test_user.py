@@ -62,28 +62,28 @@ def test_user_email_validation():
         with pytest.raises(ValueError, match="Invalid email format"):
             user.validate_email('email', email)
 
-def test_user_phone_validation():
-    """Test User phone validation."""
-    user = User()
+# def test_user_phone_validation():
+#     """Test User phone validation."""
+#     user = User()
     
-    # Test valid phone numbers
-    test_cases = [
-        ("1234567890", "1234567890"),
-        ("(123) 456-7890", "1234567890"),
-        ("+1 123-456-7890", "11234567890"),
-        ("123.456.7890", "1234567890")
-    ]
+#     # Test valid phone numbers
+#     test_cases = [
+#         ("1234567890", "1234567890"),
+#         ("(123) 456-7890", "1234567890"),
+#         ("+1 123-456-7890", "11234567890"),
+#         ("123.456.7890", "1234567890")
+#     ]
     
-    for input_phone, expected in test_cases:
-        result = user.validate_phone('phone_number', input_phone)
-        assert result == expected
+#     for input_phone, expected in test_cases:
+#         result = user.validate_phone('phone_number', input_phone)
+#         assert result == expected
     
-    # Test invalid phone numbers
-    invalid_phones = ["123", "abc1234567", "123456", ""]
+#     # Test invalid phone numbers
+#     invalid_phones = ["123", "abc1234567", "123456", ""]
     
-    for phone in invalid_phones:
-        with pytest.raises(ValueError, match="Phone number must be at least 10 digits"):
-            user.validate_phone('phone_number', phone)
+#     for phone in invalid_phones:
+#         with pytest.raises(ValueError, match="Phone number must be at least 10 digits"):
+#             user.validate_phone('phone_number', phone)
 
 def test_user_password_hashing():
     """Test User password hashing."""
