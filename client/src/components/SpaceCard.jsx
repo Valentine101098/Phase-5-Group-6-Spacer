@@ -45,7 +45,7 @@ export default function SpaceCard({ space }) {
                     </button>
                     {space.status === "available" ?
                     <Link to={`/spaces/${space.id}/booking`}>
-                    <button className="bg-blue-500 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-600 w-full text-sm sm:text-base">
+                            <button className="bg-gradient-to-br from-blue-700 via-purple-700 to-blue-400 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-600 w-full text-sm sm:text-base">
                         Quick Book
                     </button> </Link> : null}
                 </div>
