@@ -133,7 +133,7 @@ export default function SpaceCreation({ existingSpace, onSpaceCreated, onSpaceUp
     };
 
     return (
-        <div className="max-w-lg mx-auto p-4 bg-white dark:bg-primary shadow-lg rounded-lg">
+        <div className="max-w-lg mx-auto p-4 bg-gradient-to-br from-blue-700 via-purple-700 to-blue-400 shadow-lg rounded-lg">
             <h2 className="text-2xl font-bold mb-4 text-white">
                 {existingSpace ? "Edit Space" : "Create New Space"}
             </h2>
@@ -253,7 +253,7 @@ export default function SpaceCreation({ existingSpace, onSpaceCreated, onSpaceUp
                 <button
                     type="button"
                     onClick={addImageField}
-                    className="mb-4 text-green-500 hover:text-green-700 hover:underline font-medium text-sm"
+                    className="mb-4 text-white hover:text-green-400 hover:underline font-medium text-sm"
                 >
                     + Add Another Image
                 </button>
@@ -261,7 +261,7 @@ export default function SpaceCreation({ existingSpace, onSpaceCreated, onSpaceUp
                 <button
                     type="submit" // Changed to submit type
                     disabled={loading}
-                    className={`w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition text-sm sm:text-base ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-700 transition text-sm sm:text-base ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     {loading
                         ? existingSpace
