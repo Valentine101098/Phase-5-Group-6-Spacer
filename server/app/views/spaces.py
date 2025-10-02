@@ -244,3 +244,19 @@ def delete_space(space_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
+    
+# Get all spaces without pagination (for owner dashboard)
+@spaces_bp.route('/all', methods=['GET'])
+@jwt_required()
+def get_all_spaces():
+    current_user_id = get_jwt_identity()
+    current_user = db.session.get(User, current_user_id)
+
+    if not current_user:
+        return jsonify({'error': 'User not found'}), 404
+
+    if "owner" not in current_user.get_roles() and "admin" not in current_user.get_roles():
+        return jsonify({'error': 'Only owners can access all spaces'}), 403
+
+    spaces = Space.query.all()
+    return jsonify([space.to_dict() for space in spaces]), 200
