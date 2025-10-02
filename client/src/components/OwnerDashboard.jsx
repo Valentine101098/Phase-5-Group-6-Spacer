@@ -63,7 +63,7 @@ const OwnerDashboard = () => {
 
       // Fetch all data using existing API structure
       const [spacesRes, bookingsRes, invoicesRes, reviewsRes] = await Promise.all([
-        makeAuthenticatedRequest('/api/spaces/', 'GET'),
+        makeAuthenticatedRequest('/api/spaces/all', 'GET'),
         makeAuthenticatedRequest('/api/bookings/', 'GET'),
         makeAuthenticatedRequest('/api/invoices/', 'GET'),
         makeAuthenticatedRequest('/api/reviews/', 'GET')
