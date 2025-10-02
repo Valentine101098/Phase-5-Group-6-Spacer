@@ -44,7 +44,7 @@ export default function SpaceReviewForm({ booking_id, onReviewSubmitted, onCance
     }
 
     return (
-        <form onSubmit={handleSubmit} className="mt-2 bg-primary rounded flex p-4 flex-col m-4 gap-2">
+        <form onSubmit={handleSubmit} className="mt-2 bg-gradient-to-br from-blue-700 via-purple-700 to-blue-400 rounded flex p-4 flex-col m-4 gap-2">
             <label className="font-semibold text-white">Rating</label>
             <input
                 type="number"
