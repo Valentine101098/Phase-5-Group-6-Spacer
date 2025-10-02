@@ -137,7 +137,8 @@ def validate_registration_data(data):
 def google_login():
     """Initiate Google OAuth flow"""
 
-    redirect_uri = url_for('auth.google_callback', _external=True)
+    redirect_uri = url_for('auth.google_callback', _external=True, _scheme='https')
+    print(f"Generated redirect_uri: {redirect_uri}")
     return oauth.google.authorize_redirect(redirect_uri)
 
 @auth_bp.route('/google/callback')
@@ -146,22 +147,22 @@ def google_callback():
     try:
         token = oauth.google.authorize_access_token()
         user_info = token['userinfo']
-        
+
         google_id = user_info['sub']
         email = user_info['email']
         name = user_info.get('name', '')
         print('name: ', name)
-        
+
         user = User.query.filter_by(
             oauth_provider='google',
             oauth_provider_id=google_id
         ).first()
-        
+
         is_new_user = False
-        
+
         if user:
             pass
-            
+
         else:
             existing_user = User.query.filter_by(email=email).first()
             print('line 170: ', name)
@@ -174,13 +175,13 @@ def google_callback():
                     return jsonify({'error': 'Email already registered with another provider'}), 400
             else:
                 # Create new user
-               
+
                 is_new_user = True
-                
+
                 name_parts = name.strip().split() if name and name.strip() else []
                 first_name = name_parts[0] if len(name_parts) > 0 else 'First_Name'
                 last_name = name_parts[-1] if len(name_parts) > 1 else 'Last_Name'
-                
+
                 user = User(
                     email=email,
                     oauth_provider='google',
@@ -192,28 +193,28 @@ def google_callback():
                 )
                 db.session.add(user)
                 db.session.flush()
-                
+
                 role = Role.query.filter_by(role='client').first()
                 if not role:
                     role = Role(role='client')
                     db.session.add(role)
                     db.session.flush()
-                
+
                 user_role = User_Roles(user_id=user.id, role_id=role.id)
                 db.session.add(user_role)
-        
+
         db.session.commit()
-        
+
         if not user:
             raise Exception("User object is None after processing")
-        
+
         roles = user.get_roles()
-        
+
         if roles is None:
             roles = ['client']
-        
+
         claims = {'roles': roles}
-        
+
         access_token = create_access_token(
             identity=user.id,
             additional_claims=claims,
@@ -224,7 +225,7 @@ def google_callback():
             additional_claims=claims,
             expires_delta=timedelta(days=30)
         )
-        
+
         frontend_url = (
             f"{current_app.config['FRONTEND_URL']}/auth/callback"
             f"?access_token={access_token}"
@@ -232,7 +233,7 @@ def google_callback():
             f"&is_new={is_new_user}"
         )
         return redirect(frontend_url)
-        
+
     except Exception as e:
         print(f"Google OAuth error: {str(e)}")
         db.session.rollback()
@@ -330,9 +331,9 @@ def login():
                 'message': 'Invalid email or password',
                 'error': 'invalid_credentials'
             }), 401
-        
+
         if user.oauth_provider == 'google':
-            return jsonify({'error': 'Please use "Sign in with Google"'}), 400        
+            return jsonify({'error': 'Please use "Sign in with Google"'}), 400
 
         # Create JWT tokens
         roles = user.get_roles()
