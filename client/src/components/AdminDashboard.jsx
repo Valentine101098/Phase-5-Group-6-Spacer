@@ -56,7 +56,7 @@ const AdminDashboard = () => {
       // Admin sees ALL data
       const [usersRes, spacesRes, bookingsRes, invoicesRes] = await Promise.all([
         makeAuthenticatedRequest('/api/users/', 'GET'),
-        makeAuthenticatedRequest('/api/spaces/', 'GET'),
+        makeAuthenticatedRequest('/api/spaces/all', 'GET'),
         makeAuthenticatedRequest('/api/bookings/', 'GET'),
         makeAuthenticatedRequest('/api/invoices/', 'GET')
       ]);

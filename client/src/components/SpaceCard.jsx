@@ -3,7 +3,7 @@ import SpaceDetails from "./SpaceDetails";
 import { Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export default function SpaceCard({ space }) {
+export default function SpaceCard({ space, user }) {
     const [showDetails, setShowDetails] = useState(false);
 
     return (
@@ -43,7 +43,7 @@ export default function SpaceCard({ space }) {
                     <button className="bg-gray-200 text-gray-800 px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-300 text-sm sm:text-base" onClick={() => setShowDetails(true)}>
                         More Details
                     </button>
-                    {space.status === "available" ?
+                    {space.status === "available" && user?.roles?.includes("client") ?
                     <Link to={`/spaces/${space.id}/booking`}>
                             <button className="bg-gradient-to-br from-blue-700 via-purple-700 to-blue-400 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-600 w-full text-sm sm:text-base">
                         Quick Book
