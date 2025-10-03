@@ -243,7 +243,7 @@ const fetchUserBookings = () => {
 
                 {/* Book button pinned at bottom */}
                 <div className="mt-6 flex justify-center sm:justify-end"> {/* Responsive alignment */}
-                    {space.status === "available" && (
+                    {space.status === "available" && user?.role === "client" && (
                         <Link to={`/spaces/${space.id}/booking`}>
                         <button className="bg-blue-600 text-white px-5 py-2 w-full sm:w-40 rounded-lg hover:bg-blue-700 text-sm sm:text-base"> {/* Responsive width */}
                             Book Now
