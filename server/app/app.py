@@ -46,15 +46,17 @@ class Config:
     # Logging
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
     LOG_TO_STDOUT = os.getenv('LOG_TO_STDOUT', 'false').lower() == 'true'
-    
+
     # Google callback
     FRONTEND_URL = os.getenv('FRONTEND_URL', "http://127.0.0.1:5173")
+    OAUTH_SCHEME = "https"
 
 class DevelopmentConfig(Config):
     """Development specific configuration."""
     DEBUG = True
     TESTING = False
     SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URL', 'postgresql://postgres:Aloise101098%23@localhost:5432/spacer_dev')
+    OAUTH_SCHEME = "http"
 
 class ProductionConfig(Config):
     """Production specific configuration."""
@@ -62,6 +64,7 @@ class ProductionConfig(Config):
     TESTING = False
     # Ensure DATABASE_URL is set in the production environment
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL' ,'postgresql://spacer_db_gd12_user:WezI7nwwnuOBbmoltqP0HgR0dkdhosTz@dpg-d34iv8bipnbc7381a00g-a.frankfurt-postgres.render.com:5432/spacer_db_gd12')
+    OAUTH_SCHEME = "https"
 
 class TestingConfig(Config):
     TESTING = True

@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { API_BASE_URL } from "../config/api";
-import { Star, X } from "lucide-react"; // Import X for close icon
+import { Star, X } from "lucide-react";
 
 export default function SpaceDetails({ space, onClose }) {
     const [reviews, setReviews] = useState([]);
@@ -21,10 +21,10 @@ export default function SpaceDetails({ space, onClose }) {
     const goPrev = () => {
         setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? totalImages - 1 : prevIndex - 1));
     };
-    
+
     const goNext = () => {
         setCurrentImageIndex((prevIndex) => (prevIndex === totalImages - 1 ? 0 : prevIndex + 1));
-    };  
+    };
 
     const fetchReviews = () => {
         fetch(`${API_BASE_URL}/api/reviews/spaces/${space.id}?limit=5`)
@@ -53,32 +53,28 @@ const fetchUserBookings = () => {
         } else{
             setUserBookings([]);
         }
-    }, [space.id, user, accessToken]); // Added accessToken to dependencies
+    }, [space.id, user, accessToken]);
 
     const hasBooked = userBookings.length > 0;
     const latestBooking = userBookings[0];
 
-    // find if this user already has a review
     const userReview = reviews.find(r => r.user_id === user?.id);
 
-    // Handle review submit (new or edited)
     const handleReviewSubmitted = (newReview) => {
         if (editingReview) {
-            // replace edited review
             setReviews(reviews.map(r => (r.id === editingReview.id ? { ...r, ...newReview, id: editingReview.id } : r)));
             setEditingReview(null);
         } else {
-            // prepend new review
             setReviews([newReview, ...reviews]);
         }
         setShowReviewForm(false);
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4"> {/* Added padding for mobile */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-lg md:max-w-2xl lg:max-w-3xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto flex flex-col"> {/* Responsive width and padding */}
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white/98 backdrop-blur-xl dark:bg-gray-800/98 rounded-2xl shadow-2xl w-full max-w-lg md:max-w-2xl lg:max-w-3xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto flex flex-col border border-white/20">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white"> {/* Responsive text size */}
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                         {space.title}{" "}
                         <span
                             className={`px-2 py-1 text-xs font-semibold rounded ${space.status === "available"
@@ -89,37 +85,37 @@ const fetchUserBookings = () => {
                             {space.status}
                         </span>
                     </h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> {/* Adjusted close button color */}
-                        <X className="h-6 w-6" /> {/* Using Lucide X icon */}
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+                        <X className="h-6 w-6" />
                     </button>
                 </div>
 
                 {/* Gallery Section */}
-                <div className="flex justify-center shadow rounded p-4 mb-4">
+                <div className="flex justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 shadow-lg rounded-lg p-4 mb-4">
                     <div className="grid gap-4 max-w-4xl w-full">
                         {/* Featured Image with arrows + counter */}
                         {space.images[currentImageIndex] && (
                             <div className="relative flex justify-center">
                                 <button
                                     onClick={goPrev}
-                                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full hover:bg-opacity-70"
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/80 transition-all shadow-lg z-10"
                                 >
                                     <ChevronLeft size={24} />
                                 </button>
                                 <img
                                     src={space.images[currentImageIndex]}
                                     alt={`Featured Space ${currentImageIndex + 1}`}
-                                    className="h-auto max-w-full rounded-lg object-cover shadow-lg"
+                                    className="h-auto max-w-full rounded-lg object-cover shadow-xl"
                                 />
 
                                 <button
                                     onClick={goNext}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full hover:bg-opacity-70"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/80 transition-all shadow-lg z-10"
                                 >
                                     <ChevronRight size={24} />
                                 </button>
 
-                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-60 text-white text-sm px-3 py-1 rounded-full">
+                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md text-white text-sm px-3 py-1 rounded-full shadow-lg">
                                     {currentImageIndex + 1} / {totalImages}
                                 </div>
                             </div>
@@ -130,7 +126,7 @@ const fetchUserBookings = () => {
                                 <button
                                     key={index}
                                     onClick={() => setCurrentImageIndex(index)}
-                                    className={`focus:outline-none ${index === currentImageIndex ? "ring-2 ring-green-500 rounded-lg" : ""
+                                    className={`focus:outline-none transition-all ${index === currentImageIndex ? "ring-4 ring-blue-500 rounded-lg shadow-lg scale-105" : "opacity-70 hover:opacity-100"
                                         }`}
                                 >
                                     <img
@@ -145,18 +141,18 @@ const fetchUserBookings = () => {
                 </div>
 
 
-                <p className="mb-3 text-gray-700 dark:text-gray-300 text-sm sm:text-base">{space.description}</p> {/* Responsive text size and color */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 shadow p-4 rounded-xl bg-white dark:bg-gray-700"> {/* Responsive grid and spacing */}
-                    <div className="text-center p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 rounded-xl"> {/* Responsive padding and dark mode support */}
-                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Space Type</div> {/* Responsive text size */}
-                        <div className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">{space?.space_type}</div> {/* Responsive text size and dark mode support */}
+                <p className="mb-3 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed">{space.description}</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 shadow-lg p-4 rounded-xl bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 border border-gray-100 dark:border-gray-600">
+                    <div className="text-center p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 rounded-xl shadow-sm">
+                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">Space Type</div>
+                        <div className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">{space?.space_type}</div>
                     </div>
-                    <div className="text-center p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Max Guests</div>
+                    <div className="text-center p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl shadow-sm">
+                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">Max Guests</div>
                         <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">{space?.max_guests}</div>
                     </div>
-                    <div className="text-center p-3 sm:p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Kshs Per Hour</div>
+                    <div className="text-center p-3 sm:p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl shadow-sm">
+                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">Kshs Per Hour</div>
                         <div className="text-base sm:text-lg font-bold text-purple-600 dark:text-purple-400">
                             {parseFloat(space?.price_per_hour || 0).toFixed(2)}
                         </div>
@@ -165,22 +161,23 @@ const fetchUserBookings = () => {
 
                 {/* Reviews */}
                 <div className="mt-4 border-t pt-4 flex-1 border-gray-200 dark:border-gray-600">
-                    <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-900 dark:text-white">Recent Reviews</h3> {/* Responsive text size and dark mode */}
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-900 dark:text-white">Recent Reviews</h3>
                     {reviews.length > 0 ? (
-                        reviews.map((review) => (
-                            <div key={review.id} className="border-b py-2 border-gray-100 dark:border-gray-700 text-gray-800 dark:text-gray-200"> {/* Dark mode support */}
-                                <p className="text-sm sm:text-base"> {/* Responsive text size */}
+                        <div className="space-y-2">
+                        {reviews.map((review) => (
+                            <div key={review.id} className="border-b py-2 border-gray-100 dark:border-gray-700 text-gray-800 dark:text-gray-200 bg-gray-50/50 dark:bg-gray-700/50 rounded-lg px-3 backdrop-blur-sm">
+                                <p className="text-sm sm:text-base font-medium">
                                     {review.user.first_name} : {review.rating} <Star className="inline h-4 w-4 text-yellow-400 fill-current" />
                                 </p>
-                                <p className="text-sm sm:text-base">{review.comment}</p> {/* Responsive text size */}
+                                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">{review.comment}</p>
                                 {user && review.user_id === user.id && (
-                                    <div className="flex gap-2 mt-1 text-sm"> {/* Responsive text size */}
+                                    <div className="flex gap-2 mt-1 text-sm">
                                         <button
                                             onClick={() => {
                                                 setEditingReview(review);
                                                 setShowReviewForm(true);
                                             }}
-                                            className="text-blue-500 hover:underline"
+                                            className="text-blue-500 hover:text-blue-700 font-medium hover:underline"
                                         >
                                             Edit
                                         </button>
@@ -199,22 +196,23 @@ const fetchUserBookings = () => {
                                                         console.error("Error deleting review:", err)
                                                     );
                                             }}
-                                            className="text-red-500 hover:underline"
+                                            className="text-red-500 hover:text-red-700 font-medium hover:underline"
                                         >
                                             Delete
                                         </button>
                                     </div>
                                 )}
                             </div>
-                        ))
+                        ))}
+                        </div>
                     ) : (
-                        <p className="text-gray-500 italic text-sm sm:text-base">No Reviews yet.</p>)
+                        <p className="text-gray-500 italic text-sm sm:text-base bg-gray-50/50 dark:bg-gray-700/50 rounded-lg p-3">No Reviews yet.</p>)
 }
                 </div>
 
                 {/* Review Form */}
                 {showReviewForm && hasBooked && !isAdminOrOwner && (
-                    <div className="mt-4 border-t pt-4 border-gray-200 dark:border-gray-600">
+                    <div className="mt-4 border-t pt-4 border-gray-200 dark:border-gray-600 bg-blue-50/30 dark:bg-blue-900/10 rounded-lg p-3 backdrop-blur-sm">
                         <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-900 dark:text-white">
                             {editingReview ? "Edit Your Review" : "Add Your Review"}
                         </h3>
@@ -235,17 +233,17 @@ const fetchUserBookings = () => {
                 {hasBooked && !showReviewForm && !userReview && !isAdminOrOwner &&(
                     <button
                         onClick={() => setShowReviewForm(true)}
-                        className="bg-yellow-400 text-yellow-900 px-4 py-2 mt-3 w-full sm:w-40 mx-auto rounded-lg hover:bg-yellow-600 hover:text-yellow-900 transition text-sm sm:text-base" // Responsive width
+                        className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 px-4 py-2 mt-3 w-full sm:w-40 mx-auto rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all shadow-lg font-semibold text-sm sm:text-base"
                     >
                         Add Review
                     </button>
                 )}
 
                 {/* Book button pinned at bottom */}
-                <div className="mt-6 flex justify-center sm:justify-end"> {/* Responsive alignment */}
+                <div className="mt-6 flex justify-center sm:justify-end">
                     {space.status === "available" && user?.role === "client" && (
                         <Link to={`/spaces/${space.id}/booking`}>
-                        <button className="bg-blue-600 text-white px-5 py-2 w-full sm:w-40 rounded-lg hover:bg-blue-700 text-sm sm:text-base"> {/* Responsive width */}
+                        <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-2 w-full sm:w-40 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg font-semibold text-sm sm:text-base">
                             Book Now
                         </button>
                         </Link>

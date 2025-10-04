@@ -12,7 +12,7 @@ const getDashboardPath = (roles, bookingIntent, spaceId) => {
   if (bookingIntent === 'true' && spaceId) {
     return `/spaces/${spaceId}/booking`; // Use the correct path
   }
-  
+
   if (!roles || roles.length === 0) {
     return '/profile';
   }
@@ -32,7 +32,7 @@ function Login() {
   const { login, loading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Get booking intent from URL parameters
   const searchParams = new URLSearchParams(location.search);
   const bookingIntent = searchParams.get('bookingIntent');
@@ -71,7 +71,7 @@ function Login() {
   }
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
+    <div className=" bg-white/20 backdrop-blur-xl rounded-3xl p-6 p-8 rounded-lg shadow-md w-full max-w-md text-center">
       <h2 className="text-2xl font-semibold mb-6 text-primary">Login</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -105,13 +105,13 @@ function Login() {
           {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
-      
+
       <div className='mt-4'>
         <GoogleButton
-          onClick={() => { 
+          onClick={() => {
             console.log('Google button clicked');
             // Pass booking intent to Google OAuth
-            const redirectUrl = bookingIntent && spaceId 
+            const redirectUrl = bookingIntent && spaceId
               ? `${API_BASE_URL}/auth/google/login?bookingIntent=true&spaceId=${spaceId}`
               : `${API_BASE_URL}/auth/google/login`;
             window.location.href = redirectUrl;
@@ -132,7 +132,7 @@ function Login() {
           Reset it
         </Link>
       </p>
-      
+
       {/* Show booking intent message if applicable */}
       {bookingIntent === 'true' && (
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">

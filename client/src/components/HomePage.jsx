@@ -260,6 +260,20 @@ const HomePage = () => {
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResultsCount, setSearchResultsCount] = useState(null);
+  const [currentBgIndex, setCurrentBgIndex] = useState(0);
+
+  const backgroundImages = [
+    'https://images.unsplash.com/photo-1605882171181-e31b036e4ceb?q=80&w=1025&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://plus.unsplash.com/premium_photo-1664391631217-d53431f0effd?q=80&w=1035&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://images.unsplash.com/photo-1582653291997-079a1c04e5a1?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  ];
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBgIndex((prev) => (prev + 1) % backgroundImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const features = [
     {
@@ -295,7 +309,25 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen relative">
+      {/* Background Image Slideshow */}
+      <div className="fixed inset-0 z-0">
+        {backgroundImages.map((img, index) => (
+          <div
+            key={index}
+            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+            style={{
+              backgroundImage: `url(${img})`,
+              opacity: currentBgIndex === index ? 1 : 0,
+            }}
+          >
+            <div className="absolute inset-0 bg-black/40"></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Content Overlay */}
+      <div className="relative z-10">
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -306,15 +338,15 @@ const HomePage = () => {
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-float {
-          animation: float 3s ease-in-out infinite;
+          animation: float 10s ease-in-out infinite;
         }
         .animate-fade-in {
-          animation: fade-in 0.5s ease-out;
+          animation: fade-in 1.5s ease-out;
         }
       `}</style>
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-purple-700 to-blue-400">
+      <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
 
         <div className="relative max-w-7xl mx-auto px-4 py-20 sm:py-32 text-center">
@@ -347,7 +379,7 @@ const HomePage = () => {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-blue-50 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-transparent to-transparent"></div>
       </div>
 
       {/* Search Section */}
@@ -358,10 +390,10 @@ const HomePage = () => {
       {/* Features Section */}
       <div className="max-w-7xl mx-auto px-4 py-16 sm:py-24">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-5xl font-black text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 drop-shadow-2xl">
             Why Choose SpaceHub?
           </h2>
-          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-medium">
+          <p className="text-base sm:text-lg text-white/90 max-w-2xl mx-auto font-medium drop-shadow-lg">
             We make finding and managing rental spaces simple, secure, and stress-free
           </p>
         </div>
@@ -370,7 +402,7 @@ const HomePage = () => {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group text-center p-8 rounded-2xl bg-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 relative overflow-hidden"
+              className=" group text-center p-8 rounded-2xl bg-white/95 backdrop-blur-md shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-2 border border-white/50"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
               <div className="relative">
@@ -391,30 +423,32 @@ const HomePage = () => {
       <div className="max-w-7xl mx-auto px-4 pb-16 sm:pb-24">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 space-y-4 sm:space-y-0">
           <div className="flex-1">
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h2 className="text-3xl sm:text-4xl font-black text-white drop-shadow-2xl">
               {isSearching ? 'Search Results' : 'Featured Spaces'}
               {searchResultsCount !== null && (
-                <span className="text-lg font-semibold text-gray-500 ml-3">
+                <span className="text-lg font-semibold text-white/80 ml-3 drop-shadow-lg">
                   ({searchResultsCount} {searchResultsCount === 1 ? 'space' : 'spaces'} found)
                 </span>
               )}
             </h2>
           </div>
-          <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-full shadow-lg font-semibold">
+          <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-full shadow-lg font-semibold backdrop-blur-sm">
             <MapPin className="h-5 w-5" />
             <span>Nairobi, Kenya</span>
           </div>
         </div>
-
+       <div className="bg-white/20 backdrop-blur-xl rounded-3xl p-6">
         <Spaces
           searchResults={searchResults}
           isSearching={isSearching}
           onClearSearch={handleClearSearch}
         />
       </div>
+      </div>
 
       {/* Call to Action */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white">
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/50"></div>
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50"></div>
 
         <div className="relative max-w-7xl mx-auto px-4 py-20 sm:py-28 text-center">
@@ -433,6 +467,7 @@ const HomePage = () => {
             for their workspace needs.
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

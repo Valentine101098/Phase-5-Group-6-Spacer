@@ -137,7 +137,7 @@ def validate_registration_data(data):
 def google_login():
     """Initiate Google OAuth flow"""
 
-    redirect_uri = url_for('auth.google_callback', _external=True, _scheme='https')
+    redirect_uri = url_for('auth.google_callback', _external=True, _scheme=current_app.config['OAUTH_SCHEME'])
     current_app.logger.info(f"Generated redirect_uri: {redirect_uri}")
     return oauth.google.authorize_redirect(redirect_uri)
 
