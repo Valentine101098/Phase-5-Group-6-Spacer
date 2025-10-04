@@ -2,13 +2,15 @@ import { useState } from "react";
 import SpaceDetails from "./SpaceDetails";
 import { Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function SpaceCard({ space }) {
     const [showDetails, setShowDetails] = useState(false);
+    const { user } = useAuth();
 
     return (
         <div className="border w-full h-full rounded-lg overflow-hidden shadow-lg hover:shadow-[0_10px_20px_rgba(0,0,0,0.8)] hover:shadow-xl transition-shadow duration-300 flex flex-col">
-            <div className="relative w-full h-48 sm:h-60 overflow-hidden"> {/* Fixed height for the image container, responsive */}
+            <div className="relative w-full h-48 sm:h-60 overflow-hidden">
                 <div className="flex w-full h-full overflow-x-auto snap-x snap-mandatory">
                     {space.images.map((imgUrl, index) => (
                         <img
@@ -40,17 +42,41 @@ export default function SpaceCard({ space }) {
                     Kshs {space.price_per_hour}/hr
                 </span>
                 <div className="mt-3 flex flex-col gap-2">
-                    <button className="bg-gray-200 text-gray-800 px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-300 text-sm sm:text-base" onClick={() => setShowDetails(true)}>
+                    <button 
+                        className="bg-gray-200 text-gray-800 px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-300 text-sm sm:text-base" 
+                        onClick={() => setShowDetails(true)}
+                    >
                         More Details
                     </button>
-                    {space.status === "available" ?
-                    <Link to={`/spaces/${space.id}/booking`}>
-                    <button className="bg-blue-500 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-600 w-full text-sm sm:text-base">
-                        Quick Book
-                    </button> </Link> : null}
+                    
+                    {/* Booking button - ALWAYS shows for available spaces */}
+                    {space.status === "available" && (
+                        !user ? (
+                            // Not logged in - go to login page WITH booking intent
+                            <Link to={`/login?bookingIntent=true&spaceId=${space.id}`}>
+                                <button className="bg-gradient-to-br from-blue-700 via-purple-700 to-blue-400 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-600 w-full text-sm sm:text-base">
+                                    Login to Book
+                                </button>
+                            </Link>
+                        ) : user?.roles?.includes("client") ? (
+                            // Logged in client - go directly to booking page USING CORRECT PATH
+                            <Link to={`/spaces/${space.id}/booking`}>
+                                <button className="bg-gradient-to-br from-blue-700 via-purple-700 to-blue-400 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-600 w-full text-sm sm:text-base">
+                                    Book Now
+                                </button>
+                            </Link>
+                        ) : null
+                    )}
                 </div>
             </div>
-            {showDetails && (<SpaceDetails space={space} onClose={() => setShowDetails(false)} />)}
+            
+            {/* Space Details Modal */}
+            {showDetails && (
+                <SpaceDetails 
+                    space={space} 
+                    onClose={() => setShowDetails(false)} 
+                />
+            )}
         </div>
     )
 }

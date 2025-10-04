@@ -1,15 +1,18 @@
 // src/components/Login.js
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom'; // Keep this import
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
 import GoogleButton from 'react-google-signin-button';
 import 'react-google-signin-button/dist/button.css';
 
-
-
-const getDashboardPath = (roles) => {
+const getDashboardPath = (roles, bookingIntent, spaceId) => {
+  // If user was trying to book a space, redirect them to the correct booking path
+  if (bookingIntent === 'true' && spaceId) {
+    return `/spaces/${spaceId}/booking`; // Use the correct path
+  }
+  
   if (!roles || roles.length === 0) {
     return '/profile';
   }
@@ -28,13 +31,19 @@ function Login() {
   const [error, setError] = useState('');
   const { login, loading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get booking intent from URL parameters
+  const searchParams = new URLSearchParams(location.search);
+  const bookingIntent = searchParams.get('bookingIntent');
+  const spaceId = searchParams.get('spaceId');
 
   React.useEffect(() => {
     if (!loading && isAuthenticated && user) {
-      const dashboardPath = getDashboardPath(user.roles);
+      const dashboardPath = getDashboardPath(user.roles, bookingIntent, spaceId);
       navigate(dashboardPath);
     }
-  }, [isAuthenticated, loading, navigate, user]);
+  }, [isAuthenticated, loading, navigate, user, bookingIntent, spaceId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,14 +106,18 @@ function Login() {
         </button>
       </form>
       
-<div className='mt-4'>
-  <GoogleButton
-    onClick={() => { 
-      console.log('Google button clicked');
-      window.location.href = `${API_BASE_URL}/auth/google/login`;
-    }}
-  />
-</div>
+      <div className='mt-4'>
+        <GoogleButton
+          onClick={() => { 
+            console.log('Google button clicked');
+            // Pass booking intent to Google OAuth
+            const redirectUrl = bookingIntent && spaceId 
+              ? `${API_BASE_URL}/auth/google/login?bookingIntent=true&spaceId=${spaceId}`
+              : `${API_BASE_URL}/auth/google/login`;
+            window.location.href = redirectUrl;
+          }}
+        />
+      </div>
 
       {/* CORRECTED LINKS HERE */}
       <p className="mt-4 text-gray-600">
@@ -119,6 +132,15 @@ function Login() {
           Reset it
         </Link>
       </p>
+      
+      {/* Show booking intent message if applicable */}
+      {bookingIntent === 'true' && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-700 text-sm">
+            After logging in, you'll be redirected to book the space.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

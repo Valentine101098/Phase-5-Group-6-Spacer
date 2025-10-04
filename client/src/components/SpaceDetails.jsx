@@ -16,6 +16,8 @@ export default function SpaceDetails({ space, onClose }) {
 
     const totalImages = space.images.length;
 
+    const isAdminOrOwner = user?.roles?.includes("admin") || user?.roles?.includes("owner");
+
     const goPrev = () => {
         setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? totalImages - 1 : prevIndex - 1));
     };
@@ -211,7 +213,7 @@ const fetchUserBookings = () => {
                 </div>
 
                 {/* Review Form */}
-                {showReviewForm && hasBooked && (
+                {showReviewForm && hasBooked && !isAdminOrOwner && (
                     <div className="mt-4 border-t pt-4 border-gray-200 dark:border-gray-600">
                         <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-900 dark:text-white">
                             {editingReview ? "Edit Your Review" : "Add Your Review"}
@@ -230,7 +232,7 @@ const fetchUserBookings = () => {
                 )}
 
                 {/* Add Review button */}
-                {hasBooked && !showReviewForm && !userReview && (
+                {hasBooked && !showReviewForm && !userReview && !isAdminOrOwner &&(
                     <button
                         onClick={() => setShowReviewForm(true)}
                         className="bg-yellow-400 text-yellow-900 px-4 py-2 mt-3 w-full sm:w-40 mx-auto rounded-lg hover:bg-yellow-600 hover:text-yellow-900 transition text-sm sm:text-base" // Responsive width
@@ -241,7 +243,7 @@ const fetchUserBookings = () => {
 
                 {/* Book button pinned at bottom */}
                 <div className="mt-6 flex justify-center sm:justify-end"> {/* Responsive alignment */}
-                    {space.status === "available" && (
+                    {space.status === "available" && user?.role === "client" && (
                         <Link to={`/spaces/${space.id}/booking`}>
                         <button className="bg-blue-600 text-white px-5 py-2 w-full sm:w-40 rounded-lg hover:bg-blue-700 text-sm sm:text-base"> {/* Responsive width */}
                             Book Now

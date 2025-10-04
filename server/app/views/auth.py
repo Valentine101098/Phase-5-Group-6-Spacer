@@ -232,6 +232,7 @@ def google_callback():
             f"&refresh_token={refresh_token}"
             f"&is_new={is_new_user}"
         )
+        print("to frontend: ", frontend_url)
         return redirect(frontend_url)
 
     except Exception as e:
