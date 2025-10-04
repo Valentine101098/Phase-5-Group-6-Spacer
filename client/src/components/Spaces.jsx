@@ -86,10 +86,10 @@ export default function Spaces({ searchResults, isSearching, onClearSearch }) {
                 <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className={`p-2 rounded-lg ${
+                    className={`p-2 rounded-lg backdrop-blur-sm ${
                         currentPage === 1
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-white text-blue-600 hover:bg-blue-50 border border-gray-200'
+                            ? 'bg-gray-100/80 text-gray-400 cursor-not-allowed'
+                            : 'bg-white/90 text-blue-600 hover:bg-blue-50/90 border border-gray-200/50 shadow-md'
                     }`}
                     aria-label="Previous page"
                 >
@@ -100,12 +100,12 @@ export default function Spaces({ searchResults, isSearching, onClearSearch }) {
                     <>
                         <button
                             onClick={() => handlePageChange(1)}
-                            className="px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-blue-50 border border-gray-200"
+                            className="px-4 py-2 rounded-lg bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-blue-50/90 border border-gray-200/50 shadow-md"
                         >
                             1
                         </button>
                         {startPage > 2 && (
-                            <span className="px-2 text-gray-500">...</span>
+                            <span className="px-2 text-white drop-shadow-lg font-semibold">...</span>
                         )}
                     </>
                 )}
@@ -114,10 +114,10 @@ export default function Spaces({ searchResults, isSearching, onClearSearch }) {
                     <button
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
-                        className={`px-4 py-2 rounded-lg ${
+                        className={`px-4 py-2 rounded-lg backdrop-blur-sm shadow-md ${
                             currentPage === pageNum
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-200'
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                                : 'bg-white/90 text-gray-700 hover:bg-blue-50/90 border border-gray-200/50'
                         }`}
                     >
                         {pageNum}
@@ -127,11 +127,11 @@ export default function Spaces({ searchResults, isSearching, onClearSearch }) {
                 {endPage < totalPages && (
                     <>
                         {endPage < totalPages - 1 && (
-                            <span className="px-2 text-gray-500">...</span>
+                            <span className="px-2 text-white drop-shadow-lg font-semibold">...</span>
                         )}
                         <button
                             onClick={() => handlePageChange(totalPages)}
-                            className="px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-blue-50 border border-gray-200"
+                            className="px-4 py-2 rounded-lg bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-blue-50/90 border border-gray-200/50 shadow-md"
                         >
                             {totalPages}
                         </button>
@@ -141,10 +141,10 @@ export default function Spaces({ searchResults, isSearching, onClearSearch }) {
                 <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className={`p-2 rounded-lg ${
+                    className={`p-2 rounded-lg backdrop-blur-sm ${
                         currentPage === totalPages
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-white text-blue-600 hover:bg-blue-50 border border-gray-200'
+                            ? 'bg-gray-100/80 text-gray-400 cursor-not-allowed'
+                            : 'bg-white/90 text-blue-600 hover:bg-blue-50/90 border border-gray-200/50 shadow-md'
                     }`}
                     aria-label="Next page"
                 >
@@ -156,16 +156,16 @@ export default function Spaces({ searchResults, isSearching, onClearSearch }) {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <p className="ml-4 text-gray-600">Loading amazing spaces...</p>
+            <div className="flex justify-center items-center h-64 bg-white/30 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                <p className="ml-4 text-white font-semibold drop-shadow-lg">Loading amazing spaces...</p>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="text-center bg-red-50 border border-red-200 rounded-lg p-8">
+            <div className="text-center bg-red-50/95 backdrop-blur-md border border-red-200 rounded-lg p-8 shadow-xl">
                 <div className="text-red-600 mb-4">
                     <Search className="h-12 w-12 mx-auto opacity-50" />
                 </div>
@@ -176,17 +176,17 @@ export default function Spaces({ searchResults, isSearching, onClearSearch }) {
 
     if (displaySpaces.length === 0) {
         return (
-            <div className="text-center bg-gray-50 border border-gray-200 rounded-lg p-8">
+            <div className="text-center bg-white/95 backdrop-blur-md border border-white/50 rounded-lg p-8 shadow-xl">
                 <div className="text-gray-400 mb-4">
                     <Search className="h-12 w-12 mx-auto" />
                 </div>
-                <p className="text-gray-600 font-medium">
+                <p className="text-gray-700 font-medium">
                     {isSearching ? 'No spaces match your search criteria' : 'No spaces currently available'}
                 </p>
                 {isSearching && onClearSearch && (
                     <button
                         onClick={onClearSearch}
-                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all"
                     >
                         View All Spaces
                     </button>
@@ -198,8 +198,10 @@ export default function Spaces({ searchResults, isSearching, onClearSearch }) {
     return (
         <div className="container mx-auto p-4">
             {!isSearching && totalCount > 0 && (
-                <div className="mb-4 text-center text-gray-600">
-                    Showing {((currentPage - 1) * perPage) + 1} - {Math.min(currentPage * perPage, totalCount)} of {totalCount} spaces
+                <div className="mb-4 text-center">
+                    <span className="bg-white/90 backdrop-blur-md px-6 py-2 rounded-full text-gray-700 font-semibold shadow-lg border border-white/50">
+                        Showing {((currentPage - 1) * perPage) + 1} - {Math.min(currentPage * perPage, totalCount)} of {totalCount} spaces
+                    </span>
                 </div>
             )}
 

@@ -32,6 +32,14 @@ Check out the deployed application:
 - **Frontend**: [https://phase-5-group-6-spacer-1.onrender.com/](https://phase-5-group-6-spacer-1.onrender.com/)
 - **Backend API**: [https://phase-5-group-6-spacer.onrender.com/](https://phase-5-group-6-spacer.onrender.com/)
 
+- Use the following credentials to log in:
+```
+    . Email: zaguilar@example.com (Admin)
+    . Email: dwilson@example.org (Owner)
+    . Email: sherryhahn@example.org (Client)
+    Password: password123 (for all users)
+```
+
 ## 🛠️ Tech Stack
 
 ### Backend
@@ -43,6 +51,7 @@ Check out the deployed application:
 - **Flask-CORS**: Cross-origin resource sharing
 - **Flask-Migrate**: Database migrations
 - **Pipenv**: Python dependency management
+- **Google OAuth**: Social authentication using Google
 
 ### Frontend
 
@@ -218,25 +227,24 @@ npm test
 ### Screenshots
 
 1. Landing Page
-![Home page](image.png)
-
+![Home Page](image-9.png)
 2. Signup Page
-![Sign-up page](image-1.png)
+![Signup Page](image-10.png)
 
 3. Login Page
-![Login Page](image-2.png)
+![Login Page](image-11.png)
 
 4. Admin Dashboard
-![Admin Dashboard](image-3.png)
+![Admin Dashboard](image-12.png)
 
 5. Owner Dashboard
-![Owner Dashboard](image-4.png)
+![Owner Dashboard](image-13.png)
 
 6. Client Dashboard
-![Client Dashboard](image-5.png)
+![Client Dashboard](image-15.png)
 
 7. Profile Page
-![Profile Page](image-6.png)
+![Profile Page](image-14.png)
 
 ### 👨‍💻 Contributors/Developers
 

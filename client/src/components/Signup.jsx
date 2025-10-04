@@ -1,7 +1,10 @@
 // src/components/Signup.js
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
+import GoogleButton from 'react-google-signin-button';
+import 'react-google-signin-button/dist/button.css';
 
 // Utility function for email validation
 const validateEmail = (email) => {
@@ -20,6 +23,12 @@ function Signup() {
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get booking intent from URL parameters
+  const searchParams = new URLSearchParams(location.search);
+  const bookingIntent = searchParams.get('bookingIntent');
+  const spaceId = searchParams.get('spaceId');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,9 +85,31 @@ function Signup() {
     }
   };
 
+  const handleGoogleSignup = () => {
+    console.log('Google signup button clicked');
+    // Pass booking intent to Google OAuth
+    const redirectUrl = bookingIntent && spaceId
+      ? `${API_BASE_URL}/auth/google/login?bookingIntent=true&spaceId=${spaceId}`
+      : `${API_BASE_URL}/auth/google/login`;
+    window.location.href = redirectUrl;
+  };
+
   return (
-    <div className="bg-white p-4 sm:p-8 rounded-lg shadow-md w-full max-w-md mx-4 text-center">
+    <div className="bg-white/20 backdrop-blur-xl rounded-3xl p-6 p-4 sm:p-8 rounded-lg shadow-md w-full max-w-md mx-4 text-center">
       <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-primary">Sign Up</h2>
+
+      {/* Google Sign-In Button */}
+      <div className='mb-4'>
+        <GoogleButton onClick={handleGoogleSignup} />
+      </div>
+
+      {/* Divider */}
+      <div className="flex items-center my-4">
+        <div className="flex-1 border-t border-gray-300"></div>
+        <span className="px-4 text-gray-500 text-sm">or</span>
+        <div className="flex-1 border-t border-gray-300"></div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         <div>
           <label
@@ -188,12 +219,22 @@ function Signup() {
           {loading ? 'Signing Up...' : 'Sign Up'}
         </button>
       </form>
+
       <p className="mt-4 text-gray-600 text-xs sm:text-sm">
         Already have an account?{' '}
-        <a href="/login" className="text-primary hover:text-secondary hover:underline">
+        <Link to="/login" className="text-primary hover:text-secondary hover:underline">
           Login
-        </a>
+        </Link>
       </p>
+
+      {/* Show booking intent message if applicable */}
+      {bookingIntent === 'true' && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-700 text-xs sm:text-sm">
+            After signing up, you'll be redirected to book the space.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

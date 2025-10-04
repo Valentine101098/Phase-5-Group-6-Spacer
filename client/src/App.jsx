@@ -35,14 +35,14 @@ function AppContent() {
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <nav className="sticky top-0 z-50 bg-blue-300 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 sm:py-4 gap-3 sm:gap-0">
+    <div className=" min-h-screen flex flex-col">
+      <nav className=" sticky top-0 z-50 text-white ">
+        <div className=" max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 sm:py-4 gap-6 sm:gap-0">
             {/* Logo */}
             <Link
               to="/"
-              className="text-3xl sm:text-2xl lg:text-3xl font-bold text-white no-underline font-nabla text-center sm:text-left"
+              className="bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent px-6 py-3 rounded-full shadow-lg font-semibold backdrop-blur-sm text-2xl"
             >
               SpaceHub
             </Link>
@@ -51,7 +51,7 @@ function AppContent() {
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 lg:gap-6">
               <Link
                 to="/"
-                className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-xl sm:text-lg lg:text-2xl w-full sm:w-auto text-center"
+                className="bg-gradient-to-r from-blue-100 to-purple-300 bg-clip-text text-transparent px-6 py-3 rounded-full shadow-lg font-semibold backdrop-blur-sm text-xl"
               >
                 Home
               </Link>
@@ -60,13 +60,13 @@ function AppContent() {
                 <>
                   <Link
                     to="/login"
-                    className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-xl sm:text-lg lg:text-2xl w-full sm:w-auto text-center"
+                    className="bg-gradient-to-r from-blue-100 to-purple-300 bg-clip-text text-transparent px-6 py-3 rounded-full shadow-lg font-semibold backdrop-blur-sm text-xl"
                   >
                     Login
                   </Link>
                   <Link
                     to="/signup"
-                    className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-xl sm:text-lg lg:text-2xl w-full sm:w-auto text-center"
+                    className="bg-gradient-to-r from-blue-100 to-purple-300 bg-clip-text text-transparent px-6 py-3 rounded-full shadow-lg font-semibold backdrop-blur-sm text-xl"
                   >
                     Sign Up
                   </Link>
@@ -75,7 +75,7 @@ function AppContent() {
                 <>
                   <Link
                     to="/profile"
-                    className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-xl sm:text-lg lg:text-2xl w-full sm:w-auto text-center"
+                    className="bg-gradient-to-r from-blue-100 to-purple-300 bg-clip-text text-transparent px-6 py-3 rounded-full shadow-lg font-semibold backdrop-blur-sm text-xl"
                   >
                     Profile
                   </Link>
@@ -85,7 +85,7 @@ function AppContent() {
                       {user.roles.includes('admin') && (
                         <Link
                           to="/admin-dashboard"
-                          className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-xl sm:text-lg lg:text-2xl w-full sm:w-auto text-center"
+                          className="bg-gradient-to-r from-blue-100 to-purple-300 bg-clip-text text-transparent px-6 py-3 rounded-full shadow-lg font-semibold backdrop-blur-sm text-xl"
                         >
                           My Dashboard
                         </Link>
@@ -93,7 +93,7 @@ function AppContent() {
                       {user.roles.includes('client') && (
                         <Link
                           to="/client-dashboard"
-                          className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-xl sm:text-lg lg:text-2xl w-full sm:w-auto text-center"
+                          className="bg-gradient-to-r from-blue-100 to-purple-300 bg-clip-text text-transparent px-6 py-3 rounded-full shadow-lg font-semibold backdrop-blur-sm text-xl"
                         >
                           My Dashboard
                         </Link>
@@ -101,7 +101,7 @@ function AppContent() {
                       {user.roles.includes('owner') && (
                         <Link
                           to="/owner-dashboard"
-                          className="text-blue-600 hover:text-secondary hover:underline transition-colors duration-200 font-dancing font-bold text-xl sm:text-lg lg:text-2xl w-full sm:w-auto text-center"
+                          className="bg-gradient-to-r from-blue-100 to-purple-300 bg-clip-text text-transparent px-6 py-3 rounded-full shadow-lg font-semibold backdrop-blur-sm text-xl"
                         >
                           My Dashboard
                         </Link>
@@ -120,7 +120,7 @@ function AppContent() {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-grow w-full bg-lightblue-lighter">
+      <main className=" bg-workspace-1 bg-cover bg-center flex-grow w-full bg-lightblue-lighter">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -190,3 +190,13 @@ function App() {
 }
 
 export default App;
+
+
+
+
+// https://images.unsplash.com/photo-1605882171181-e31b036e4ceb?q=80&w=1025&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+
+// https://plus.unsplash.com/premium_photo-1664391631217-d53431f0effd?q=80&w=1035&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+
+
+// https://images.unsplash.com/photo-1582653291997-079a1c04e5a1?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
