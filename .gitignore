@@ -1,3 +1,6 @@
+client/.env
+server/.env
+
 # Logs
 logs
 *.log
@@ -22,3 +25,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.env
+.env.*
+# Environment files
+*.env
+*.env.*
+server/tree.txt
+server/migrations
+server/temp_seed.py
+*__pycache__*
+*.pytest_cache
+server/tools
+*.pyc*
+client/src/features/temp

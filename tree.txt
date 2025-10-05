@@ -1,0 +1,40 @@
+.
+├── Pipfile
+├── README.md
+├── client
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.jsx
+│   │   ├── __tests__
+│   │   │   └── App.test.jsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── server
+│   ├── Pipfile
+│   ├── Pipfile.lock
+│   ├── app.py
+│   ├── models.py
+│   ├── tests
+│   │   ├── test_agreement_instance.py
+│   │   ├── test_agreement_template.py
+│   │   ├── test_booking.py
+│   │   ├── test_dummy.py
+│   │   └── test_invoice.py
+│   └── views
+│       ├── __init__.py
+│       ├── roles.py
+│       └── users.py
+└── tree.txt
+
+8 directories, 29 files

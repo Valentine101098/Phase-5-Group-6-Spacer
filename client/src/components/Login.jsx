@@ -1,0 +1,148 @@
+// src/components/Login.js
+import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api';
+import GoogleButton from 'react-google-signin-button';
+import 'react-google-signin-button/dist/button.css';
+
+const getDashboardPath = (roles, bookingIntent, spaceId) => {
+  // If user was trying to book a space, redirect them to the correct booking path
+  if (bookingIntent === 'true' && spaceId) {
+    return `/spaces/${spaceId}/booking`; // Use the correct path
+  }
+
+  if (!roles || roles.length === 0) {
+    return '/profile';
+  }
+  if (roles.includes('admin')) {
+    return '/admin-dashboard';
+  }
+  if (roles.includes('owner')) {
+    return '/owner-dashboard';
+  }
+  return '/client-dashboard';
+};
+
+function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const { login, loading, isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get booking intent from URL parameters
+  const searchParams = new URLSearchParams(location.search);
+  const bookingIntent = searchParams.get('bookingIntent');
+  const spaceId = searchParams.get('spaceId');
+
+  React.useEffect(() => {
+    if (!loading && isAuthenticated && user) {
+      const dashboardPath = getDashboardPath(user.roles, bookingIntent, spaceId);
+      navigate(dashboardPath);
+    }
+  }, [isAuthenticated, loading, navigate, user, bookingIntent, spaceId]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!email || !password) {
+      setError('Email and password are required.');
+      return;
+    }
+
+    const result = await login(email, password);
+    if (!result.success) {
+      setError(result.error || 'Login failed. Please try again.');
+    } else {
+      // Login successful, useEffect will handle navigation
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-8 text-lg text-primary">Loading authentication...</div>;
+  }
+
+  if (isAuthenticated) {
+    return null; // Or a redirect to dashboard, but useEffect already handles it
+  }
+
+  return (
+    <div className=" bg-white/20 backdrop-blur-xl rounded-3xl p-6 p-8 rounded-lg shadow-md w-full max-w-md text-center">
+      <h2 className="text-2xl font-semibold mb-6 text-primary">Login</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="email" className="block text-left text-gray-700 text-sm font-bold mb-2">Email:</label>
+          <input
+            type="email"
+            id="email"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="block text-left text-gray-700 text-sm font-bold mb-2">Password:</label>
+          <input
+            type="password"
+            id="password"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
+      </form>
+
+      <div className='mt-4'>
+        <GoogleButton
+          onClick={() => {
+            console.log('Google button clicked');
+            // Pass booking intent to Google OAuth
+            const redirectUrl = bookingIntent && spaceId
+              ? `${API_BASE_URL}/auth/google/login?bookingIntent=true&spaceId=${spaceId}`
+              : `${API_BASE_URL}/auth/google/login`;
+            window.location.href = redirectUrl;
+          }}
+        />
+      </div>
+
+      {/* CORRECTED LINKS HERE */}
+      <p className="mt-4 text-gray-600">
+        Don't have an account? {' '}
+        <Link to="/signup" className="text-primary hover:text-secondary hover:underline">
+          Sign Up
+        </Link>
+      </p>
+      <p className="mt-2 text-gray-600">
+        Forgot your password? {' '}
+        <Link to="/forgot-password" className="text-primary hover:text-secondary hover:underline">
+          Reset it
+        </Link>
+      </p>
+
+      {/* Show booking intent message if applicable */}
+      {bookingIntent === 'true' && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-700 text-sm">
+            After logging in, you'll be redirected to book the space.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Login;

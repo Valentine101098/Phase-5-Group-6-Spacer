@@ -1,0 +1,242 @@
+// src/components/Signup.js
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api';
+import GoogleButton from 'react-google-signin-button';
+import 'react-google-signin-button/dist/button.css';
+
+// Utility function for email validation
+const validateEmail = (email) => {
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailPattern.test(email);
+};
+
+function Signup() {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get booking intent from URL parameters
+  const searchParams = new URLSearchParams(location.search);
+  const bookingIntent = searchParams.get('bookingIntent');
+  const spaceId = searchParams.get('spaceId');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError('Invalid email format.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          email,
+          phone_number: phoneNumber.trim(),
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccessMessage('Registration successful! You can now log in.');
+        setFirstName('');
+        setLastName('');
+        setEmail('');
+        setPhoneNumber('');
+        setPassword('');
+        setConfirmPassword('');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError(
+          data.message ||
+            (data.errors ? data.errors.join(', ') : 'Registration failed.')
+        );
+      }
+    } catch (err) {
+      setError('Network error or server unavailable.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = () => {
+    console.log('Google signup button clicked');
+    // Pass booking intent to Google OAuth
+    const redirectUrl = bookingIntent && spaceId
+      ? `${API_BASE_URL}/auth/google/login?bookingIntent=true&spaceId=${spaceId}`
+      : `${API_BASE_URL}/auth/google/login`;
+    window.location.href = redirectUrl;
+  };
+
+  return (
+    <div className="bg-white/20 backdrop-blur-xl rounded-3xl p-6 p-4 sm:p-8 rounded-lg shadow-md w-full max-w-md mx-4 text-center">
+      <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-primary">Sign Up</h2>
+
+      {/* Google Sign-In Button */}
+      <div className='mb-4'>
+        <GoogleButton onClick={handleGoogleSignup} />
+      </div>
+
+      {/* Divider */}
+      <div className="flex items-center my-4">
+        <div className="flex-1 border-t border-gray-300"></div>
+        <span className="px-4 text-gray-500 text-sm">or</span>
+        <div className="flex-1 border-t border-gray-300"></div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <div>
+          <label
+            htmlFor="firstName"
+            className="block text-left text-gray-700 text-xs sm:text-sm font-bold mb-2"
+          >
+            First Name:
+          </label>
+          <input
+            type="text"
+            id="firstName"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="lastName"
+            className="block text-left text-gray-700 text-xs sm:text-sm font-bold mb-2"
+          >
+            Last Name:
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="email"
+            className="block text-left text-gray-700 text-xs sm:text-sm font-bold mb-2"
+          >
+            Email:
+          </label>
+          <input
+            type="email"
+            id="email"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="phoneNumber"
+            className="block text-left text-gray-700 text-xs sm:text-sm font-bold mb-2"
+          >
+            Phone Number:
+          </label>
+          <input
+            type="tel"
+            id="phoneNumber"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="password"
+            className="block text-left text-gray-700 text-xs sm:text-sm font-bold mb-2"
+          >
+            Password:
+          </label>
+          <input
+            type="password"
+            id="password"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="confirmPassword"
+            className="block text-left text-gray-700 text-xs sm:text-sm font-bold mb-2"
+          >
+            Confirm Password:
+          </label>
+          <input
+            type="password"
+            id="confirmPassword"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        </div>
+        {error && <p className="text-red-500 text-xs sm:text-sm mb-4">{error}</p>}
+        {successMessage && (
+          <p className="text-green-500 text-xs sm:text-sm mb-4">{successMessage}</p>
+        )}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+        >
+          {loading ? 'Signing Up...' : 'Sign Up'}
+        </button>
+      </form>
+
+      <p className="mt-4 text-gray-600 text-xs sm:text-sm">
+        Already have an account?{' '}
+        <Link to="/login" className="text-primary hover:text-secondary hover:underline">
+          Login
+        </Link>
+      </p>
+
+      {/* Show booking intent message if applicable */}
+      {bookingIntent === 'true' && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-700 text-xs sm:text-sm">
+            After signing up, you'll be redirected to book the space.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Signup;
